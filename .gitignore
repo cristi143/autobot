@@ -1,0 +1,25 @@
+# Secrete — NICIODATĂ în git
+.env
+*.key
+secrets/
+config/local*.py
+
+# Date de piață (7.5 GB în ../historical_data — stau pe disc, nu în git)
+historical_data/
+*.csv
+*.parquet
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# Diverse
+.DS_Store
+*.swp
+.idea/
+.vscode/
+*.log
