@@ -5,31 +5,22 @@
 #   user=marcelpa  home=/home/marcelpa
 #   repo clonat în: /home/marcelpa/repositories/autobot  (= PWD la deploy)
 #   document root: /home/marcelpa/autobot.dunitru.ro
+#                  SAU  /home/marcelpa/autobot.dunitru.ro/public_html
+#                  — cPanel se poartă diferit de la un domeniu la altul, așa că
+#                  deploy-ul îl determină singur (vezi mai jos).
 #
 # ⚠ DOCUMENT ROOT-UL TREBUIE SĂ FIE ÎN AFARA lui /home/marcelpa/dunitru.ro/.
-#   Deploy-ul lui dunitru.ro golește complet /home/marcelpa/dunitru.ro/public_html,
-#   deci dacă subdomeniul ar sta acolo înăuntru s-ar șterge la fiecare deploy
-#   de dunitru.ro. De aceea folosim un arbore separat: autobot.dunitru.ro/.
+#   Deploy-ul lui dunitru.ro golește complet propriul document root, deci un
+#   subdomeniu găzduit acolo înăuntru s-ar șterge la fiecare deploy de dunitru.ro.
 #
-# Deocamdată site static. Când apare interfața reală (PHP/Laravel), pașii de
-# build se adaugă aici, după modelul din ../../02_Marcel/marcel-parcel/.cpanel.yml.
+# Tot deploy-ul e o singură comandă pentru că fiecare task rulează în shell
+# separat — variabila $DEST nu ar supraviețui de la un rând la altul.
 #
 # IMPORTANT: cPanel oprește deploy-ul la prima comandă cu exit != 0.
 deployment:
   tasks:
     - 'echo "=== DEPLOY autobot.dunitru.ro $(date) ===" > /home/marcelpa/deploy-autobot.log'
 
-    - 'echo "[1/4] verificare siguranță document root" >> /home/marcelpa/deploy-autobot.log'
-    - 'mkdir -p /home/marcelpa/autobot.dunitru.ro >> /home/marcelpa/deploy-autobot.log 2>&1'
-    - 'if [ -f /home/marcelpa/autobot.dunitru.ro/index.php ]; then echo "STOP: document root-ul conține index.php — nu pare a fi site-ul static autobot. Nu șterg nimic." >> /home/marcelpa/deploy-autobot.log; exit 1; fi'
-
-    - 'echo "[2/4] golire document root (ca ștergerile din repo să se propage)" >> /home/marcelpa/deploy-autobot.log'
-    - 'find /home/marcelpa/autobot.dunitru.ro -mindepth 1 -delete >> /home/marcelpa/deploy-autobot.log 2>&1'
-
-    - 'echo "[3/4] copiere public/ -> document root (inclusiv .htaccess)" >> /home/marcelpa/deploy-autobot.log'
-    - 'cp -a public/. /home/marcelpa/autobot.dunitru.ro/ >> /home/marcelpa/deploy-autobot.log 2>&1'
-
-    - 'echo "[4/4] conținutul publicat:" >> /home/marcelpa/deploy-autobot.log'
-    - 'ls -la /home/marcelpa/autobot.dunitru.ro >> /home/marcelpa/deploy-autobot.log 2>&1'
+    - 'BASE=/home/marcelpa/autobot.dunitru.ro; LOG=/home/marcelpa/deploy-autobot.log; DEST="$BASE"; if [ -d "$BASE/public_html" ]; then DEST="$BASE/public_html"; fi; echo "[1/4] document root ales: $DEST" >> "$LOG"; mkdir -p "$DEST" >> "$LOG" 2>&1; if [ -f "$DEST/index.php" ]; then echo "STOP: document root-ul conține index.php — nu pare a fi site-ul static autobot. Nu șterg nimic." >> "$LOG"; exit 1; fi; echo "[2/4] golire document root" >> "$LOG"; find "$DEST" -mindepth 1 -delete >> "$LOG" 2>&1; echo "[3/4] copiere public/ -> $DEST" >> "$LOG"; cp -a public/. "$DEST"/ >> "$LOG" 2>&1; echo "[4/4] conținut publicat:" >> "$LOG"; ls -la "$DEST" >> "$LOG" 2>&1'
 
     - 'echo "=== DEPLOY DONE $(date) ===" >> /home/marcelpa/deploy-autobot.log'

@@ -9,7 +9,9 @@ Control → Deploy. Deocamdată site static („în construcție").
 
 - **Cod sursă:** GitHub `cristi143/autobot`
 - **Producție:** ClausWeb, cont cPanel `marcelpa` (autobot.dunitru.ro e **subdomeniu**)
-  - document root: `/home/marcelpa/autobot.dunitru.ro/`
+  - document root: `/home/marcelpa/autobot.dunitru.ro/`, sau
+    `/home/marcelpa/autobot.dunitru.ro/public_html/` — **deploy-ul îl detectează singur**
+    (dacă există subfolderul `public_html`, acela e document root-ul)
   - clona Git a serverului: `/home/marcelpa/repositories/autobot`
 
 ### ⚠ De ce document root separat
