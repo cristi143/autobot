@@ -20,6 +20,12 @@
 SET NAMES utf8mb4;
 SET time_zone = '+00:00';
 
+-- Spune explicit unde se creează tabelele. Fără linia asta, un import pornit
+-- din phpMyAdmin fără să fi selectat întâi baza în panoul din stânga eșuează cu
+-- „#1046 - No database selected", pentru că rulează la nivel de server.
+-- Dacă baza se numește altfel, se schimbă aici.
+USE marcelpa_autobot;
+
 
 -- ---------------------------------------------------------------------------
 -- Lumânările de 1h, așa cum le-a văzut serverul. Copie proprie, ca să putem

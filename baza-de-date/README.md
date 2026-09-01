@@ -18,8 +18,17 @@ Reține exact cum arată numele cu prefix — le vei pune în configurare.
 
 ## 2. Rulezi schema
 
-cPanel → **phpMyAdmin** → selectezi baza `marcelpa_autobot` în stânga →
-tab **Import** → încarci `schema.sql` din acest folder → **Go**.
+cPanel → **phpMyAdmin** → **click pe `marcelpa_autobot` în panoul din stânga**,
+astfel încât bara de sus să arate `Server: localhost » Database: marcelpa_autobot`
+→ tab **Import** → încarci `schema.sql` → **Go**.
+
+Selectarea bazei contează: pornit de la nivelul serverului, importul eșuează cu
+`#1046 - No database selected`. Schema conține și un `USE marcelpa_autobot;` ca
+plasă de siguranță, dar dacă baza se numește altfel, linia aceea trebuie schimbată.
+
+**Reimportul e sigur.** Toate tabelele sunt `CREATE TABLE IF NOT EXISTS`, iar
+inserarea băncilor are `ON DUPLICATE KEY UPDATE`, deci rularea de mai multe ori
+nu strică nimic și nu pierde date.
 
 Ar trebui să raporteze 8 tabele create. Dacă dă vreo eroare, trimite-mi textul
 exact — schema n-a putut fi rulată local, neexistând MySQL pe calculatorul de
