@@ -19,9 +19,98 @@
     <div class="ohlc" id="ohlc" aria-live="polite"></div>
   </header>
 
-  <div class="grafic-invelis">
-    <div id="grafic"></div>
-    <div class="stare" id="stare">Se încarcă datele…</div>
+  <div class="corp">
+    <div class="grafic-invelis">
+      <div id="grafic"></div>
+      <div class="stare" id="stare">Se încarcă datele…</div>
+    </div>
+
+    <aside class="panou" id="panou">
+      <div class="avertisment">
+        Date de exemplu — motorul nu e încă implementat
+      </div>
+
+      <!-- ---------- poziția ---------- -->
+      <section class="bloc">
+        <h2 class="titlu-bloc">Poziție</h2>
+
+        <div class="stare-poz" id="stare-poz">
+          <span class="pastila long" id="poz-tip">LONG deschis</span>
+          <span class="poz-varsta" id="poz-varsta">de 3 ore</span>
+        </div>
+
+        <dl class="perechi">
+          <div><dt>Intrare</dt><dd class="n" id="poz-intrare">—</dd></div>
+          <div><dt>Preț acum</dt><dd class="n" id="poz-acum">—</dd></div>
+          <div class="separator"></div>
+          <div>
+            <dt>TP <span class="mic">fix, +1%</span></dt>
+            <dd class="n sus" id="poz-tp">—</dd>
+          </div>
+          <div>
+            <dt>SL <span class="mic" title="Pragul e prețul liniei de intrare la ora curentă. Linia fiind înclinată, se schimbă la fiecare oră — săgeata arată încotro.">se mișcă</span></dt>
+            <dd class="n jos" id="poz-sl">—</dd>
+          </div>
+          <div class="separator"></div>
+          <div><dt>Câștig curent</dt><dd class="n" id="poz-pl">—</dd></div>
+        </dl>
+
+        <div class="masura" id="masura" aria-hidden="true">
+          <div class="masura-bara">
+            <span class="masura-umplere" id="masura-umplere"></span>
+            <span class="masura-ac" id="masura-ac"></span>
+          </div>
+          <div class="masura-capete"><span id="masura-jos">SL</span><span id="masura-sus">TP</span></div>
+        </div>
+      </section>
+
+      <!-- ---------- triunghiul ---------- -->
+      <section class="bloc">
+        <h2 class="titlu-bloc">Triunghi activ</h2>
+        <div id="triunghi-gol" class="gol" hidden>Niciun triunghi desenat.</div>
+        <dl class="perechi" id="triunghi-date">
+          <div><dt>Linia de sus <span class="mic">long la spargere</span></dt><dd class="n" id="tri-sus">—</dd></div>
+          <div><dt>Linia de jos <span class="mic">short la spargere</span></dt><dd class="n" id="tri-jos">—</dd></div>
+          <div><dt>Desenat</dt><dd class="n" id="tri-cand">—</dd></div>
+        </dl>
+        <p class="nota-bloc">Prețurile liniilor sunt cele de la ora curentă — se strâng pe măsură ce trece timpul.</p>
+      </section>
+
+      <!-- ---------- băncile ---------- -->
+      <section class="bloc">
+        <h2 class="titlu-bloc">Bănci</h2>
+
+        <div class="banca" id="banca-long">
+          <div class="banca-cap">
+            <span class="banca-nume long">LONG</span>
+            <span class="banca-stare" id="bl-stare">în ZEC</span>
+          </div>
+          <div class="banca-sold n" id="bl-sold">—</div>
+          <div class="banca-linii">
+            <span>randament</span><span class="n" id="bl-rand">—</span>
+            <span>vs. „stau pe USDC"</span><span class="n" id="bl-vs">—</span>
+          </div>
+        </div>
+
+        <div class="banca" id="banca-short">
+          <div class="banca-cap">
+            <span class="banca-nume short">SHORT</span>
+            <span class="banca-stare" id="bs-stare">în ZEC</span>
+          </div>
+          <div class="banca-sold n" id="bs-sold">—</div>
+          <div class="banca-linii">
+            <span>randament</span><span class="n" id="bs-rand">—</span>
+            <span>vs. „cumpăr și țin"</span><span class="n" id="bs-vs">—</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------- istoric ---------- -->
+      <section class="bloc">
+        <h2 class="titlu-bloc">Ultimele tranzacții</h2>
+        <div class="istoric" id="istoric"></div>
+      </section>
+    </aside>
   </div>
 
   <footer class="subsol">
@@ -31,5 +120,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.2.3/dist/lightweight-charts.standalone.production.js"></script>
 <script src="/grafic.js"></script>
+<script src="/panou.js"></script>
 </body>
 </html>

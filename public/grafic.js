@@ -190,6 +190,17 @@
   });
   function improspateazaAntet() {
     if (!subCursor) scrieOhlc(lumanari[lumanari.length - 1]);
+    anuntaPretul();
+  }
+
+  /* Panoul lateral are nevoie de prețul curent ca să calculeze câștigul și
+     poziția acului. Îl trimitem ca eveniment, ca cele două fișiere să rămână
+     independente. */
+  function anuntaPretul() {
+    if (!lumanari.length) return;
+    document.dispatchEvent(new CustomEvent("autobot:pret", {
+      detail: lumanari[lumanari.length - 1].close
+    }));
   }
 
   /* ---------- 1. istoricul commitat ---------- */

@@ -78,9 +78,16 @@ body {
 .ohlc .dif.sus { color: var(--sus); }
 .ohlc .dif.jos { color: var(--jos); }
 
-/* ---- graficul ---- */
+/* ---- corpul: grafic + panou ---- */
 
-.grafic-invelis { position: relative; flex: 1; min-height: 0; }
+.corp {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: stretch;
+}
+
+.grafic-invelis { position: relative; flex: 1; min-width: 0; min-height: 0; }
 
 #grafic { position: absolute; inset: 0; }
 
@@ -153,4 +160,196 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .live.activ::before { animation: none; }
+}
+
+/* ================= panoul lateral ================= */
+
+.panou {
+  width: 21rem;
+  flex: 0 0 21rem;
+  overflow-y: auto;
+  border-left: 1px solid var(--line);
+  background: var(--bara);
+  display: flex;
+  flex-direction: column;
+}
+
+.avertisment {
+  padding: .5rem .9rem;
+  background: rgba(210, 153, 34, .14);
+  color: #d29922;
+  border-bottom: 1px solid var(--line);
+  font-size: .6875rem;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.bloc {
+  padding: .95rem 1rem 1.1rem;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: .7rem;
+}
+.bloc:last-child { border-bottom: 0; }
+
+.titlu-bloc {
+  margin: 0;
+  font-size: .6875rem;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.n {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+.mic { font-weight: 400; color: var(--muted); font-size: .6875rem; letter-spacing: 0; text-transform: none; }
+
+/* ---- starea poziției ---- */
+
+.stare-poz { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+
+.pastila {
+  display: inline-block;
+  padding: .15rem .5rem;
+  border-radius: 3px;
+  font-size: .6875rem;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+.pastila.long   { background: rgba(38,166,154,.16);  color: var(--sus); }
+.pastila.short  { background: rgba(239,83,80,.16);   color: var(--jos); }
+.pastila.goala  { background: var(--line);           color: var(--muted); }
+
+.poz-varsta { font-size: .75rem; color: var(--muted); }
+
+/* ---- liste de perechi etichetă/valoare ---- */
+
+.perechi { margin: 0; display: flex; flex-direction: column; gap: .4rem; }
+
+.perechi > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: .75rem;
+}
+
+.perechi dt { color: var(--muted); font-size: .8125rem; }
+.perechi dd { margin: 0; font-size: .875rem; text-align: right; white-space: nowrap; }
+
+.perechi .separator { display: block; height: 1px; background: var(--line); margin: .15rem 0; }
+
+.sus { color: var(--sus); }
+.jos { color: var(--jos); }
+
+/* ---- măsura SL — preț — TP ---- */
+
+.masura { display: flex; flex-direction: column; gap: .3rem; margin-top: .1rem; }
+
+.masura-bara {
+  position: relative;
+  height: 5px;
+  border-radius: 3px;
+  background: linear-gradient(to right, rgba(239,83,80,.35), var(--line) 45%, rgba(38,166,154,.35));
+  overflow: visible;
+}
+
+.masura-ac {
+  position: absolute;
+  top: -3px;
+  width: 2px;
+  height: 11px;
+  background: var(--text);
+  border-radius: 1px;
+  transform: translateX(-1px);
+}
+
+.masura-umplere { display: none; }
+
+.masura-capete {
+  display: flex;
+  justify-content: space-between;
+  font-size: .6875rem;
+  color: var(--muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+/* ---- băncile ---- */
+
+.banca {
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: .65rem .75rem;
+  display: flex;
+  flex-direction: column;
+  gap: .35rem;
+}
+
+.banca-cap { display: flex; align-items: center; justify-content: space-between; }
+
+.banca-nume {
+  font-size: .6875rem;
+  font-weight: 600;
+  letter-spacing: .08em;
+}
+.banca-nume.long  { color: var(--sus); }
+.banca-nume.short { color: var(--jos); }
+
+.banca-stare {
+  font-size: .6875rem;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: .05rem .45rem;
+}
+
+.banca-sold { font-size: 1.0625rem; }
+
+.banca-linii {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: .15rem .5rem;
+  font-size: .75rem;
+  color: var(--muted);
+}
+.banca-linii .n { color: var(--text); }
+
+/* ---- istoric ---- */
+
+.istoric { display: flex; flex-direction: column; gap: .3rem; }
+
+.tranz {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: baseline;
+  gap: .5rem;
+  padding: .35rem 0;
+  border-bottom: 1px solid var(--line);
+  font-size: .75rem;
+}
+.tranz:last-child { border-bottom: 0; }
+
+.tranz .cand { color: var(--muted); font-family: ui-monospace, monospace; }
+.tranz .motiv { color: var(--muted); }
+.tranz .rez { font-family: ui-monospace, monospace; font-variant-numeric: tabular-nums; font-weight: 600; }
+
+.gol { color: var(--muted); font-size: .8125rem; }
+.nota-bloc { margin: 0; color: var(--muted); font-size: .6875rem; line-height: 1.45; }
+
+/* ---- pe ecran îngust panoul trece sub grafic ---- */
+
+@media (max-width: 60rem) {
+  .corp { flex-direction: column; }
+  .grafic-invelis { flex: 0 0 60vh; }
+  .panou {
+    width: auto;
+    flex: 1 1 auto;
+    border-left: 0;
+    border-top: 1px solid var(--line);
+  }
 }
