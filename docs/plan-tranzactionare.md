@@ -167,7 +167,7 @@ Fără astea, simularea minte în favoarea strategiei.
 
 0. ~~verificare cPanel~~ — **gata**, totul trece
 1. ~~bază de date + API + desenare triunghiuri~~ — **gata**
-2. cron orar + motor de semnale + cele două bănci simulate + jurnal
+2. ~~cron orar + motor de semnale + cele două bănci simulate + jurnal~~ — **gata**
 3. protecție cu parolă a paginii (cPanel, `.htpasswd`)
 4. analiza liniilor desenate → model matematic
 5. bani reali — doar după luni de simulare
@@ -189,18 +189,21 @@ o perioadă nevăzută.
 - Comision **0,075% pe parte**.
 - **Linii de unică folosință**, arhivate după ce trag.
 
-## Presupuneri de lămurit înainte de etapa 2 (motorul)
+## Presupuneri confirmate de utilizator
 
-Nu blochează etapa 1. Le notez ca să nu treacă neobservate.
+1. **Spargere cu lumânare de culoarea greșită** — o roșie care închide peste linia
+   de sus nu e semnal. Triunghiul **rămâne armat** până apare o lumânare cu ambele
+   condiții.
+2. **Prețul de execuție** — intrarea și SL-ul la **deschiderea lumânării
+   următoare**; TP-ul exact la `intrare × 1,01`, fiind ordin limită.
 
-1. **Spargere cu lumânare de culoarea greșită.** Dacă o lumânare *roșie* închide
-   peste linia de sus, nu e semnal de long (lipsește condiția de culoare). Presupun
-   că **triunghiul rămâne armat** până apare o lumânare care îndeplinește ambele
-   condiții. De confirmat.
-2. **Prețul de execuție.** Presupun: intrarea și SL-ul se execută la **deschiderea
-   lumânării următoare** (semnalul se află abia după închidere, deci un ordin la
-   piață s-ar executa acolo); TP-ul se execută **exact la `intrare × 1,01`**, fiind
-   un ordin limită. De confirmat.
+## Adăugat după prima folosire pe date reale
+
+**Triunghiul expiră la vârf.** Liniile fiind convergente, se intersectează cândva.
+Dacă prețul n-a spart până atunci, după intersecție „linia de sus" ajunge sub „cea
+de jos" — iar rolurile fiind înghețate la desenare, orice lumânare verde ar
+declanșa un long fals. Motorul calculează vârful și marchează triunghiul `sters`,
+cu explicație în `nota`.
 
 ## Cerut de utilizator, de făcut mai târziu
 

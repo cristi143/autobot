@@ -1,13 +1,34 @@
 # autobot.dunitru.ro — context de lucru
 
-Proiect nou: platformă de tranzacționare automată pe Binance.
-Stadiu actual: **grafic de lumânări 1h pentru ZECUSDC, live** (stil TradingView),
-plus lanțul de deploy. Motorul botului nu există încă.
+Platformă de tranzacționare automată pe Binance, ZECUSDC pe 1h.
+
+## Stare la 2 septembrie 2026: SISTEMUL RULEAZĂ
+
+Tot lanțul e viu, în simulare cu bani fictivi:
+
+| Piesă | Unde | Ce face |
+|---|---|---|
+| Grafic live | `public/grafic.js` | lumânări 1h, istoric + punte REST + WebSocket |
+| Desen | `public/desen.js` | utilizatorul trage triunghiuri, se salvează |
+| API | `public/api/` | `stare.php`, `triunghiuri.php`, `_comun.php` |
+| Panou | `public/panou.js` | poziție, triunghi, bănci, istoric |
+| **Motor** | `motor/motor.php` | **cron orar, ia deciziile** |
+| Bază de date | MySQL `marcelpa_autobot` | 8 tabele, vezi `baza-de-date/schema.sql` |
+
+- **Cron activ:** minutul 1 al fiecărei ore,
+  `/opt/cpanel/ea-php83/root/usr/bin/php /home/marcelpa/autobot-motor/motor.php`
+- **Configurarea** (parole, cheie API): `/home/marcelpa/autobot-config.php`,
+  în afara zonei publice, niciodată în git.
+- **Băncile pornesc** cu 500 USDC (long) și echivalentul în ZEC (short).
+
+**Etapele 0, 1 și 2 sunt gata.** Rămân: parola pe site (3), analiza liniilor
+pentru un model matematic (4), bani reali (5) — și o pagină de statistici,
+cerută separat.
 
 ## La începutul fiecărei sesiuni
-Citește **`DEPLOY.md`** (hosting, deploy, cum e construit graficul) și
-**`docs/plan-tranzactionare.md`** (unde mergem: liniile de trend devin semnale,
-cele două bănci simulate, deciziile deja luate și cele rămase).
+Citește **`docs/plan-tranzactionare.md`** — regulile de tranzacționare exacte,
+sursa de adevăr. Apoi **`DEPLOY.md`** (hosting, deploy, cum e construit
+graficul) și **`motor/README.md`** (cum funcționează motorul și cronul).
 
 ## Reguli de lucru
 - Tot ce ajunge pe web stă în **`public/`**. Deploy-ul nu copiază nimic altceva.
@@ -20,7 +41,32 @@ cele două bănci simulate, deciziile deja luate și cele rămase).
   `git -c user.name="Cristi Iorga" -c user.email="cristi.s.iorga@gmail.com"`
 - În commit nu se pune identificatorul de model.
 
-## Graficul (starea actuală a site-ului)
+## Reguli de tranzacționare, pe scurt
+Detaliile și motivele sunt în `docs/plan-tranzactionare.md` — **nu le reinventa**.
+
+- **Triunghi** = două linii convergente. Trage **o singură dată**, apoi ambele
+  linii trec în istoric. Fără triunghi activ, motorul nu face nimic.
+- **LONG**: lumânare verde închide peste linia de sus. **SHORT**: roșie sub cea de jos.
+- **TP**: +1%, urmărit în timp real (pe maximul/minimul orei — un TP e un ordin
+  limită la un preț cunoscut). **SL**: lumânarea închide înapoi peste linia de intrare.
+- **TP se verifică înaintea SL**, și nu din preferință: SL-ul se judecă pe
+  închidere, TP-ul oricând în timpul orei, deci TP-ul e primul prin construcție.
+- **Triunghiul expiră la vârf** dacă n-a fost spart: după intersecție, „sus"
+  ajunge sub „jos" și orice lumânare verde ar da un long fals.
+- Comision 0,075% pe parte. O poziție odată; cât e deschisă, nu se caută semnale.
+
+## Capcane deja plătite
+- **Timpul e BIGINT în milisecunde UTC peste tot.** Serverul are fusul
+  Europe/Bucharest. Orice `DATETIME` sau formatare fără UTC explicit aliniază
+  lumânările greșit cu 2–3 ore, tăcut.
+- **`serialize_precision` e mare pe server** — fără `ini_set('serialize_precision','-1')`
+  din `_comun.php`, json_encode scrie 0.075 ca 0.07499999999999999722…
+- **Atributul `hidden` nu ascunde** elementele stilate cu `display:flex`; de aceea
+  există `[hidden] { display: none !important; }` în style.css.
+- Verificarea matematicii: `php motor/probe/matematica.php` — 26 de probe, fără
+  bază de date. Rulează-le după orice atingere a formulelor.
+
+## Graficul
 - Pagina principală = grafic de lumânări 1h **live**, cu `lightweight-charts` de la
   TradingView, luat de pe jsDelivr (versiune fixată: 4.2.3).
 - **Trei straturi de date:** JSON commitat (istoric) + Binance REST (puntea până în

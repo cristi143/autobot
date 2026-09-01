@@ -59,25 +59,36 @@ vezi `.gitignore`.
 
 ```
 autobot/
-├── .cpanel.yml     rețeta de deploy
+├── .cpanel.yml          rețeta de deploy
 ├── CLAUDE.md
-├── DEPLOY.md       acest fișier
+├── DEPLOY.md            acest fișier
 ├── README.md
+├── baza-de-date/
+│   ├── schema.sql       cele 8 tabele
+│   ├── config.exemplu.php
+│   └── README.md        cum se pregătește baza
+├── motor/               → /home/marcelpa/autobot-motor/ (ÎN AFARA webului)
+│   ├── motor.php        motorul, rulat din cron orar
+│   ├── probe/matematica.php
+│   └── README.md
 ├── tools/
-│   └── agrega_1h.py    agregă 1m -> 1h, scrie public/data/<SIMBOL>-1h.json
-└── public/         ← TOT ce ajunge pe autobot.dunitru.ro
-    ├── index.html      graficul de lumânări
-    ├── grafic.js       randarea (lightweight-charts de la TradingView, prin CDN)
-    ├── style.css
-    ├── data/
-    │   └── ZECUSDC-1h.json   6.856 lumânări, ~620 KB
-    ├── favicon.svg
-    ├── robots.txt  (noindex — aplicație privată)
-    └── .htaccess
+│   └── agrega_1h.py     agregă 1m -> 1h în public/data/
+└── public/              → document root
+    ├── index.html       graficul + panoul lateral
+    ├── grafic.js        lumânări (lightweight-charts, prin CDN)
+    ├── desen.js         desenarea triunghiurilor
+    ├── panou.js         poziție, bănci, istoric
+    ├── api/             _comun.php · stare.php · triunghiuri.php
+    ├── data/            ZECUSDC-1h.json — istoricul adânc
+    ├── style.css, favicon.svg, robots.txt, .htaccess
 ```
 
-Când apare motorul botului, va sta într-un folder frate (ex. `engine/`) care **nu**
-se copiază pe server — deploy-ul atinge doar `public/`.
+**Motorul nu ajunge în document root.** Deploy-ul îl copiază separat, în
+`/home/marcelpa/autobot-motor/`, unde nu e accesibil prin web. Cronul îl cheamă
+de acolo.
+
+**Configurarea** (parola bazei, cheia de API) stă în `/home/marcelpa/autobot-config.php`,
+cu un nivel deasupra a tot. Nu e în git și nu e accesibilă prin web.
 
 ---
 
