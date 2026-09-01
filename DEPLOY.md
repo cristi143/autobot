@@ -86,9 +86,38 @@ se copiază pe server — deploy-ul atinge doar `public/`.
 Pagina principală arată lumânări de 1h în stilul TradingView — chiar biblioteca lor
 open-source, `lightweight-charts` v4.2.3, încărcată de pe jsDelivr.
 
-### Cum se regenerează datele
+### Cele trei straturi de date
 
-Datele **nu** se citesc live de la Binance; se pregătesc local și se comit ca JSON:
+Graficul e continuu de la primul minut de istoric până la lumânarea în formare:
+
+| Strat | Sursă | Acoperă |
+|---|---|---|
+| **Istoric** | `public/data/<SIMBOL>-1h.json`, commitat | de la începutul datelor tale |
+| **Punte** | Binance REST `/api/v3/klines` | golul dintre JSON și prezent |
+| **Live** | Binance WebSocket `@kline_1h` | lumânarea curentă, în timp real |
+
+**De ce merge fără server:** Binance permite CORS pe datele publice de piață
+(`access-control-allow-origin: *`) și nu cere cheie API pentru ele. Browserul cere
+direct. Site-ul rămâne static — nimic de rulat pe ClausWeb.
+
+Puntea se pagineaza singură (1000 de lumânări pe cerere), deci nu contează cât de
+vechi e JSON-ul: dacă a rămas în urmă cu o lună sau cu un an, tot se leagă.
+
+**Rezistență la deconectări:** WebSocket-ul se reconectează cu backoff exponențial
+(1s, 2s, 4s… max 30s), iar înainte de fiecare reconectare cere prin REST ce s-a
+pierdut. La revenirea în tab (`visibilitychange`) se resincronizează, pentru că
+browserele suspendă WebSocket-urile în taburile de fundal. Dacă Binance e complet
+inaccesibil, graficul rămâne pe istoricul local și indicatorul arată „doar istoric" —
+nu se albește pagina.
+
+Indicatorul din antet: **live** (verde, pulsând) · **se conectează / reconectare**
+(chihlimbar) · **doar istoric** (gri).
+
+### Cum se regenerează istoricul
+
+JSON-ul commitat e doar baza de istoric — graficul rămâne la zi singur, prin punte
+și WebSocket. Îl regenerezi doar când ai descărcat date noi de 1 minut (pentru
+backtesting, de exemplu):
 
 ```bash
 python3 tools/agrega_1h.py ZECUSDC          # -> public/data/ZECUSDC-1h.json
@@ -106,11 +135,13 @@ comiți JSON-ul actualizat și dai deploy.
 1. `python3 tools/agrega_1h.py BTCUSDT`
 2. în `public/grafic.js`, schimbi `var SIMBOL = "ZECUSDC";`
 
-(Un selector de simboluri în pagină e următorul pas firesc — deocamdată e o
-singură pereche, deliberat.)
+(Un selector de simboluri și de interval în pagină e următorul pas firesc —
+deocamdată e o singură pereche, deliberat.)
 
-### De ce JSON commitat și nu API live
+### De ce istoric commitat și nu totul din REST
 
-Site-ul e static, iar ClausWeb n-are cum să țină un proces care vorbește cu Binance.
-Un JSON de ~620 KB, comprimat de Apache la sub 200 KB, e soluția simplă și robustă.
-Când va exista motorul pe VPS, el poate scrie datele direct.
+Binance REST dă maximum 1000 de lumânări pe cerere. Cele ~6.900 de ore de istoric
+ar însemna 7 cereri la fiecare încărcare de pagină, cu latență și risc de limitare
+de rată. JSON-ul commitat (~620 KB, sub 200 KB după compresia Apache) se încarcă
+dintr-o dată și funcționează chiar dacă Binance e inaccesibil. Puntea aduce doar
+diferența.

@@ -1,8 +1,8 @@
 # autobot.dunitru.ro — context de lucru
 
 Proiect nou: platformă de tranzacționare automată pe Binance.
-Stadiu actual: **grafic de lumânări 1h pentru ZECUSDC** (stil TradingView), plus
-lanțul de deploy. Motorul botului nu există încă.
+Stadiu actual: **grafic de lumânări 1h pentru ZECUSDC, live** (stil TradingView),
+plus lanțul de deploy. Motorul botului nu există încă.
 
 ## La începutul fiecărei sesiuni
 Citește **`DEPLOY.md`** — hosting, deploy, și împărțirea arhitecturii
@@ -20,12 +20,18 @@ Citește **`DEPLOY.md`** — hosting, deploy, și împărțirea arhitecturii
 - În commit nu se pune identificatorul de model.
 
 ## Graficul (starea actuală a site-ului)
-- Pagina principală = grafic de lumânări 1h, cu `lightweight-charts` de la
+- Pagina principală = grafic de lumânări 1h **live**, cu `lightweight-charts` de la
   TradingView, luat de pe jsDelivr (versiune fixată: 4.2.3).
-- **Datele sunt un JSON commitat**, `public/data/<SIMBOL>-1h.json`, generat de
-  `tools/agrega_1h.py` din `../historical_data/`. Nu se citește live de la Binance —
-  site-ul e static.
-- După date noi: `python3 tools/agrega_1h.py ZECUSDC`, commit JSON-ul, deploy.
+- **Trei straturi de date:** JSON commitat (istoric) + Binance REST (puntea până în
+  prezent) + WebSocket (lumânarea curentă). Detalii în DEPLOY.md §5.
+- **Browserul vorbește direct cu Binance** — datele publice de piață permit CORS și
+  nu cer cheie API. Site-ul rămâne static; nu e nevoie de nimic pe server. Nu
+  propune un backend pentru asta.
+- **Cheile API rămân interzise aici oricum.** Datele publice n-au nevoie de ele; iar
+  orice endpoint care cere semnătură (cont, ordine) NU are ce căuta într-o pagină
+  din browser — cheia ar fi vizibilă oricui.
+- JSON-ul se regenerează doar când apar date noi de 1 minut:
+  `python3 tools/agrega_1h.py ZECUSDC`, commit, deploy. Graficul rămâne la zi singur.
 - Simbolul afișat se schimbă din `var SIMBOL` în `public/grafic.js`.
 - Fișierele 1m rămân în afara git-ului; doar JSON-ul agregat intră.
 
