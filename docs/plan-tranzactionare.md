@@ -202,6 +202,12 @@ Nu blochează etapa 1. Le notez ca să nu treacă neobservate.
    piață s-ar executa acolo); TP-ul se execută **exact la `intrare × 1,01`**, fiind
    un ordin limită. De confirmat.
 
+## Cerut de utilizator, de făcut mai târziu
+
+- **Pagină separată de statistici** — câte ieșiri pe TP față de SL, cel mai lung
+  șir de pierderi, timp mediu în piață, distribuția rezultatelor. Ține deliberat
+  de altă pagină: panoul lateral rămâne pentru starea curentă, nu pentru analiză.
+
 ## Ce urmează
 
 TP-ul de 1% e fix deocamdată. Utilizatorul vrea să-l facă mai târziu configurabil

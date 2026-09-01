@@ -3,6 +3,8 @@
 *.key
 secrets/
 config/local*.py
+config.php
+autobot-config.php
 
 # Date de piață (7.5 GB în ../historical_data — stau pe disc, nu în git)
 historical_data/
