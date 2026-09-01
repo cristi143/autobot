@@ -20,11 +20,37 @@ rula pe shared hosting" e adevărată pentru strategii care reacționează în s
 **Nu se aplică aici:** pe 1h e nevoie de o singură verificare pe oră, adică un cron —
 exact ce are cPanel. Fără VPS, fără server local.
 
-Depinde de două lucruri de verificat în cPanel înainte de a începe:
-- **Cron Jobs** (secțiunea Advanced)
-- extensiile PHP **`curl`** și **`openssl`** (Select PHP Version → Extensions)
+### Mediul serverului — verificat pe 2 septembrie 2026
 
-Dacă lipsesc, planul se mută pe varianta locală.
+Rulat cu o pagină de probă direct pe `autobot.dunitru.ro`. **Totul e în regulă:**
+
+| | |
+|---|---|
+| PHP | **8.1.34**, SAPI litespeed |
+| Extensii | `curl`, `openssl`, `json`, `pdo_mysql`, `hash` — toate active |
+| Conexiune la Binance | **funcționează** de pe server (HTTP 200, lumânare validă) |
+| Fus orar al serverului | **Europe/Bucharest** |
+| IP de ieșire | **86.107.43.56** (≠ IP-ul de intrare al site-ului, 93.114.248.158) |
+
+Rămâne de confirmat vizual doar existența secțiunii **Cron Jobs** (cPanel → Advanced).
+
+### Trei consecințe de ținut minte
+
+1. **Fusul serverului e Europe/Bucharest, dar Binance lucrează în UTC.**
+   Tot codul care formatează sau compară timpi trebuie să forțeze explicit UTC
+   (`new DateTimeZone('UTC')`, `gmdate()`). Altfel lumânările se vor alinia greșit
+   cu 2–3 ore, în funcție de ora de vară. E cea mai probabilă sursă de bug tăcut
+   din tot proiectul.
+
+2. **IP-ul de ieșire diferă de cel de intrare** și, pe shared hosting, se poate
+   schimba fără preaviz. La etapa 5, dacă punem cheia Binance pe listă albă de IP,
+   o schimbare de IP oprește tranzacționarea. De cântărit atunci: listă albă
+   (mai sigur, mai fragil) vs. fără (mai comod, mai riscant).
+
+3. **PHP 8.1 nu mai primește actualizări de securitate** (suport încheiat la finalul
+   lui 2025). Merge pentru ce facem, dar merită ridicat la 8.3 din cPanel →
+   *MultiPHP Manager*, pentru subdomeniul `autobot.dunitru.ro`. Marcel Parcel
+   rulează deja pe 8.3.
 
 ## Arhitectura
 

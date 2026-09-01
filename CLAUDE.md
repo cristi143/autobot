@@ -36,6 +36,16 @@ cele două bănci simulate, deciziile deja luate și cele rămase).
 - Simbolul afișat se schimbă din `var SIMBOL` în `public/grafic.js`.
 - Fișierele 1m rămân în afara git-ului; doar JSON-ul agregat intră.
 
+## Mediul serverului (verificat 2 sept. 2026)
+PHP 8.1.34 litespeed · `curl`, `openssl`, `json`, `pdo_mysql`, `hash` active ·
+serverul ajunge la Binance · IP de ieșire `86.107.43.56`.
+
+- **Fusul serverului e Europe/Bucharest, Binance e în UTC.** Orice formatare sau
+  comparare de timpi forțează explicit UTC (`gmdate`, `DateTimeZone('UTC')`).
+  Altfel lumânările se aliniază greșit cu 2–3 ore. Cea mai probabilă sursă de bug
+  tăcut din proiect.
+- Detalii și celelalte consecințe: `docs/plan-tranzactionare.md`.
+
 ## Reguli specifice botului
 - **Cheile API Binance nu ajung NICIODATĂ în git și nici pe ClausWeb.** Stau în
   `.env` pe mașina care rulează motorul. `.gitignore` le blochează — nu-l slăbi.
