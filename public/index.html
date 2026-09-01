@@ -64,6 +64,24 @@
         </div>
       </section>
 
+      <!-- ---------- uneltele de desen ---------- -->
+      <section class="bloc" id="unelte">
+        <h2 class="titlu-bloc">Triunghiuri</h2>
+
+        <button type="button" class="buton" id="btn-deseneaza">Desenează triunghi</button>
+        <p class="desen-mesaj" id="desen-mesaj" aria-live="polite"></p>
+
+        <div class="confirmare" id="confirmare" hidden>
+          <p id="conf-detaliu"></p>
+          <div class="confirmare-butoane">
+            <button type="button" class="buton mic" id="btn-salveaza">Salvează</button>
+            <button type="button" class="buton mic sters" id="btn-renunta">Renunță</button>
+          </div>
+        </div>
+
+        <div class="lista-triunghiuri" id="lista-triunghiuri"></div>
+      </section>
+
       <!-- ---------- triunghiul ---------- -->
       <section class="bloc">
         <h2 class="titlu-bloc">Triunghi activ</h2>
@@ -121,5 +139,6 @@
 <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.2.3/dist/lightweight-charts.standalone.production.js"></script>
 <script src="/grafic.js"></script>
 <script src="/panou.js"></script>
+<script src="/desen.js"></script>
 </body>
 </html>

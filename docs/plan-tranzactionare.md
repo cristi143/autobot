@@ -165,8 +165,8 @@ Fără astea, simularea minte în favoarea strategiei.
 
 ## Etape
 
-0. verificare cPanel (cron + extensii PHP)
-1. bază de date + API + desenare linii pe grafic, salvate
+0. ~~verificare cPanel~~ — **gata**, totul trece
+1. ~~bază de date + API + desenare triunghiuri~~ — **gata**
 2. cron orar + motor de semnale + cele două bănci simulate + jurnal
 3. protecție cu parolă a paginii (cPanel, `.htpasswd`)
 4. analiza liniilor desenate → model matematic

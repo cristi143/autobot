@@ -22,6 +22,11 @@
 
 * { box-sizing: border-box; }
 
+/* Atributul `hidden` are display:none din foaia implicita a browserului, pe care
+   orice `display` dintr-o clasa il bate. Fara linia asta, elementele ascunse din
+   cod dar stilate cu flex raman vizibile. */
+[hidden] { display: none !important; }
+
 html, body { height: 100%; }
 
 body {
@@ -353,3 +358,72 @@ body {
     border-top: 1px solid var(--line);
   }
 }
+
+/* ================= desenarea triunghiurilor ================= */
+
+.panza-desen {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;   /* devine „auto" doar în modul desen */
+  z-index: 3;
+}
+
+.buton {
+  appearance: none;
+  width: 100%;
+  padding: .45rem .7rem;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: .8125rem;
+  cursor: pointer;
+  transition: border-color .12s ease, background-color .12s ease;
+}
+.buton:hover { border-color: var(--muted); }
+.buton:focus-visible { outline: 2px solid var(--sus); outline-offset: 1px; }
+.buton.activ { border-color: var(--sus); color: var(--sus); }
+.buton.mic { width: auto; flex: 1; padding: .35rem .6rem; font-size: .75rem; }
+.buton.sters { color: var(--muted); }
+
+.desen-mesaj { margin: 0; font-size: .75rem; color: var(--muted); min-height: 1em; line-height: 1.4; }
+.desen-mesaj.rau { color: var(--jos); }
+
+.confirmare {
+  border: 1px solid var(--sus);
+  border-radius: 4px;
+  padding: .6rem .7rem;
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+}
+.confirmare p { margin: 0; font-size: .75rem; color: var(--muted); line-height: 1.45; }
+.confirmare-butoane { display: flex; gap: .4rem; }
+
+.lista-triunghiuri { display: flex; flex-direction: column; gap: .2rem; }
+
+.rand-triunghi {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .5rem;
+  padding: .3rem 0;
+  border-bottom: 1px solid var(--line);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: .75rem;
+}
+.rand-triunghi:last-child { border-bottom: 0; }
+
+.mic-buton {
+  appearance: none;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  font-size: .6875rem;
+  cursor: pointer;
+  padding: .1rem .3rem;
+  border-radius: 3px;
+}
+.mic-buton:hover { color: var(--jos); background: rgba(239,83,80,.12); }

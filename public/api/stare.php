@@ -1,0 +1,109 @@
+<?php
+/**
+ * Starea pe care o afișează panoul lateral: poziție, triunghi activ, bănci,
+ * ultimele tranzacții.
+ *
+ * Deocamdată pozițiile și tranzacțiile sunt mereu goale — motorul, care le
+ * produce, vine la etapa 2. Băncile și triunghiurile sunt însă reale, citite
+ * din baza de date.
+ */
+
+declare(strict_types=1);
+require __DIR__ . '/_comun.php';
+
+$pdo   = baza();
+$acum  = acum_ms();
+$reguli = config()['reguli'] ?? [];
+
+/* ---- triunghiul activ, cu prețurile liniilor la ora curentă ---- */
+
+$triunghi = null;
+$rand = $pdo->query("SELECT id, desenat_la FROM triunghiuri
+                     WHERE stare = 'activ' ORDER BY desenat_la DESC LIMIT 1")->fetch();
+if ($rand) {
+    $st = $pdo->prepare("SELECT rol, t1, p1, t2, p2 FROM linii WHERE triunghi_id = ?");
+    $st->execute([$rand['id']]);
+
+    $preturi = [];
+    foreach ($st->fetchAll() as $l) {
+        $preturi[$l['rol']] = round(pret_linie($l, $acum), 8);
+    }
+
+    $triunghi = [
+        'exista'  => true,
+        'id'      => (int)$rand['id'],
+        'sus'     => $preturi['sus'] ?? null,
+        'jos'     => $preturi['jos'] ?? null,
+        'desenat' => (int)$rand['desenat_la'],
+    ];
+}
+
+/* ---- poziția deschisă (nu există până la etapa 2) ---- */
+
+$pozitie = ['deschisa' => false];
+
+$p = $pdo->query("SELECT p.*, l.t1, l.p1, l.t2, l.p2
+                  FROM pozitii p
+                  JOIN linii l ON l.id = p.linie_sl_id
+                  WHERE p.stare = 'deschisa' LIMIT 1")->fetch();
+if ($p) {
+    $pozitie = [
+        'deschisa'   => true,
+        'tip'        => $p['banca'],
+        'banca'      => $p['banca'],
+        'intrare'    => (float)$p['intrare_pret'],
+        'intrare_ms' => (int)$p['intrare_ora'],
+        'cantitate'  => (float)$p['cantitate'],
+        'tp'         => (float)$p['tp_pret'],
+        // SL-ul nu e un preț stocat: e linia, evaluată acum și cu o oră în urmă,
+        // ca panoul să poată arăta încotro se mișcă.
+        'sl_acum'          => round(pret_linie($p, $acum), 8),
+        'sl_ora_trecuta'   => round(pret_linie($p, $acum - 3600000), 8),
+    ];
+}
+
+/* ---- băncile ---- */
+
+$banci = [];
+foreach ($pdo->query("SELECT * FROM banci") as $b) {
+    $usdc = (float)$b['sold_usdc'];
+    $zec  = (float)$b['sold_zec'];
+    $banci[$b['banca']] = [
+        'moneda'    => $zec > 0 ? 'ZEC' : 'USDC',
+        'sold_usdc' => $usdc,
+        'sold_zec'  => $zec,
+    ];
+}
+
+/* ---- ultimele tranzacții închise ---- */
+
+$istoric = [];
+foreach ($pdo->query("SELECT banca, iesire_ora, motiv_iesire, rezultat_proc
+                      FROM pozitii WHERE stare = 'inchisa'
+                      ORDER BY iesire_ora DESC LIMIT 10") as $t) {
+    $istoric[] = [
+        'cand'     => (int)$t['iesire_ora'],
+        'banca'    => $t['banca'],
+        'motiv'    => strtoupper((string)$t['motiv_iesire']),
+        'rezultat' => $t['rezultat_proc'] === null ? null : (float)$t['rezultat_proc'],
+    ];
+}
+
+/* ---- ultima rulare a cronului: „tace pentru că n-a fost nimic" vs. „e mort" ---- */
+
+$ultimul_cron = $pdo->query("SELECT pornit_la, rezultat FROM jurnal_cron
+                             ORDER BY pornit_la DESC LIMIT 1")->fetch() ?: null;
+
+raspunde([
+    'ok'       => true,
+    'acum'     => $acum,
+    'motor'    => ['implementat' => false, 'ultima_rulare' => $ultimul_cron],
+    'pozitie'  => $pozitie,
+    'triunghi' => $triunghi ?? ['exista' => false],
+    'banci'    => $banci,
+    'istoric'  => $istoric,
+    'reguli'   => [
+        'tp_procent'       => (float)($reguli['tp_procent'] ?? 1.0),
+        'comision_o_parte' => (float)($reguli['comision_o_parte'] ?? 0.075),
+    ],
+]);

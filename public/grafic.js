@@ -368,6 +368,45 @@
       }
     });
 
+  /* ---------- ce are nevoie stratul de desen ---------- */
+
+  /* Liniile de trend se prelungesc dincolo de ultima lumânare, iar
+     timeToCoordinate nu poate răspunde pentru momente fără lumânare. De aceea
+     lucrăm în coordonate logice: indicele lumânării, care se poate extrapola
+     liniar în viitor pentru că intervalul e fix, o oră. */
+  window.Autobot = {
+    chart: chart,
+    serie: serieLum,
+    lumanari: function () { return lumanari; },
+
+    /** moment (ms) -> indice logic pe axa graficului, extrapolat în afara datelor */
+    msLaIndice: function (ms) {
+      if (!lumanari.length) return null;
+      var s0 = lumanari[0].time, sN = lumanari[lumanari.length - 1].time;
+      var s = Math.floor(ms / 1000);
+      if (s <= s0) return (s - s0) / 3600;
+      if (s >= sN) return (lumanari.length - 1) + (s - sN) / 3600;
+      var i = indice[Math.floor(s / 3600) * 3600];
+      if (i !== undefined) return i;
+      return (lumanari.length - 1) + (s - sN) / 3600;   // gol în date
+    },
+
+    /** indice logic -> moment (ms) */
+    indiceLaMs: function (idx) {
+      if (!lumanari.length) return null;
+      var sN = lumanari[lumanari.length - 1].time;
+      var n = lumanari.length - 1;
+      return (idx <= n)
+        ? (lumanari[Math.max(0, Math.round(idx))].time) * 1000
+        : (sN + (idx - n) * 3600) * 1000;
+    },
+
+    pretCurent: function () {
+      return lumanari.length ? lumanari[lumanari.length - 1].close : null;
+    }
+  };
+
+
   /* ---------- tema sistemului ---------- */
 
   window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", function () {
