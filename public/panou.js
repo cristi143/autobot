@@ -1,8 +1,8 @@
 /* Panoul lateral: poziție, triunghi activ, bănci, istoric.
  *
- * Datele vin de la `api/stare.php`. Băncile și triunghiurile sunt reale;
- * pozițiile și istoricul rămân goale până când motorul (etapa 2) începe să le
- * producă — panoul arată atunci „fără poziție", ceea ce e adevărat.
+ * Datele vin de la `api/stare.php`. Banda de sus spune și când a rulat ultima
+ * dată motorul: fără asta, un cron mort ar arăta exact ca unul liniștit, care
+ * n-a avut ce face.
  *
  * Prețul curent nu vine de la server, ci din grafic, prin evenimentul
  * `autobot:pret` — ca „Preț acum" și câștigul curent să se miște în timp real
@@ -65,7 +65,7 @@
     if (!p.deschisa) {
       tip.textContent = "fără poziție";
       tip.className = "pastila goala";
-      varsta.textContent = S.motor.implementat ? "" : "motorul vine la etapa 2";
+      varsta.textContent = "aștept o spargere";
       ["poz-intrare", "poz-acum", "poz-tp", "poz-sl", "poz-pl"].forEach(function (id) {
         $(id).textContent = "—";
         $(id).classList.remove("sus", "jos");
@@ -149,7 +149,7 @@
   function redaIstoric() {
     var gazda = $("istoric");
     if (!S.istoric.length) {
-      gol(gazda, S.motor.implementat ? "Nicio tranzacție încă." : "Nimic încă — motorul vine la etapa 2.");
+      gol(gazda, "Nicio tranzacție încă.");
       return;
     }
     gazda.textContent = "";
@@ -191,9 +191,18 @@
         };
         var av = document.querySelector(".avertisment");
         if (av) {
-          av.textContent = S.motor.implementat
-            ? "Simulare — bani fictivi"
-            : "Motorul nu e încă implementat — pozițiile apar la etapa 2";
+          var u = S.motor.ultima_rulare;
+          if (S.motor.intarziat) {
+            // Fără asta, un motor mort ar arăta ca unul liniștit.
+            av.textContent = u
+              ? "Motorul n-a mai rulat din " + candUTC(u.pornit_la) + " UTC — verifică cronul"
+              : "Motorul n-a rulat niciodată — verifică cronul";
+            av.classList.add("rau");
+          } else {
+            av.textContent = "Simulare cu bani fictivi · ultima verificare " +
+                             candUTC(u.pornit_la) + " UTC";
+            av.classList.remove("rau");
+          }
         }
         redaTot();
       })

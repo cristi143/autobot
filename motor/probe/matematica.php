@@ -75,6 +75,30 @@ verifica('maximul a atins TP-ul', $atinsTP, true);
 verifica('închiderea ar fi dat și SL', $inchidere < $linieSL, true);
 verifica('câștigă TP-ul (se verifică primul)', $atinsTP, true);
 
+
+echo "\n=== 6. vârful triunghiului ===\n";
+function varfulTriunghiului(array $sus, array $jos): ?int {
+    $m1 = ((float)$sus['p2'] - (float)$sus['p1']) / ((int)$sus['t2'] - (int)$sus['t1']);
+    $m2 = ((float)$jos['p2'] - (float)$jos['p1']) / ((int)$jos['t2'] - (int)$jos['t1']);
+    if (abs($m1 - $m2) < 1e-15) return null;
+    $b1 = (float)$sus['p1'] - $m1 * (int)$sus['t1'];
+    $b2 = (float)$jos['p1'] - $m2 * (int)$jos['t1'];
+    return (int)round(($b2 - $b1) / ($m1 - $m2));
+}
+$O = 3600000;
+// sus coboară de la 900 la 860 în 10 ore; jos urcă de la 800 la 840 tot atunci
+// se întâlnesc la mijloc, la ora 12.5, în punctul 850
+$sus = ['t1'=>0,'p1'=>900.0,'t2'=>10*$O,'p2'=>860.0];
+$jos = ['t1'=>0,'p1'=>800.0,'t2'=>10*$O,'p2'=>840.0];
+$v = varfulTriunghiului($sus, $jos);
+verifica('vârful, în ore de la început', $v / $O, 12.5, 1e-9);
+verifica('la vârf, cele două linii coincid',
+    abs(pretLinie($sus, $v) - pretLinie($jos, $v)) < 1e-6, true);
+verifica('înainte de vârf, sus e deasupra', pretLinie($sus, 5*$O) > pretLinie($jos, 5*$O), true);
+verifica('DUPĂ vârf, sus ajunge dedesubt', pretLinie($sus, 20*$O) < pretLinie($jos, 20*$O), true);
+$paralele = varfulTriunghiului($sus, ['t1'=>0,'p1'=>800.0,'t2'=>10*$O,'p2'=>760.0]);
+verifica('linii paralele: fără vârf', $paralele === null, true);
+
 echo "\n" . str_repeat('-', 68) . "\n";
 printf("%d trecute, %d căzute\n", $treceri, $caderi);
 exit($caderi > 0 ? 1 : 0);

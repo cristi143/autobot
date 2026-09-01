@@ -89,15 +89,27 @@ foreach ($pdo->query("SELECT banca, iesire_ora, motiv_iesire, rezultat_proc
     ];
 }
 
-/* ---- ultima rulare a cronului: „tace pentru că n-a fost nimic" vs. „e mort" ---- */
+/* ---- ultima rulare a cronului ----
+   Un cron mort arată exact ca unul care n-a avut ce face. Singura deosebire e
+   cât timp a trecut de la ultima rulare: motorul scrie în jurnal de fiecare
+   dată, chiar și când nu face nimic. Peste două ore fără nicio urmă, ceva e
+   stricat. */
 
-$ultimul_cron = $pdo->query("SELECT pornit_la, rezultat FROM jurnal_cron
-                             ORDER BY pornit_la DESC LIMIT 1")->fetch() ?: null;
+$c = $pdo->query("SELECT pornit_la, rezultat FROM jurnal_cron
+                  ORDER BY pornit_la DESC LIMIT 1")->fetch() ?: null;
+
+$motor = ['implementat' => true, 'ultima_rulare' => null, 'intarziat' => false];
+if ($c) {
+    $motor['ultima_rulare'] = ['pornit_la' => (int)$c['pornit_la'], 'rezultat' => $c['rezultat']];
+    $motor['intarziat'] = ($acum - (int)$c['pornit_la']) > 2 * 3600000;
+} else {
+    $motor['intarziat'] = true;   // n-a rulat niciodată
+}
 
 raspunde([
     'ok'       => true,
     'acum'     => $acum,
-    'motor'    => ['implementat' => false, 'ultima_rulare' => $ultimul_cron],
+    'motor'    => $motor,
     'pozitie'  => $pozitie,
     'triunghi' => $triunghi ?? ['exista' => false],
     'banci'    => $banci,

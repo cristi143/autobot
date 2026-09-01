@@ -160,6 +160,21 @@ function pretLinie(array $l, int $moment): float {
     return (float)$l['p1'] + $panta * ($moment - $t1);
 }
 
+/**
+ * Momentul în care două linii convergente se intersectează, sau null dacă nu se
+ * întâlnesc niciodată. După vârf, triunghiul nu mai are sens: „sus" ajunge sub
+ * „jos", iar orice lumânare verde ar declanșa un long fals.
+ */
+function varfulTriunghiului(array $sus, array $jos): ?int {
+    $m1 = ((float)$sus['p2'] - (float)$sus['p1']) / ((int)$sus['t2'] - (int)$sus['t1']);
+    $m2 = ((float)$jos['p2'] - (float)$jos['p1']) / ((int)$jos['t2'] - (int)$jos['t1']);
+    if (abs($m1 - $m2) < 1e-15) return null;          // paralele: canal, nu triunghi
+
+    $b1 = (float)$sus['p1'] - $m1 * (int)$sus['t1'];
+    $b2 = (float)$jos['p1'] - $m2 * (int)$jos['t1'];
+    return (int)round(($b2 - $b1) / ($m1 - $m2));
+}
+
 function citesteBanca(string $care): array {
     global $pdo;
     $st = $pdo->prepare("SELECT * FROM banci WHERE banca = ?");
@@ -292,6 +307,23 @@ foreach ($triunghiuri as $t) {
     $st->execute([$t['id']]);
     $linii = [];
     foreach ($st->fetchAll() as $l) { $linii[$l['rol']] = $l; }
+
+    if (!isset($linii['sus']) || !isset($linii['jos'])) {
+        spune("Triunghiul #{$t['id']} n-are ambele linii — îl sar.");
+        continue;
+    }
+
+    // Trecut de vârf, fără spargere: liniile s-au intersectat, rolurile n-ar mai
+    // însemna nimic. Îl scoatem din joc în loc să producă un semnal fals.
+    $varf = varfulTriunghiului($linii['sus'], $linii['jos']);
+    if ($varf !== null && $inchisa['ora'] >= $varf) {
+        $pdo->prepare("UPDATE triunghiuri SET stare='sters', nota=? WHERE id=?")
+            ->execute(['expirat: liniile s-au intersectat pe ' .
+                       gmdate('Y-m-d H:i', intdiv($varf, 1000)) . ' UTC fără spargere',
+                       $t['id']]);
+        spune("Triunghiul #{$t['id']} a trecut de vârf fără spargere — expirat.");
+        continue;
+    }
 
     $semnal = null;
     if ($verde && isset($linii['sus'])) {

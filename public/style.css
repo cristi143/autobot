@@ -427,3 +427,8 @@ body {
   border-radius: 3px;
 }
 .mic-buton:hover { color: var(--jos); background: rgba(239,83,80,.12); }
+
+.avertisment.rau {
+  background: rgba(239, 83, 80, .16);
+  color: var(--jos);
+}
