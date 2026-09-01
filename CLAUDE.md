@@ -5,8 +5,9 @@ Stadiu actual: **grafic de lumânări 1h pentru ZECUSDC, live** (stil TradingVie
 plus lanțul de deploy. Motorul botului nu există încă.
 
 ## La începutul fiecărei sesiuni
-Citește **`DEPLOY.md`** — hosting, deploy, și împărțirea arhitecturii
-(ce rulează pe ClausWeb vs. ce trebuie să ruleze pe VPS).
+Citește **`DEPLOY.md`** (hosting, deploy, cum e construit graficul) și
+**`docs/plan-tranzactionare.md`** (unde mergem: liniile de trend devin semnale,
+cele două bănci simulate, deciziile deja luate și cele rămase).
 
 ## Reguli de lucru
 - Tot ce ajunge pe web stă în **`public/`**. Deploy-ul nu copiază nimic altceva.
