@@ -11,6 +11,13 @@ declare(strict_types=1);
 // să nu strecoare ora Bucureștiului într-un calcul.
 date_default_timezone_set('UTC');
 
+// Serverul are serialize_precision mare, așa că json_encode scria 0.075 ca
+// 0.07499999999999999722444243843710864894092082977294921875. Valoarea era
+// corectă, dar prețurile ar fi arătat la fel, iar un om care se uită la ele
+// n-ar mai ști ce e real și ce e zgomot de virgulă mobilă. Cu -1, PHP scrie
+// cea mai scurtă formă care se citește înapoi identic.
+@ini_set('serialize_precision', '-1');
+
 const CALE_CONFIG = '/home/marcelpa/autobot-config.php';
 
 /** Răspunde cu JSON și oprește execuția. */
