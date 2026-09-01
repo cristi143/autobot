@@ -63,9 +63,14 @@ autobot/
 ├── CLAUDE.md
 ├── DEPLOY.md       acest fișier
 ├── README.md
+├── tools/
+│   └── agrega_1h.py    agregă 1m -> 1h, scrie public/data/<SIMBOL>-1h.json
 └── public/         ← TOT ce ajunge pe autobot.dunitru.ro
-    ├── index.html
+    ├── index.html      graficul de lumânări
+    ├── grafic.js       randarea (lightweight-charts de la TradingView, prin CDN)
     ├── style.css
+    ├── data/
+    │   └── ZECUSDC-1h.json   6.856 lumânări, ~620 KB
     ├── favicon.svg
     ├── robots.txt  (noindex — aplicație privată)
     └── .htaccess
@@ -73,3 +78,39 @@ autobot/
 
 Când apare motorul botului, va sta într-un folder frate (ex. `engine/`) care **nu**
 se copiază pe server — deploy-ul atinge doar `public/`.
+
+---
+
+## 5. Graficul de lumânări
+
+Pagina principală arată lumânări de 1h în stilul TradingView — chiar biblioteca lor
+open-source, `lightweight-charts` v4.2.3, încărcată de pe jsDelivr.
+
+### Cum se regenerează datele
+
+Datele **nu** se citesc live de la Binance; se pregătesc local și se comit ca JSON:
+
+```bash
+python3 tools/agrega_1h.py ZECUSDC          # -> public/data/ZECUSDC-1h.json
+```
+
+Scriptul citește `../historical_data/<SIMBOL>/candles_1m/*.csv`, grupează pe ore
+(open = primul open, high = maximul, low = minimul, close = ultimul close,
+volume = suma) și elimină ora curentă dacă e incompletă. Rulează în câteva secunde.
+
+După descărcarea de date noi cu `download_historical.py`, rulezi din nou scriptul,
+comiți JSON-ul actualizat și dai deploy.
+
+### Cum adaugi alt simbol
+
+1. `python3 tools/agrega_1h.py BTCUSDT`
+2. în `public/grafic.js`, schimbi `var SIMBOL = "ZECUSDC";`
+
+(Un selector de simboluri în pagină e următorul pas firesc — deocamdată e o
+singură pereche, deliberat.)
+
+### De ce JSON commitat și nu API live
+
+Site-ul e static, iar ClausWeb n-are cum să țină un proces care vorbește cu Binance.
+Un JSON de ~620 KB, comprimat de Apache la sub 200 KB, e soluția simplă și robustă.
+Când va exista motorul pe VPS, el poate scrie datele direct.

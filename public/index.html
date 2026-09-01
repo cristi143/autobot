@@ -3,20 +3,32 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Autobot — în construcție</title>
-<meta name="description" content="Autobot — platformă de tranzacționare automată. În construcție.">
+<title>Autobot — ZECUSDC 1h</title>
 <meta name="robots" content="noindex, nofollow">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-  <main class="card">
-    <div class="dot" aria-hidden="true"></div>
-    <h1>Autobot</h1>
-    <p class="lead">Platformă de tranzacționare automată.</p>
-    <p class="status"><span class="badge">în dezvoltare</span></p>
-    <p class="sub">Interfața nu este încă disponibilă.</p>
-  </main>
-  <footer>autobot.dunitru.ro</footer>
+  <header class="bara">
+    <div class="identitate">
+      <span class="marca">Autobot</span>
+      <span class="simbol" id="simbol">ZECUSDC</span>
+      <span class="interval">1h</span>
+    </div>
+    <div class="ohlc" id="ohlc" aria-live="polite"></div>
+  </header>
+
+  <div class="grafic-invelis">
+    <div id="grafic"></div>
+    <div class="stare" id="stare">Se încarcă datele…</div>
+  </div>
+
+  <footer class="subsol">
+    <span id="rezumat"></span>
+    <span class="nota">ore UTC · date Binance, agregate local din lumânări de 1 minut</span>
+  </footer>
+
+<script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.2.3/dist/lightweight-charts.standalone.production.js"></script>
+<script src="/grafic.js"></script>
 </body>
 </html>

@@ -1,7 +1,8 @@
 # autobot.dunitru.ro — context de lucru
 
 Proiect nou: platformă de tranzacționare automată pe Binance.
-Stadiu actual: **doar pagina „în construcție"**, plus lanțul de deploy.
+Stadiu actual: **grafic de lumânări 1h pentru ZECUSDC** (stil TradingView), plus
+lanțul de deploy. Motorul botului nu există încă.
 
 ## La începutul fiecărei sesiuni
 Citește **`DEPLOY.md`** — hosting, deploy, și împărțirea arhitecturii
@@ -17,6 +18,16 @@ Citește **`DEPLOY.md`** — hosting, deploy, și împărțirea arhitecturii
 - Se comite cu identitate explicită dacă repo-ul n-o are:
   `git -c user.name="Cristi Iorga" -c user.email="cristi.s.iorga@gmail.com"`
 - În commit nu se pune identificatorul de model.
+
+## Graficul (starea actuală a site-ului)
+- Pagina principală = grafic de lumânări 1h, cu `lightweight-charts` de la
+  TradingView, luat de pe jsDelivr (versiune fixată: 4.2.3).
+- **Datele sunt un JSON commitat**, `public/data/<SIMBOL>-1h.json`, generat de
+  `tools/agrega_1h.py` din `../historical_data/`. Nu se citește live de la Binance —
+  site-ul e static.
+- După date noi: `python3 tools/agrega_1h.py ZECUSDC`, commit JSON-ul, deploy.
+- Simbolul afișat se schimbă din `var SIMBOL` în `public/grafic.js`.
+- Fișierele 1m rămân în afara git-ului; doar JSON-ul agregat intră.
 
 ## Reguli specifice botului
 - **Cheile API Binance nu ajung NICIODATĂ în git și nici pe ClausWeb.** Stau în
