@@ -5,6 +5,7 @@
 #   user=marcelpa  home=/home/marcelpa
 #   repo clonat în: /home/marcelpa/repositories/autobot  (= PWD la deploy)
 #   document root: /home/marcelpa/autobot.dunitru.ro
+#   motorul (rulat din cron, în afara webului): /home/marcelpa/autobot-motor
 #
 # Golirea păstrează .well-known, cgi-bin, .user.ini și php.ini — sunt fișierele
 # cPanel-ului. Mai ales .well-known: acolo pune AutoSSL dovada de validare a
@@ -25,6 +26,8 @@ deployment:
   tasks:
     - 'echo "=== DEPLOY autobot.dunitru.ro $(date) ===" > /home/marcelpa/deploy-autobot.log'
 
-    - 'BASE=/home/marcelpa/autobot.dunitru.ro; LOG=/home/marcelpa/deploy-autobot.log; DEST="$BASE"; if [ -d "$BASE/public_html" ]; then DEST="$BASE/public_html"; fi; echo "[1/4] document root ales: $DEST" >> "$LOG"; mkdir -p "$DEST" >> "$LOG" 2>&1; if [ -f "$DEST/index.php" ]; then echo "STOP: document root-ul conține index.php — nu pare a fi site-ul static autobot. Nu șterg nimic." >> "$LOG"; exit 1; fi; echo "[2/4] golire document root (păstrez fișierele proprii ale cPanel)" >> "$LOG"; find "$DEST" -mindepth 1 -maxdepth 1 ! -name .well-known ! -name cgi-bin ! -name .user.ini ! -name php.ini -exec rm -rf {} + >> "$LOG" 2>&1; echo "[3/4] copiere public/ -> $DEST" >> "$LOG"; cp -a public/. "$DEST"/ >> "$LOG" 2>&1; echo "[4/4] conținut publicat:" >> "$LOG"; ls -la "$DEST" >> "$LOG" 2>&1'
+    - 'BASE=/home/marcelpa/autobot.dunitru.ro; LOG=/home/marcelpa/deploy-autobot.log; DEST="$BASE"; if [ -d "$BASE/public_html" ]; then DEST="$BASE/public_html"; fi; echo "[1/5] document root ales: $DEST" >> "$LOG"; mkdir -p "$DEST" >> "$LOG" 2>&1; if [ -f "$DEST/index.php" ]; then echo "STOP: document root-ul conține index.php — nu pare a fi site-ul static autobot. Nu șterg nimic." >> "$LOG"; exit 1; fi; echo "[2/5] golire document root (păstrez fișierele proprii ale cPanel)" >> "$LOG"; find "$DEST" -mindepth 1 -maxdepth 1 ! -name .well-known ! -name cgi-bin ! -name .user.ini ! -name php.ini -exec rm -rf {} + >> "$LOG" 2>&1; echo "[3/5] copiere public/ -> $DEST" >> "$LOG"; cp -a public/. "$DEST"/ >> "$LOG" 2>&1; echo "[4/5] conținut publicat:" >> "$LOG"; ls -la "$DEST" >> "$LOG" 2>&1'
+
+    - 'MOT=/home/marcelpa/autobot-motor; LOG=/home/marcelpa/deploy-autobot.log; echo "[5/5] motorul -> $MOT" >> "$LOG"; mkdir -p "$MOT" >> "$LOG" 2>&1; cp -a motor/. "$MOT"/ >> "$LOG" 2>&1; ls -la "$MOT" >> "$LOG" 2>&1'
 
     - 'echo "=== DEPLOY DONE $(date) ===" >> /home/marcelpa/deploy-autobot.log'
