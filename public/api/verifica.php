@@ -53,7 +53,19 @@ $curbe = preg_match('/[\x{2018}\x{2019}\x{201C}\x{201D}]/u', $brut);
 pas('Fără ghilimele curbe', !$curbe,
     $curbe ? 'GĂSITE — înlocuiește \u{201C}\u{201D}\u{2018}\u{2019} cu \' simplu' : 'da');
 
-/* --- 3. Se parsează? --- */
+/* --- 3. Cum arată de fapt fișierul --- */
+// Se tipărește ÎNAINTE de include: dacă acela cade fatal, măcar vedem sursa.
+$linii = preg_split('/\r\n|\r|\n/', $brut);
+$sursa = "\n--- autobot-config.php, primele 30 de linii (parola mascată) ---\n";
+foreach ($linii as $i => $rand) {
+    if ($i >= 30) { $sursa .= sprintf("%3d  … (încă %d linii)\n", $i + 1, count($linii) - 30); break; }
+    // ascundem valoarea parolei, oricum ar fi scrisă
+    $rand = preg_replace("/(['\"]parola['\"]\s*=>\s*['\"])[^'\"]*/u", '$1••••••••', $rand);
+    $sursa .= sprintf("%3d  %s\n", $i + 1, $rand);
+}
+$pasi[] = $sursa;
+
+/* --- 4. Se parsează? --- */
 $config = @include $cale;
 pas('Se încarcă fără eroare', is_array($config),
     is_array($config) ? 'a întors un tablou' : 'NU a întors un tablou (vezi eroarea de mai jos)');
@@ -76,11 +88,11 @@ $cheie_ok = isset($config['cheie_api']) && strlen((string)$config['cheie_api']) 
             && strpos((string)$config['cheie_api'], 'ȘIR-LUNG') === false;
 pas('cheie_api completată', $cheie_ok, $cheie_ok ? 'da' : 'lipsă sau lăsată ca model');
 
-/* --- 4. Extensia PDO --- */
+/* --- 5. Extensia PDO --- */
 pas('Extensia pdo_mysql', extension_loaded('pdo_mysql'), extension_loaded('pdo_mysql') ? 'da' : 'LIPSEȘTE');
 if (!extension_loaded('pdo_mysql')) { exit; }
 
-/* --- 5. Conexiunea --- */
+/* --- 6. Conexiunea --- */
 $d = $config['db'];
 try {
     $pdo = new PDO("mysql:host={$d['gazda']};dbname={$d['nume']};charset=utf8mb4",
@@ -92,7 +104,7 @@ try {
     exit;
 }
 
-/* --- 6. Tabelele --- */
+/* --- 7. Tabelele --- */
 $asteptate = array('lumanari_1h','triunghiuri','linii','semnale','pozitii','banci','miscari','jurnal_cron');
 $gasite = array();
 foreach ($pdo->query('SHOW TABLES') as $r) { $gasite[] = array_values($r)[0]; }
@@ -100,7 +112,7 @@ $lipsa = array_diff($asteptate, $gasite);
 pas('Cele 8 tabele', count($lipsa) === 0,
     count($lipsa) === 0 ? 'toate există' : 'lipsesc: ' . implode(', ', $lipsa));
 
-/* --- 7. Băncile --- */
+/* --- 8. Băncile --- */
 try {
     $b = $pdo->query('SELECT banca, sold_usdc FROM banci')->fetchAll(PDO::FETCH_ASSOC);
     $t = array();
@@ -110,7 +122,7 @@ try {
     pas('Băncile inițializate', false, $e->getMessage());
 }
 
-/* --- 8. Fișierele API --- */
+/* --- 9. Fișierele API --- */
 foreach (array('_comun.php', 'triunghiuri.php', 'stare.php') as $f) {
     $c = __DIR__ . '/' . $f;
     pas("Există $f", file_exists($c), file_exists($c) ? 'da' : 'LIPSEȘTE — n-a ajuns la deploy');
