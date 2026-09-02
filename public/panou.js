@@ -18,6 +18,7 @@
     pozitie:  { deschisa: false },
     triunghi: { exista: false },
     banci:    {},
+    statistici: null,
     pret_initial: null,
     istoric:  [],
     motor:    { implementat: false }
@@ -214,7 +215,7 @@
 
   /* ---------- citirea stării ---------- */
 
-  function redaTot() { redaPozitie(); redaTriunghi(); redaBanci(); redaIstoric(); }
+  function redaTot() { redaPozitie(); redaTriunghi(); redaBanci(); redaIstoric(); redaStatistici(); }
 
   function citesteStarea() {
     return fetch("api/stare.php", { cache: "no-store" })
@@ -227,6 +228,7 @@
           banci:    d.banci    || {},
           pret_initial: d.pret_initial || null,
           istoric:  d.istoric  || [],
+          statistici: d.statistici || null,
           motor:    d.motor    || { implementat: false }
         };
         var av = document.querySelector(".avertisment");
@@ -273,6 +275,74 @@
         redaTot();
       });
   }
+
+  /* ---------- statisticile ---------- */
+
+  function redaStatistici() {
+    var st = S.statistici;
+    var gol = "—";
+    if (!st || !st.total) {
+      ["st-total","st-tp","st-sl","st-rata","st-med-tp","st-med-sl","st-max","st-min"]
+        .forEach(function (id) { $(id).textContent = gol; });
+      $("st-total").textContent = "0";
+      $("st-nota").textContent = "Cifrele apar pe măsură ce se încheie tranzacții.";
+      return;
+    }
+
+    $("st-total").textContent = String(st.total);
+    $("st-tp").textContent    = String(st.tp);
+    $("st-sl").textContent    = String(st.sl);
+    $("st-rata").textContent  = (st.total ? (st.tp / st.total * 100).toFixed(0) + "%" : gol);
+
+    $("st-med-tp").textContent = st.medie_tp == null ? gol : proc(st.medie_tp, true);
+    $("st-med-sl").textContent = st.medie_sl == null ? gol : proc(st.medie_sl, true);
+
+    var max = $("st-max"), min = $("st-min");
+    max.textContent = st.maxim == null ? gol : proc(st.maxim, true);
+    min.textContent = st.minim == null ? gol : proc(st.minim, true);
+    semn(max, st.maxim); semn(min, st.minim);
+
+    // Cifra care contează cel mai mult: cât de des trebuie să ai dreptate ca să
+    // ieși pe zero, dat fiind că un TP câștigă fix iar un SL pierde variabil.
+    if (st.medie_tp != null && st.medie_sl != null && st.medie_sl < 0) {
+      var prag = (-st.medie_sl) / (st.medie_tp - st.medie_sl) * 100;
+      $("st-nota").textContent =
+        "Cu un câștig mediu de " + st.medie_tp.toFixed(2) + "% și o pierdere medie de " +
+        st.medie_sl.toFixed(2) + "%, ai nevoie de " + prag.toFixed(0) +
+        "% tranzacții reușite ca să ieși pe zero.";
+    } else {
+      $("st-nota").textContent = "";
+    }
+  }
+
+  /* ---------- filele ---------- */
+
+  var CHEIE_FILA = "autobot_fila";
+
+  function schimbaFila(nume) {
+    var gasita = false;
+    document.querySelectorAll(".fila").forEach(function (b) {
+      var a = b.dataset.fila === nume;
+      if (a) gasita = true;
+      b.classList.toggle("activa", a);
+      b.setAttribute("aria-selected", a ? "true" : "false");
+    });
+    if (!gasita) return schimbaFila("curent");
+    document.querySelectorAll(".continut").forEach(function (d) {
+      d.hidden = (d.id !== "p-" + nume);
+    });
+    try { localStorage.setItem(CHEIE_FILA, nume); } catch (e) {}
+    // panoul are derulare proprie; la schimbare pornim de sus
+    var panou = document.getElementById("panou");
+    if (panou) panou.scrollTop = 0;
+  }
+
+  document.querySelectorAll(".fila").forEach(function (b) {
+    b.addEventListener("click", function () { schimbaFila(b.dataset.fila); });
+  });
+
+  try { schimbaFila(localStorage.getItem(CHEIE_FILA) || "curent"); }
+  catch (e) { schimbaFila("curent"); }
 
   /* ---------- legături ---------- */
 

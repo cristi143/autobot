@@ -30,6 +30,17 @@
         Date de exemplu — motorul nu e încă implementat
       </div>
 
+      <nav class="file" role="tablist" aria-label="Secțiunile panoului">
+        <button type="button" class="fila activa" role="tab" id="fila-curent"
+                aria-selected="true" aria-controls="p-curent" data-fila="curent">Curent</button>
+        <button type="button" class="fila" role="tab" id="fila-banci"
+                aria-selected="false" aria-controls="p-banci" data-fila="banci">Bănci</button>
+        <button type="button" class="fila" role="tab" id="fila-statistici"
+                aria-selected="false" aria-controls="p-statistici" data-fila="statistici">Statistici</button>
+      </nav>
+
+      <div class="continut" id="p-curent" role="tabpanel" aria-labelledby="fila-curent">
+
       <!-- ---------- poziția ---------- -->
       <section class="bloc">
         <h2 class="titlu-bloc">Poziție</h2>
@@ -38,6 +49,7 @@
           <span class="pastila long" id="poz-tip">LONG deschis</span>
           <span class="poz-varsta" id="poz-varsta">de 3 ore</span>
         </div>
+
 
         <dl class="perechi">
           <div><dt>Intrare</dt><dd class="n" id="poz-intrare">—</dd></div>
@@ -94,6 +106,15 @@
         <p class="nota-bloc">Prețurile liniilor sunt cele de la ora curentă — se strâng pe măsură ce trece timpul.</p>
       </section>
 
+      <!-- ---------- istoric ---------- -->
+      <section class="bloc">
+        <h2 class="titlu-bloc">Ultimele tranzacții</h2>
+        <div class="istoric" id="istoric"></div>
+      </section>
+      </div>
+
+      <div class="continut" id="p-banci" role="tabpanel" aria-labelledby="fila-banci" hidden>
+
       <!-- ---------- băncile ---------- -->
       <section class="bloc">
         <h2 class="titlu-bloc">Bănci</h2>
@@ -125,11 +146,41 @@
         </div>
       </section>
 
-      <!-- ---------- istoric ---------- -->
-      <section class="bloc">
-        <h2 class="titlu-bloc">Ultimele tranzacții</h2>
-        <div class="istoric" id="istoric"></div>
-      </section>
+      </div>
+
+      <div class="continut" id="p-statistici" role="tabpanel" aria-labelledby="fila-statistici" hidden>
+        <section class="bloc">
+          <h2 class="titlu-bloc">Tranzacții încheiate</h2>
+          <dl class="perechi">
+            <div><dt>Total</dt><dd class="n" id="st-total">—</dd></div>
+            <div><dt>Ieșite pe TP</dt><dd class="n sus" id="st-tp">—</dd></div>
+            <div><dt>Ieșite pe SL</dt><dd class="n jos" id="st-sl">—</dd></div>
+            <div><dt>Rată de reușită</dt><dd class="n" id="st-rata">—</dd></div>
+          </dl>
+        </section>
+
+        <section class="bloc">
+          <h2 class="titlu-bloc">Rezultate</h2>
+          <dl class="perechi">
+            <div><dt>Câștig mediu <span class="mic">pe TP</span></dt><dd class="n sus" id="st-med-tp">—</dd></div>
+            <div><dt>Pierdere medie <span class="mic">pe SL</span></dt><dd class="n jos" id="st-med-sl">—</dd></div>
+            <div class="separator"></div>
+            <div><dt>Cea mai bună</dt><dd class="n" id="st-max">—</dd></div>
+            <div><dt>Cea mai slabă</dt><dd class="n" id="st-min">—</dd></div>
+          </dl>
+          <p class="nota-bloc" id="st-nota"></p>
+        </section>
+
+        <section class="bloc">
+          <h2 class="titlu-bloc">Ce urmează aici</h2>
+          <p class="nota-bloc">
+            Cel mai lung șir de pierderi, timpul mediu în piață, distribuția
+            rezultatelor, și — după 30–40 de triunghiuri — ce s-ar fi întâmplat
+            cu alt TP, cu trailing sau cu un SL fix.
+          </p>
+        </section>
+      </div>
+
     </aside>
   </div>
 

@@ -11,7 +11,7 @@ Tot lanțul e viu, în simulare cu bani fictivi:
 | Grafic live | `public/grafic.js` | lumânări 1h, istoric + punte REST + WebSocket |
 | Desen | `public/desen.js` | trage triunghiuri; arată și istoricul celor consumate |
 | API | `public/api/` | `stare.php`, `triunghiuri.php`, `_comun.php` |
-| Panou | `public/panou.js` | poziție, triunghi, bănci, istoric |
+| Panou | `public/panou.js` | trei file: Curent, Bănci, Statistici |
 | **Motor** | `motor/motor.php` | **cron orar, ia deciziile** |
 | Bază de date | MySQL `marcelpa_autobot` | 8 tabele, vezi `baza-de-date/schema.sql` |
 

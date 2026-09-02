@@ -128,6 +128,31 @@ if ($c) {
     $motor['intarziat'] = true;   // n-a rulat niciodată
 }
 
+/* ---- statistici peste TOATE tranzacțiile încheiate ----
+   Nu peste ultimele zece afișate în listă: o rată de reușită calculată pe o
+   fereastră mișcătoare ar spune altceva decât adevărul. */
+
+$s = $pdo->query("
+    SELECT COUNT(*)                                                AS total,
+           SUM(motiv_iesire = 'tp')                                AS tp,
+           SUM(motiv_iesire = 'sl')                                AS sl,
+           AVG(CASE WHEN motiv_iesire = 'tp' THEN rezultat_proc END) AS medie_tp,
+           AVG(CASE WHEN motiv_iesire = 'sl' THEN rezultat_proc END) AS medie_sl,
+           MAX(rezultat_proc)                                      AS maxim,
+           MIN(rezultat_proc)                                      AS minim
+    FROM pozitii WHERE stare = 'inchisa'
+")->fetch() ?: [];
+
+$statistici = [
+    'total'    => (int)($s['total'] ?? 0),
+    'tp'       => (int)($s['tp'] ?? 0),
+    'sl'       => (int)($s['sl'] ?? 0),
+    'medie_tp' => isset($s['medie_tp']) && $s['medie_tp'] !== null ? round((float)$s['medie_tp'], 4) : null,
+    'medie_sl' => isset($s['medie_sl']) && $s['medie_sl'] !== null ? round((float)$s['medie_sl'], 4) : null,
+    'maxim'    => isset($s['maxim'])    && $s['maxim']    !== null ? round((float)$s['maxim'], 4) : null,
+    'minim'    => isset($s['minim'])    && $s['minim']    !== null ? round((float)$s['minim'], 4) : null,
+];
+
 /* ---- ce versiune de cod are serverul ----
    Browserul o compară cu versiunea fișierului pe care chiar l-a încărcat.
    Diferite = rulează cod vechi din cache, iar panoul o spune. */
@@ -151,6 +176,7 @@ raspunde([
     'banci'    => $banci,
     'pret_initial' => $pretInitial,
     'istoric'  => $istoric,
+    'statistici' => $statistici,
     'reguli'   => [
         'tp_procent'       => (float)($reguli['tp_procent'] ?? 1.0),
         'comision_o_parte' => (float)($reguli['comision_o_parte'] ?? 0.075),

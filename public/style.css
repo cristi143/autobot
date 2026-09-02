@@ -488,3 +488,40 @@ body {
   color: var(--muted);
   margin-top: -.15rem;
 }
+
+/* ================= filele panoului ================= */
+
+.file {
+  display: flex;
+  border-bottom: 1px solid var(--line);
+  background: var(--bara);
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.fila {
+  appearance: none;
+  flex: 1;
+  padding: .55rem .4rem;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  font-size: .75rem;
+  font-weight: 600;
+  letter-spacing: .04em;
+  cursor: pointer;
+  transition: color .12s ease, border-color .12s ease;
+}
+
+.fila:hover { color: var(--text); }
+.fila:focus-visible { outline: 2px solid var(--sus); outline-offset: -2px; }
+
+.fila.activa {
+  color: var(--text);
+  border-bottom-color: var(--sus);
+}
+
+.continut { display: flex; flex-direction: column; }
