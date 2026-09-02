@@ -63,6 +63,10 @@ Detaliile și motivele sunt în `docs/plan-tranzactionare.md` — **nu le reinve
 - Comision 0,075% pe parte. O poziție odată; cât e deschisă, nu se caută semnale.
 
 ## Capcane deja plătite
+- **Codul din browser poate fi mai vechi decât cel de pe server.** `desen.js` are
+  o constantă `VERSIUNE`; `stare.php` o citește din fișierul de pe disc, iar
+  panoul le compară. Diferite → banda de sus spune să reîncarci forțat.
+  **Schimbă `VERSIUNE` la fiecare modificare din `public/`.**
 - **Timpul e BIGINT în milisecunde UTC peste tot.** Serverul are fusul
   Europe/Bucharest. Orice `DATETIME` sau formatare fără UTC explicit aliniază
   lumânările greșit cu 2–3 ore, tăcut.

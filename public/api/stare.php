@@ -113,8 +113,22 @@ if ($c) {
     $motor['intarziat'] = true;   // n-a rulat niciodată
 }
 
+/* ---- ce versiune de cod are serverul ----
+   Browserul o compară cu versiunea fișierului pe care chiar l-a încărcat.
+   Diferite = rulează cod vechi din cache, iar panoul o spune. */
+
+$versiune = null;
+$caleDesen = __DIR__ . '/../desen.js';
+if (is_readable($caleDesen)) {
+    $cap = (string)file_get_contents($caleDesen, false, null, 0, 2048);
+    if (preg_match('/VERSIUNE\s*=\s*"([^"]+)"/', $cap, $m)) {
+        $versiune = $m[1];
+    }
+}
+
 raspunde([
     'ok'       => true,
+    'versiune' => $versiune,
     'acum'     => $acum,
     'motor'    => $motor,
     'pozitie'  => $pozitie,

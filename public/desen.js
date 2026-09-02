@@ -16,6 +16,14 @@
 (function () {
   "use strict";
 
+  /* Marcaj de versiune. Serverul îl citește din fișierul de pe disc, browserul
+     îl are din fișierul pe care chiar l-a încărcat. Dacă cele două diferă,
+     browserul rulează cod vechi — și atunci o spune, în loc să ne întrebăm de
+     ce o schimbare „nu a avut efect". Se schimbă la fiecare modificare a
+     fișierelor din public/. */
+  var VERSIUNE = "2026-09-02-b";
+  window.AUTOBOT_VERSIUNE = VERSIUNE;
+
   var A = window.Autobot;
   if (!A) return;
 

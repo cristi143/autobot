@@ -190,6 +190,19 @@
           motor:    d.motor    || { implementat: false }
         };
         var av = document.querySelector(".avertisment");
+
+        // Codul din browser e mai vechi decât cel de pe server? Atunci orice
+        // altceva am arăta e nesigur — asta se spune prima.
+        var alServerului = d.versiune || null;
+        var alMeu = window.AUTOBOT_VERSIUNE || null;
+        if (av && alServerului && alMeu && alServerului !== alMeu) {
+          av.textContent = "Browserul rulează cod vechi (" + alMeu + " față de " +
+                           alServerului + " pe server) — reîncarcă forțat: Ctrl+Shift+R";
+          av.classList.add("rau");
+          redaTot();
+          return;
+        }
+
         if (av) {
           var u = S.motor.ultima_rulare;
           if (S.motor.intarziat) {
