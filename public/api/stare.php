@@ -59,6 +59,13 @@ if ($p) {
         // ca panoul să poată arăta încotro se mișcă.
         'sl_acum'          => round(pret_linie($p, $acum), 8),
         'sl_ora_trecuta'   => round(pret_linie($p, $acum - 3600000), 8),
+        // Geometria liniei, ca graficul s-o poată desena. Cât timp poziția e
+        // deschisă, linia asta E stop loss-ul — trebuie văzută, nu doar citită
+        // ca număr. Triunghiul e deja consumat, deci nu se mai desenează singur.
+        'sl_linie' => [
+            't1' => (int)$p['t1'], 'p1' => (float)$p['p1'],
+            't2' => (int)$p['t2'], 'p2' => (float)$p['p2'],
+        ],
     ];
 }
 

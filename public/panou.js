@@ -205,6 +205,14 @@
           }
         }
         redaTot();
+
+        // Graficul desenează linia de SL și pragul de TP; triunghiul consumat
+        // nu se mai afișează singur, iar linia lui rămâne pragul de ieșire.
+        document.dispatchEvent(new CustomEvent("autobot:pozitie", {
+          detail: S.pozitie && S.pozitie.deschisa ? {
+            tip: S.pozitie.tip, linie: S.pozitie.sl_linie, tp: S.pozitie.tp
+          } : null
+        }));
       })
       .catch(function (e) {
         var av = document.querySelector(".avertisment");

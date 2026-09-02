@@ -46,6 +46,7 @@
   var puncte = [];             // punctele clicului curent, {ms, pret}
   var indiciu = null;          // punctul de sub cursor, pentru previzualizare
   var inAsteptare = null;      // triunghiul desenat, încă nesalvat
+  var pozitie = null;          // {tip, linie, tp} cât timp e o poziție deschisă
 
   /* ---------- conversii ---------- */
 
@@ -72,11 +73,35 @@
   /* ---------- desenare ---------- */
 
   var CULORI = {
-    sus:       "#26a69a",
-    jos:       "#ef5350",
-    schita:    "#8b949e",
-    manere:    "#e6edf3"
+    sus:    "#26a69a",
+    jos:    "#ef5350",
+    schita: "#8b949e",
+    sl:     "#ef5350",   // linia de intrare devine prag de ieșire
+    tp:     "#26a69a"
   };
+
+  /** Prag orizontal, de la marginea stângă la dreapta — TP-ul e un preț fix. */
+  function traseazaPrag(pretPrag, culoare, eticheta) {
+    var y = yDinPret(pretPrag);
+    if (y == null) return;
+    var lat = latimeUtila();
+
+    ctx.save();
+    ctx.strokeStyle = culoare;
+    ctx.lineWidth = 1;
+    ctx.setLineDash([2, 4]);
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(lat, y);
+    ctx.stroke();
+
+    ctx.setLineDash([]);
+    ctx.font = "11px ui-monospace, SFMono-Regular, Menlo, monospace";
+    ctx.fillStyle = culoare;
+    ctx.textBaseline = "bottom";
+    ctx.fillText(eticheta, 6, y - 3);
+    ctx.restore();
+  }
 
   function traseazaLinie(l, culoare, punctat) {
     var x1 = xDinMs(l.t1), y1 = yDinPret(l.p1);
@@ -124,6 +149,12 @@
       if (t.linii.sus) traseazaLinie(t.linii.sus, CULORI.sus, false);
       if (t.linii.jos) traseazaLinie(t.linii.jos, CULORI.jos, false);
     });
+
+    // Poziția deschisă: linia de intrare e stop loss-ul, iar TP-ul un preț fix.
+    if (pozitie && pozitie.linie) {
+      traseazaLinie(pozitie.linie, CULORI.sl, true);
+      if (pozitie.tp) traseazaPrag(pozitie.tp, CULORI.tp, "TP " + pozitie.tp.toFixed(2));
+    }
 
     // linia terminată din desenul curent
     if (puncte.length >= 2) {
@@ -348,7 +379,33 @@
 
   A.chart.timeScale().subscribeVisibleLogicalRangeChange(redeseneaza);
   window.addEventListener("resize", function () { dimensioneaza(); redeseneaza(); });
+
+  /* Plasă de siguranță pentru scala de preț.
+     Biblioteca anunță schimbările pe axa timpului, dar nu și pe cea verticală.
+     În mod normal nu contează: fiecare tic de preț declanșează oricum o
+     redesenare. Rămâne însă cazul în care graficul își reîncadrează singur
+     prețurile fără să vină un tic — de exemplu după sosirea datelor din punte,
+     sau cu WebSocket-ul căzut. Atunci liniile ar rămâne la înălțimea veche.
+
+     Verificăm unde ajunge un preț de referință și redesenăm doar când chiar
+     s-a mutat ceva: un apel de funcție la fiecare jumătate de secundă. */
+  var ultimulY = null, ultimaLatime = null;
+  setInterval(function () {
+    var lum = A.lumanari();
+    if (!lum.length) return;
+    var y = A.serie.priceToCoordinate(lum[lum.length - 1].close);
+    var lat = latimeUtila();
+    if (y !== ultimulY || lat !== ultimaLatime) {
+      ultimulY = y;
+      ultimaLatime = lat;
+      redeseneaza();
+    }
+  }, 500);
   document.addEventListener("autobot:pret", redeseneaza);
+  document.addEventListener("autobot:pozitie", function (ev) {
+    pozitie = ev.detail;
+    redeseneaza();
+  });
 
   dimensioneaza();
   redeseneaza();
