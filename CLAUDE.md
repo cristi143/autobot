@@ -63,6 +63,11 @@ Detaliile și motivele sunt în `docs/plan-tranzactionare.md` — **nu le reinve
 - Comision 0,075% pe parte. O poziție odată; cât e deschisă, nu se caută semnale.
 
 ## Capcane deja plătite
+- **`logicalToCoordinate` întoarce 0, nu null, pentru indici din afara datelor.**
+  Nu extrapolează în viitor. Orice punct de după ultima lumânare — vârful unui
+  triunghi, de pildă — trebuie aflat **în pixeli**, nu prin bibliotecă: o
+  transformare liniară păstrează intersecțiile, iar capetele liniilor sunt deja
+  pe ecran. Vezi `intersectie()` din desen.js.
 - **Codul din browser poate fi mai vechi decât cel de pe server.** `desen.js` are
   o constantă `VERSIUNE`; `stare.php` o citește din fișierul de pe disc, iar
   panoul le compară. Diferite → banda de sus spune să reîncarci forțat.

@@ -21,7 +21,7 @@
      browserul rulează cod vechi — și atunci o spune, în loc să ne întrebăm de
      ce o schimbare „nu a avut efect". Se schimbă la fiecare modificare a
      fișierelor din public/. */
-  var VERSIUNE = "2026-09-02-b";
+  var VERSIUNE = "2026-09-02-c";
   window.AUTOBOT_VERSIUNE = VERSIUNE;
 
   var A = window.Autobot;
@@ -91,19 +91,6 @@
     sl:     "#ef5350",   // linia de intrare devine prag de ieșire
     tp:     "#26a69a"
   };
-
-  /**
-   * Momentul în care laturile se întâlnesc, sau null dacă sunt paralele.
-   * Aceeași socoteală ca în motor — acolo decide expirarea, aici cât desenăm.
-   */
-  function varful(sus, jos) {
-    var m1 = (sus.p2 - sus.p1) / (sus.t2 - sus.t1);
-    var m2 = (jos.p2 - jos.p1) / (jos.t2 - jos.t1);
-    if (Math.abs(m1 - m2) < 1e-15) return null;
-    var b1 = sus.p1 - m1 * sus.t1;
-    var b2 = jos.p1 - m2 * jos.t1;
-    return (b2 - b1) / (m1 - m2);
-  }
 
   /** Unde s-a terminat tranzacția: TP sau SL. */
   function traseazaIesire(iesire) {
@@ -199,13 +186,36 @@
     ctx.restore();
   }
 
+  /** Capetele unei linii în pixeli, sau null dacă nu se pot afla. */
+  function capete(l) {
+    var x1 = xDinMs(l.t1), y1 = yDinPret(l.p1);
+    var x2 = xDinMs(l.t2), y2 = yDinPret(l.p2);
+    if (x1 == null || x2 == null || y1 == null || y2 == null) return null;
+    return { x1: x1, y1: y1, x2: x2, y2: y2 };
+  }
+
   /**
-   * @param limitaMs  dacă e dat, linia se oprește acolo în loc să se prelungească
-   *                  până la marginea din dreapta. Un triunghi care a tras e o
-   *                  poveste încheiată: dincolo de semnal, liniile lui nu mai
-   *                  înseamnă nimic și doar încarcă graficul.
+   * Intersecția a două linii, calculată ÎN PIXELI.
+   *
+   * Nu în timp: `logicalToCoordinate` întoarce 0 pentru indici logici din afara
+   * datelor, deci un vârf aflat în viitor nu poate fi transformat în coordonată.
+   * În pixeli n-are importanță — o transformare liniară păstrează intersecțiile,
+   * iar capetele liniilor sunt oricum deja pe ecran.
    */
-  function traseazaLinie(l, culoare, punctat, subtire, limitaMs) {
+  function intersectie(a, b) {
+    var dax = a.x2 - a.x1, day = a.y2 - a.y1;
+    var dbx = b.x2 - b.x1, dby = b.y2 - b.y1;
+    var numitor = dax * dby - day * dbx;
+    if (Math.abs(numitor) < 1e-9) return null;      // paralele
+    var t = ((b.x1 - a.x1) * dby - (b.y1 - a.y1) * dbx) / numitor;
+    return { x: a.x1 + t * dax, y: a.y1 + t * day };
+  }
+
+  /**
+   * @param limitaX  dacă e dat, linia se oprește la coordonata asta în loc să se
+   *                 prelungească până la marginea din dreapta.
+   */
+  function traseazaLinie(l, culoare, punctat, subtire, limitaX) {
     var x1 = xDinMs(l.t1), y1 = yDinPret(l.p1);
     var x2 = xDinMs(l.t2), y2 = yDinPret(l.p2);
     if (x1 == null || x2 == null || y1 == null || y2 == null) return;
@@ -215,11 +225,9 @@
     // Linia se prelungește până la marginea din dreapta. Calculul se face în
     // pixeli, ceea ce e corect pentru că ambele axe sunt liniare: o dreaptă în
     // (timp, preț) rămâne o dreaptă pe ecran.
-    var xSfarsit = Math.max(lat, x1, x2);
-    if (limitaMs) {
-      var xLimita = xDinMs(limitaMs);
-      if (xLimita != null) xSfarsit = Math.max(xLimita, x1, x2);
-    }
+    var xSfarsit = (limitaX != null)
+      ? Math.max(limitaX, x1, x2)
+      : Math.max(lat, x1, x2);
     var ySfarsit = (x2 === x1)
       ? y2
       : y1 + ((y2 - y1) / (x2 - x1)) * (xSfarsit - x1);
@@ -264,14 +272,18 @@
       // doar triunghiurile încă armate, nu și un stop loss deja în lucru. Când
       // se întâmplă, semnul ieșirii cade în dreapta triunghiului închis. E
       // corect așa — vârful e un fapt geometric, ieșirea unul de tranzacție.
-      //
-      // Dacă laturile sunt paralele (canal, nu triunghi), ne oprim la ieșire.
-      var pana = null;
-      if (t.linii.sus && t.linii.jos) pana = varful(t.linii.sus, t.linii.jos);
-      if (pana == null) pana = (t.iesire && t.iesire.ora) || (t.semnal && t.semnal.ora);
+      var limita = null;
+      var cSus = t.linii.sus ? capete(t.linii.sus) : null;
+      var cJos = t.linii.jos ? capete(t.linii.jos) : null;
+      if (cSus && cJos) {
+        var v = intersectie(cSus, cJos);
+        // Doar dacă vârful e înainte: în urmă înseamnă laturi care se depărtează,
+        // iar atunci n-avem ce închide.
+        if (v && v.x > Math.max(cSus.x2, cJos.x2)) limita = v.x;
+      }
 
-      if (t.linii.sus) traseazaLinie(t.linii.sus, CULORI.vechi, false, true, pana);
-      if (t.linii.jos) traseazaLinie(t.linii.jos, CULORI.vechi, false, true, pana);
+      if (t.linii.sus) traseazaLinie(t.linii.sus, CULORI.vechi, false, true, limita);
+      if (t.linii.jos) traseazaLinie(t.linii.jos, CULORI.vechi, false, true, limita);
       if (t.semnal) traseazaSemnal(t.semnal);
       if (t.iesire) traseazaIesire(t.iesire);
     });
