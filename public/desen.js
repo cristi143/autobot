@@ -84,6 +84,46 @@
     tp:     "#26a69a"
   };
 
+  /**
+   * Momentul în care laturile se întâlnesc, sau null dacă sunt paralele.
+   * Aceeași socoteală ca în motor — acolo decide expirarea, aici cât desenăm.
+   */
+  function varful(sus, jos) {
+    var m1 = (sus.p2 - sus.p1) / (sus.t2 - sus.t1);
+    var m2 = (jos.p2 - jos.p1) / (jos.t2 - jos.t1);
+    if (Math.abs(m1 - m2) < 1e-15) return null;
+    var b1 = sus.p1 - m1 * sus.t1;
+    var b2 = jos.p1 - m2 * jos.t1;
+    return (b2 - b1) / (m1 - m2);
+  }
+
+  /** Unde s-a terminat tranzacția: TP sau SL. */
+  function traseazaIesire(iesire) {
+    var x = xDinMs(iesire.ora), y = yDinPret(iesire.pret);
+    if (x == null || y == null || x < 0 || x > latimeUtila()) return;
+
+    var peTP = iesire.motiv === "tp";
+    var culoare = peTP ? CULORI.sus : CULORI.jos;
+
+    ctx.save();
+    ctx.strokeStyle = culoare;
+    ctx.fillStyle = culoare;
+    ctx.lineWidth = 1.8;
+
+    if (peTP) {
+      ctx.beginPath();
+      ctx.arc(x, y, 4, 0, Math.PI * 2);
+      ctx.fill();
+    } else {
+      var d = 4.5;
+      ctx.beginPath();
+      ctx.moveTo(x - d, y - d); ctx.lineTo(x + d, y + d);
+      ctx.moveTo(x + d, y - d); ctx.lineTo(x - d, y + d);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
   /** Locul unde triunghiul a tras: lumânarea și prețul de închidere. */
   function traseazaSemnal(semnal) {
     var x = xDinMs(semnal.ora), y = yDinPret(semnal.pret);
@@ -207,10 +247,25 @@
     // Întâi istoricul, ca să stea în spatele celor active.
     consumate.forEach(function (t) {
       if (!vizibile[t.id]) return;
-      var pana = t.semnal ? t.semnal.ora : (t.consumat_la || null);
+
+      // Până la vârf: acolo se închide triunghiul pe care l-a desenat
+      // utilizatorul. Liniile converg, deci desenul se mărginește singur — spre
+      // deosebire de prelungirea la infinit, care trecea peste tot graficul.
+      //
+      // Poziția poate trăi mai mult decât vârful: expirarea la vârf privește
+      // doar triunghiurile încă armate, nu și un stop loss deja în lucru. Când
+      // se întâmplă, semnul ieșirii cade în dreapta triunghiului închis. E
+      // corect așa — vârful e un fapt geometric, ieșirea unul de tranzacție.
+      //
+      // Dacă laturile sunt paralele (canal, nu triunghi), ne oprim la ieșire.
+      var pana = null;
+      if (t.linii.sus && t.linii.jos) pana = varful(t.linii.sus, t.linii.jos);
+      if (pana == null) pana = (t.iesire && t.iesire.ora) || (t.semnal && t.semnal.ora);
+
       if (t.linii.sus) traseazaLinie(t.linii.sus, CULORI.vechi, false, true, pana);
       if (t.linii.jos) traseazaLinie(t.linii.jos, CULORI.vechi, false, true, pana);
       if (t.semnal) traseazaSemnal(t.semnal);
+      if (t.iesire) traseazaIesire(t.iesire);
     });
 
     activeSalvate.forEach(function (t) {

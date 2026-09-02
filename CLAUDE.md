@@ -57,9 +57,9 @@ Detaliile și motivele sunt în `docs/plan-tranzactionare.md` — **nu le reinve
 - **Triunghiul expiră la vârf** dacă n-a fost spart: după intersecție, „sus"
   ajunge sub „jos" și orice lumânare verde ar da un long fals.
 - **Cele consumate rămân vizibile**: ultimul se desenează automat în gri, restul
-  se bifează din listă (alegerea se ține în localStorage). Liniile lor se opresc
-  la locul semnalului — dincolo de el nu mai înseamnă nimic — iar o săgeată arată
-  în ce direcție s-a intrat.
+  se bifează din listă (alegerea se ține în localStorage). Liniile lor merg
+  **până la vârf**, unde triunghiul se închide singur. Pe ele: o săgeată la
+  semnal (direcția intrării) și semnul ieșirii — cerc plin pentru TP, × pentru SL.
 - Comision 0,075% pe parte. O poziție odată; cât e deschisă, nu se caută semnale.
 
 ## Capcane deja plătite

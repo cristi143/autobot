@@ -55,12 +55,30 @@ if ($metoda === 'GET') {
             ];
         }
 
+        // Ieșirea din poziție: până acolo, linia de intrare a fost stop loss.
+        $st = $pdo->prepare("SELECT s.triunghi_id, p.iesire_ora, p.iesire_pret,
+                                    p.motiv_iesire, p.rezultat_proc
+                             FROM pozitii p
+                             JOIN semnale s ON s.id = p.semnal_id
+                             WHERE s.triunghi_id IN ($loc) AND p.stare = 'inchisa'");
+        $st->execute($ids);
+        $iesiri = [];
+        foreach ($st->fetchAll() as $ie) {
+            $iesiri[(int)$ie['triunghi_id']] = [
+                'ora'      => (int)$ie['iesire_ora'],
+                'pret'     => (float)$ie['iesire_pret'],
+                'motiv'    => $ie['motiv_iesire'],
+                'rezultat' => $ie['rezultat_proc'] === null ? null : (float)$ie['rezultat_proc'],
+            ];
+        }
+
         foreach ($triunghiuri as &$t) {
             $t['id']         = (int)$t['id'];
             $t['desenat_la'] = (int)$t['desenat_la'];
             $t['consumat_la']= $t['consumat_la'] === null ? null : (int)$t['consumat_la'];
             $t['linii']      = $peTriunghi[$t['id']] ?? [];
             $t['semnal']     = $semnale[$t['id']] ?? null;
+            $t['iesire']     = $iesiri[$t['id']] ?? null;
         }
         unset($t);
     }
