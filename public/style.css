@@ -525,3 +525,8 @@ body {
 }
 
 .continut { display: flex; flex-direction: column; }
+
+.rand-triunghi .semn.expirat {
+  color: var(--muted);
+  background: var(--line);
+}

@@ -18,9 +18,10 @@ if ($metoda === 'GET') {
     $pdo = baza();
 
     $triunghiuri = $pdo->query("
-        SELECT id, stare, desenat_la, consumat_la, nota
+        SELECT id, stare, desenat_la, consumat_la, nota,
+               fereastra_de_la, fereastra_pana_la
         FROM triunghiuri
-        WHERE stare IN ('activ','consumat')
+        WHERE stare IN ('activ','consumat','expirat')
         ORDER BY (stare = 'activ') DESC, desenat_la DESC
         LIMIT 50
     ")->fetchAll();
@@ -76,6 +77,8 @@ if ($metoda === 'GET') {
             $t['id']         = (int)$t['id'];
             $t['desenat_la'] = (int)$t['desenat_la'];
             $t['consumat_la']= $t['consumat_la'] === null ? null : (int)$t['consumat_la'];
+            $t['fereastra_de_la']   = $t['fereastra_de_la']   === null ? null : (int)$t['fereastra_de_la'];
+            $t['fereastra_pana_la'] = $t['fereastra_pana_la'] === null ? null : (int)$t['fereastra_pana_la'];
             $t['linii']      = $peTriunghi[$t['id']] ?? [];
             $t['semnal']     = $semnale[$t['id']] ?? null;
             $t['iesire']     = $iesiri[$t['id']] ?? null;
@@ -126,12 +129,19 @@ if ($metoda === 'POST') {
 
     $nota = isset($d['nota']) ? mb_substr(trim((string)$d['nota']), 0, 255) : null;
 
+    // Fereastra vizibilă la desenare: „vârful evident" depinde de cât se vedea
+    // pe ecran. Fără ea, analiza de mai târziu ar judeca desenul fără să știe
+    // la ce se uita omul. Opțională — un client mai vechi n-o trimite.
+    $fDeLa  = isset($d['fereastra_de_la'])   && is_numeric($d['fereastra_de_la'])   ? (int)$d['fereastra_de_la']   : null;
+    $fPanaLa= isset($d['fereastra_pana_la']) && is_numeric($d['fereastra_pana_la']) ? (int)$d['fereastra_pana_la'] : null;
+
     $pdo = baza();
     $pdo->beginTransaction();
     try {
-        $pdo->prepare("INSERT INTO triunghiuri (stare, desenat_la, nota)
-                       VALUES ('activ', ?, ?)")
-            ->execute([acum_ms(), $nota !== '' ? $nota : null]);
+        $pdo->prepare("INSERT INTO triunghiuri
+                         (stare, desenat_la, fereastra_de_la, fereastra_pana_la, nota)
+                       VALUES ('activ', ?, ?, ?, ?)")
+            ->execute([acum_ms(), $fDeLa, $fPanaLa, $nota !== '' ? $nota : null]);
         $id = (int)$pdo->lastInsertId();
 
         $st = $pdo->prepare("INSERT INTO linii (triunghi_id, rol, t1, p1, t2, p2)
@@ -161,10 +171,20 @@ if ($metoda === 'DELETE') {
     $st->execute([$id]);
     $stare = $st->fetchColumn();
 
-    if ($stare === false)     eroare('Triunghiul nu există.', 404);
+    if ($stare === false) eroare('Triunghiul nu există.', 404);
+
+    // Se poate retrage doar unul încă armat. Cele consumate și cele expirate
+    // sunt material de analiză: unul spune ce a declanșat o tranzacție, celălalt
+    // e verdictul pieței asupra unui tipar care nu s-a confirmat. Ștergerea, ca
+    // stare, trebuie să însemne un singur lucru — decizia utilizatorului.
     if ($stare === 'consumat') {
         eroare('Triunghiul a produs deja un semnal — nu poate fi șters, ' .
                'altfel tranzacția ar rămâne fără explicație.', 409);
+    }
+    if ($stare === 'expirat') {
+        eroare('Triunghiul a expirat la vârf fără spargere. Se păstrează: ' .
+               'e un tipar pe care piața nu l-a confirmat, exact ce ne trebuie ' .
+               'ca să înțelegem cum desenezi.', 409);
     }
 
     $pdo->prepare("UPDATE triunghiuri SET stare = 'sters' WHERE id = ?")->execute([$id]);

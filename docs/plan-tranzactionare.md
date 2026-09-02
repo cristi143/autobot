@@ -200,6 +200,24 @@ Fără astea, simularea minte în favoarea strategiei.
 4. analiza liniilor desenate → model matematic
 5. bani reali — doar după luni de simulare
 
+## Datele strânse pentru etapa 4
+
+Se reconstituie oricând din ce e deja în bază: ce ating capetele liniilor (față de
+vârfurile și văile detectate din lumânări), cât de departe în urmă privește
+utilizatorul, ce vârfuri a sărit, ce toleranță acceptă.
+
+Se înregistrează pe măsură ce se întâmplă, **pentru că nu se pot completa
+retroactiv**:
+
+- **starea `expirat`**, separată de `sters` — piața a infirmat tiparul, față de
+  utilizatorul care și-a retras desenul. Amândouă sunt exemple negative, din
+  motive diferite. Niciuna nu se poate șterge.
+- **fereastra vizibilă la desenare** — cât se vedea pe ecran în acel moment.
+
+Rămân neînregistrate, deliberat: nota utilizatorului despre ce a văzut (de
+adăugat când vrea el) și momentele în care s-a uitat fără să deseneze — acelea ar
+cere un jurnal de vizite, mai intruziv și cu valoare mai mică.
+
 ## Etapa 4: modelul matematic
 
 Utilizatorul nu poate explica verbal cum trage liniile. Abordare, după 20–30 de

@@ -21,7 +21,7 @@
      browserul rulează cod vechi — și atunci o spune, în loc să ne întrebăm de
      ce o schimbare „nu a avut efect". Se schimbă la fiecare modificare a
      fișierelor din public/. */
-  var VERSIUNE = "2026-09-02-g";
+  var VERSIUNE = "2026-09-02-h";
   window.AUTOBOT_VERSIUNE = VERSIUNE;
 
   var A = window.Autobot;
@@ -502,9 +502,16 @@
         var toate = d.triunghiuri || [];
         activeSalvate = toate.filter(function (t) { return t.stare === "activ"; });
 
-        // Consumate, cele mai recente întâi.
-        consumate = toate.filter(function (t) { return t.stare === "consumat"; })
-                         .sort(function (a, b) { return (b.consumat_la || 0) - (a.consumat_la || 0); })
+        // Istoricul: cele care au tras și cele care au expirat la vârf fără
+        // spargere. Amândouă merită privite — unul arată ce a mers, celălalt un
+        // tipar pe care piața nu l-a confirmat.
+        consumate = toate.filter(function (t) {
+                           return t.stare === "consumat" || t.stare === "expirat";
+                         })
+                         .sort(function (a, b) {
+                           return (b.consumat_la || b.desenat_la || 0) -
+                                  (a.consumat_la || a.desenat_la || 0);
+                         })
                          .slice(0, 10);
 
         vizibile = citesteVizibile();
@@ -521,15 +528,34 @@
       .catch(function (e) { spune("Nu pot citi triunghiurile: " + e.message, true); });
   }
 
+  /** Marginile graficului, în milisecunde — ce se vedea când s-a desenat. */
+  function fereastraVizibila() {
+    try {
+      var r = A.chart.timeScale().getVisibleLogicalRange();
+      if (!r) return null;
+      var de_la = A.indiceLaMs(r.from), pana = A.indiceLaMs(r.to);
+      if (de_la == null || pana == null) return null;
+      return { de_la: Math.round(de_la), pana_la: Math.round(pana) };
+    } catch (e) { return null; }
+  }
+
   function salveaza() {
     if (!inAsteptare) return;
     var c = cheia();
     if (!c) return;
 
+    var f = fereastraVizibila();
+    var trimit = {
+      sus: inAsteptare.sus,
+      jos: inAsteptare.jos,
+      fereastra_de_la:   f ? f.de_la : null,
+      fereastra_pana_la: f ? f.pana_la : null
+    };
+
     fetch("api/triunghiuri.php", {
       method: "POST",
       headers: { "Content-Type": "application/json", "X-Autobot-Cheie": c },
-      body: JSON.stringify(inAsteptare)
+      body: JSON.stringify(trimit)
     })
       .then(function (r) { return r.json().then(function (d) { return { s: r.status, d: d }; }); })
       .then(function (x) {
@@ -626,7 +652,7 @@
     if (consumate.length) {
       var cap = document.createElement("div");
       cap.className = "cap-istoric";
-      cap.textContent = "au tras — bifează ca să le vezi";
+      cap.textContent = "istoric — bifează ca să le vezi";
       lista.appendChild(cap);
 
       // Lista are înălțime mărginită și derulează dincolo de ea: istoricul
@@ -656,6 +682,9 @@
         if (t.semnal) {
           sm.className = "semn " + t.semnal.tip;
           sm.textContent = t.semnal.tip === "long" ? "LONG" : "SHORT";
+        } else if (t.stare === "expirat") {
+          sm.className = "semn expirat";
+          sm.textContent = "EXPIRAT";
         }
 
         r.appendChild(bifa); r.appendChild(e); r.appendChild(sm);

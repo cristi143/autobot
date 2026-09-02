@@ -48,6 +48,17 @@ CREATE TABLE IF NOT EXISTS lumanari_1h (
 -- „consumat" înseamnă că a tras; liniile rămân în bază pentru că SL-ul se
 -- evaluează în continuare față de linia de intrare.
 --
+-- STĂRILE ÎNSEAMNĂ LUCRURI DIFERITE, ȘI NU SE AMESTECĂ:
+--   activ    — desenat, așteaptă o spargere
+--   consumat — a produs un semnal
+--   expirat  — laturile s-au intersectat fără spargere (verdictul pieței)
+--   sters    — utilizatorul l-a retras (decizia lui)
+-- Ultimele două sunt amândouă exemple negative pentru analiza de la etapa 4, dar
+-- din motive diferite; contopite, n-ar mai spune nimic.
+--
+-- FEREASTRA VIZIBILĂ la desenare se păstrează pentru că „vârful evident" depinde
+-- de cât se vedea pe ecran în acel moment.
+--
 -- ȘTERGEREA E MOALE, DIN CONSTRUCȚIE. Cheile străine dinspre `semnale` și
 -- `pozitii` spre `linii` nu au ON DELETE, deci baza va REFUZA ștergerea unui
 -- triunghi care a produs vreodată un semnal. Asta e intenționat: istoricul
@@ -56,8 +67,10 @@ CREATE TABLE IF NOT EXISTS lumanari_1h (
 -- ---------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS triunghiuri (
     id           INT UNSIGNED NOT NULL AUTO_INCREMENT,
-    stare        ENUM('activ','consumat','sters') NOT NULL DEFAULT 'activ',
+    stare        ENUM('activ','consumat','expirat','sters') NOT NULL DEFAULT 'activ',
     desenat_la   BIGINT       NOT NULL COMMENT 'ms UTC',
+    fereastra_de_la   BIGINT  NULL COMMENT 'ms UTC, marginea stângă a graficului la desenare',
+    fereastra_pana_la BIGINT  NULL COMMENT 'ms UTC, marginea dreaptă',
     consumat_la  BIGINT       NULL     COMMENT 'ms UTC, când a tras',
     nota         VARCHAR(255) NULL     COMMENT 'ce a văzut utilizatorul aici',
     PRIMARY KEY (id),

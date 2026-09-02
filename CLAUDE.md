@@ -58,7 +58,13 @@ Detaliile și motivele sunt în `docs/plan-tranzactionare.md` — **nu le reinve
 - **TP se verifică înaintea SL**, și nu din preferință: SL-ul se judecă pe
   închidere, TP-ul oricând în timpul orei, deci TP-ul e primul prin construcție.
 - **Triunghiul expiră la vârf** dacă n-a fost spart: după intersecție, „sus"
-  ajunge sub „jos" și orice lumânare verde ar da un long fals.
+  ajunge sub „jos" și orice lumânare verde ar da un long fals. Primește starea
+  `expirat`, **distinctă de `sters`** — unul e verdictul pieței, celălalt decizia
+  utilizatorului. Amândouă sunt exemple negative pentru etapa 4, dar din motive
+  diferite; contopite, n-ar mai spune nimic. De aceea nici nu se pot șterge.
+- **Se salvează fereastra vizibilă la desenare** (`fereastra_de_la`,
+  `fereastra_pana_la`): „vârful evident" depinde de cât se vedea pe ecran. Nu se
+  poate reconstitui retroactiv.
 - **Cele consumate rămân vizibile**: ultimul se desenează automat în gri, restul
   se bifează din listă (alegerea se ține în localStorage). Liniile lor merg
   **până la vârf**, unde triunghiul se închide singur.
