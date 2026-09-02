@@ -43,7 +43,9 @@ $config = require CALE_CONFIG;
 $simbol   = $config['piata']['simbol'] ?? 'ZECUSDC';
 $tpProc   = (float)($config['reguli']['tp_procent'] ?? 1.0);
 $comision = (float)($config['reguli']['comision_o_parte'] ?? 0.075) / 100.0;
-$capital  = (float)($config['reguli']['capital_initial'] ?? 500.0);
+// capital_initial nu se citește aici: banca de long își ia soldul din tabel, iar
+// cea de short se finanțează din ce are deja. Îl folosește doar stare.php, ca
+// punct de referință pentru randament.
 
 /* ------------------------------------------------------------ baza de date */
 
