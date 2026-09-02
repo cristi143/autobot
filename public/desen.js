@@ -21,7 +21,7 @@
      browserul rulează cod vechi — și atunci o spune, în loc să ne întrebăm de
      ce o schimbare „nu a avut efect". Se schimbă la fiecare modificare a
      fișierelor din public/. */
-  var VERSIUNE = "2026-09-02-h";
+  var VERSIUNE = "2026-09-02-i";
   window.AUTOBOT_VERSIUNE = VERSIUNE;
 
   var A = window.Autobot;
@@ -471,6 +471,8 @@
     puncte = [];
     indiciu = null;
     inAsteptare = null;
+    var cn = document.getElementById("nota-camp");
+    if (cn) cn.value = "";
     redeseneaza();
     actualizeazaBara();
   }
@@ -545,11 +547,13 @@
     if (!c) return;
 
     var f = fereastraVizibila();
+    var campNota = document.getElementById("nota-camp");
     var trimit = {
       sus: inAsteptare.sus,
       jos: inAsteptare.jos,
       fereastra_de_la:   f ? f.de_la : null,
-      fereastra_pana_la: f ? f.pana_la : null
+      fereastra_pana_la: f ? f.pana_la : null,
+      nota: campNota ? campNota.value.trim() : ""
     };
 
     fetch("api/triunghiuri.php", {
@@ -617,11 +621,16 @@
       spune("Clic: " + pasi[puncte.length], false);
     }
 
+    var eraAscunsa = conf.hidden;
     conf.hidden = !inAsteptare;
     if (inAsteptare) {
       document.getElementById("conf-detaliu").textContent =
         "Linie de sus (long la spargere) și linie de jos (short la spargere), " +
         "deduse din poziția prețului.";
+      if (eraAscunsa) {
+        var cn = document.getElementById("nota-camp");
+        if (cn) cn.focus();
+      }
     }
 
     lista.textContent = "";
@@ -689,6 +698,14 @@
 
         r.appendChild(bifa); r.appendChild(e); r.appendChild(sm);
         cutie.appendChild(r);
+
+        if (t.nota) {
+          var n = document.createElement("div");
+          n.className = "nota-rand";
+          n.textContent = t.nota;
+          n.title = t.nota;          // textul întreg, dacă e tăiat
+          cutie.appendChild(n);
+        }
       });
     }
   }
@@ -698,6 +715,9 @@
     else { modDesen = true; puncte = []; actualizeazaBara(); }
   });
   document.getElementById("btn-salveaza").addEventListener("click", salveaza);
+  document.getElementById("nota-camp").addEventListener("keydown", function (ev) {
+    if (ev.key === "Enter") { ev.preventDefault(); salveaza(); }
+  });
   document.getElementById("btn-renunta").addEventListener("click", function () {
     reseteazaDesenul();
   });

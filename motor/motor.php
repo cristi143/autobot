@@ -358,11 +358,13 @@ foreach ($triunghiuri as $t) {
     // însemna nimic. Îl scoatem din joc în loc să producă un semnal fals.
     $varf = varfulTriunghiului($linii['sus'], $linii['jos']);
     if ($varf !== null && $inchisa['ora'] >= $varf) {
-        $pdo->prepare("UPDATE triunghiuri SET stare='expirat', nota=? WHERE id=?")
-            ->execute(['liniile s-au intersectat pe ' .
-                       gmdate('Y-m-d H:i', intdiv($varf, 1000)) . ' UTC fără spargere',
-                       $t['id']]);
-        spune("Triunghiul #{$t['id']} a trecut de vârf fără spargere — expirat.");
+        // `nota` NU se atinge: e a utilizatorului, scrisă la desenare, și e
+        // material pentru etapa 4. Starea `expirat` spune deja ce s-a întâmplat,
+        // iar momentul vârfului se recalculează oricând din cele două linii.
+        $pdo->prepare("UPDATE triunghiuri SET stare='expirat' WHERE id=?")
+            ->execute([$t['id']]);
+        spune("Triunghiul #{$t['id']} a trecut de vârf fără spargere (" .
+              gmdate('Y-m-d H:i', intdiv($varf, 1000)) . " UTC) — expirat.");
         continue;
     }
 

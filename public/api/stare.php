@@ -18,7 +18,7 @@ $reguli = config()['reguli'] ?? [];
 /* ---- triunghiul activ, cu prețurile liniilor la ora curentă ---- */
 
 $triunghi = null;
-$rand = $pdo->query("SELECT id, desenat_la FROM triunghiuri
+$rand = $pdo->query("SELECT id, desenat_la, nota FROM triunghiuri
                      WHERE stare = 'activ' ORDER BY desenat_la DESC LIMIT 1")->fetch();
 if ($rand) {
     $st = $pdo->prepare("SELECT rol, t1, p1, t2, p2 FROM linii WHERE triunghi_id = ?");
@@ -35,6 +35,7 @@ if ($rand) {
         'sus'     => $preturi['sus'] ?? null,
         'jos'     => $preturi['jos'] ?? null,
         'desenat' => (int)$rand['desenat_la'],
+        'nota'    => $rand['nota'],
     ];
 }
 

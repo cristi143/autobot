@@ -214,9 +214,11 @@ retroactiv**:
   motive diferite. Niciuna nu se poate șterge.
 - **fereastra vizibilă la desenare** — cât se vedea pe ecran în acel moment.
 
-Rămân neînregistrate, deliberat: nota utilizatorului despre ce a văzut (de
-adăugat când vrea el) și momentele în care s-a uitat fără să deseneze — acelea ar
-cere un jurnal de vizite, mai intruziv și cu valoare mai mică.
+- **nota utilizatorului** — ce a văzut acolo, scrisă la desenare. Singurul lucru
+  care nu se deduce niciodată din cifre. Motorul nu o atinge.
+
+Rămân neînregistrate, deliberat: momentele în care s-a uitat fără să deseneze —
+acelea ar cere un jurnal de vizite, mai intruziv și cu valoare mai mică.
 
 ## Etapa 4: modelul matematic
 

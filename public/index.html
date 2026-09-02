@@ -85,6 +85,9 @@
 
         <div class="confirmare" id="confirmare" hidden>
           <p id="conf-detaliu"></p>
+          <input type="text" class="nota-camp" id="nota-camp" maxlength="255"
+                 placeholder="ce ai văzut aici? (opțional)"
+                 aria-label="Notă despre triunghi">
           <div class="confirmare-butoane">
             <button type="button" class="buton mic" id="btn-salveaza">Salvează</button>
             <button type="button" class="buton mic sters" id="btn-renunta">Renunță</button>
@@ -103,6 +106,7 @@
           <div><dt>Linia de jos <span class="mic">short la spargere</span></dt><dd class="n" id="tri-jos">—</dd></div>
           <div><dt>Desenat</dt><dd class="n" id="tri-cand">—</dd></div>
         </dl>
+        <p class="nota-triunghi" id="tri-nota" hidden></p>
         <p class="nota-bloc">Prețurile liniilor sunt cele de la ora curentă — se strâng pe măsură ce trece timpul.</p>
       </section>
 

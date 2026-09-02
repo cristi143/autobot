@@ -530,3 +530,40 @@ body {
   color: var(--muted);
   background: var(--line);
 }
+
+/* ---- notele scrise la desenare ---- */
+
+.nota-camp {
+  appearance: none;
+  width: 100%;
+  padding: .4rem .55rem;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: .8125rem;
+}
+.nota-camp::placeholder { color: var(--muted); }
+.nota-camp:focus { outline: none; border-color: var(--sus); }
+
+/* În listă, nota stă sub rândul ei, pe o singură linie. Dacă e prea lungă se
+   taie — textul întreg rămâne în „title". */
+.nota-rand {
+  padding: 0 0 .3rem 1.35rem;
+  margin-top: -.15rem;
+  color: var(--muted);
+  font-size: .6875rem;
+  font-style: italic;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nota-triunghi {
+  margin: 0;
+  color: var(--muted);
+  font-size: .75rem;
+  font-style: italic;
+  line-height: 1.45;
+}

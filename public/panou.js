@@ -119,6 +119,10 @@
     $("tri-sus").textContent  = pret(t.sus);
     $("tri-jos").textContent  = pret(t.jos);
     $("tri-cand").textContent = candUTC(t.desenat);
+
+    var n = $("tri-nota");
+    n.textContent = t.nota || "";
+    n.hidden = !t.nota;
   }
 
   /* ---------- băncile ---------- */

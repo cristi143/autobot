@@ -62,6 +62,9 @@ Detaliile și motivele sunt în `docs/plan-tranzactionare.md` — **nu le reinve
   `expirat`, **distinctă de `sters`** — unul e verdictul pieței, celălalt decizia
   utilizatorului. Amândouă sunt exemple negative pentru etapa 4, dar din motive
   diferite; contopite, n-ar mai spune nimic. De aceea nici nu se pot șterge.
+- **`nota` e a utilizatorului**, scrisă la desenare. Motorul NU o atinge — a
+  suprascris-o odată la expirare, ceea ce ar fi șters tocmai lucrul care nu se
+  poate reconstitui. Starea `expirat` spune deja ce s-a întâmplat.
 - **Se salvează fereastra vizibilă la desenare** (`fereastra_de_la`,
   `fereastra_pana_la`): „vârful evident" depinde de cât se vedea pe ecran. Nu se
   poate reconstitui retroactiv.
