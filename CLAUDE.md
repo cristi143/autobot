@@ -15,7 +15,7 @@ Tot lanțul e viu, în simulare cu bani fictivi:
 | **Motor** | `motor/motor.php` | **cron orar, ia deciziile** |
 | Bază de date | MySQL `marcelpa_autobot` | 8 tabele, vezi `baza-de-date/schema.sql` |
 
-- **Cron activ:** la fiecare 5 minute (`*/5 * * * *`),
+- **Cron activ:** la fiecare minut (`* * * * *`),
   `/opt/cpanel/ea-php83/root/usr/bin/php /home/marcelpa/autobot-motor/motor.php`
 - **Configurarea** (parole, cheie API): `/home/marcelpa/autobot-config.php`,
   în afara zonei publice, niciodată în git.

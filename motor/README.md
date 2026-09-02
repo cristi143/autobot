@@ -5,11 +5,14 @@ Rulează din cron, o dată pe oră. **Nu e accesibil prin web** — stă în
 
 ## Cron job-ul
 
-cPanel → **Cron Jobs** → *Add New Cron Job* → **Once Per Five Minutes**:
+cPanel → **Cron Jobs** → *Add New Cron Job* → **Once Per Minute**:
 
 ```
-*/5 * * * *
+* * * * *
 ```
+
+Atenție la câmpul *Minute*: `*` înseamnă „la fiecare minut", iar `1` ar însemna
+„la minutul 1 al fiecărei ore" — adică o dată pe oră. E ușor de confundat.
 
 Comanda:
 
@@ -17,17 +20,26 @@ Comanda:
 /opt/cpanel/ea-php83/root/usr/bin/php /home/marcelpa/autobot-motor/motor.php >/dev/null 2>&1
 ```
 
-**De ce la 5 minute și nu la o oră.** Motorul are două ritmuri. TP-ul se
-verifică la fiecare rulare, inclusiv pe lumânarea în formare: e un ordin limită
-la un preț cunoscut, deci dacă maximul l-a atins, s-ar fi executat deja — n-are
-rost să așteptăm închiderea orei ca s-o recunoaștem. Cu cronul la 5 minute,
-poziția se închide în cel mult atâta de la atingerea pragului.
+**„Rulare" înseamnă o pornire a scriptului.** Motorul nu stă pornit: cronul îl
+lansează, el își face treaba în ~270 ms și moare. La un minut, sunt 1440 de
+porniri pe zi, fiecare cu o singură cerere la Binance — sub o miime din limita
+de rată.
 
-SL-ul și semnalele noi se judecă tot pe închiderea lumânării de 1h, o singură
-dată per lumânare. Rulările dintre ore nu le ating.
+**De ce la fiecare minut.** Motorul are două ritmuri. TP-ul se verifică la
+fiecare rulare, inclusiv pe lumânarea în formare, deci poziția se închide în cel
+mult 60 de secunde de la atingerea pragului. SL-ul și semnalele se judecă tot pe
+închiderea lumânării de 1h, o singură dată per lumânare; rulările dintre ore nu
+le ating.
 
-Prima rulare de după minutul 0 prinde lumânarea proaspăt închisă. Nu contează
-că e la :00 sau :05 — Binance are oricum nevoie de o clipă ca s-o publice.
+**Nu se ratează niciodată o atingere de TP, oricât de rar ar rula cronul.**
+Câmpul `high` al lumânării în formare e maximul atins de orice tranzacție de la
+începutul orei până în clipa cererii, actualizat la fiecare tick. Un vârf de trei
+secunde rămâne acolo. Interogarea prețului curent ar fi mai slabă, nu mai bună:
+ar vedea doar clipa aceea și ar rata vârful.
+
+Ce câștigă rularea deasă e doar **viteza de recunoaștere** — prețul de ieșire e
+corect oricum. Iar la bani reali (etapa 5) întârzierea dispare complet: TP-ul va
+fi un ordin limită așezat la Binance, executat de ei în milisecunde.
 
 Dacă `ea-php83` nu există, încearcă `ea-php81`. Verifici din File Manager dacă
 există calea, sau lași cPanel să aleagă cu simplul `php`.

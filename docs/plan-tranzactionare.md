@@ -123,7 +123,7 @@ SL-ul se evaluează în ultima clipă a orei; TP-ul se poate atinge oricând în
 **Deci dacă ambele se întâmplă în aceeași oră, TP-ul a fost întotdeauna primul, prin
 construcție.** Nu e o presupunere optimistă, e o consecință a definițiilor.
 
-### Cronul rulează la 5 minute, cu două ritmuri
+### Cronul rulează la fiecare minut, cu două ritmuri
 
 **Corectare față de prima versiune a planului.** Scrisesem că un cron orar
 „reproduce exact" un TP în timp real. Adevărat despre **prețul** de execuție —
@@ -134,7 +134,11 @@ Deci:
 
 - **TP — la fiecare rulare**, inclusiv pe lumânarea în formare. Dacă maximul de
   până acum a atins pragul, ordinul s-a executat deja. Poziția se închide în cel
-  mult 5 minute de la atingere.
+  mult 60 de secunde de la atingere.
+
+  Atingerea nu se ratează niciodată, oricât de rar ar rula cronul: `high` al
+  lumânării în formare e maximul oricărei tranzacții de la începutul orei,
+  actualizat la fiecare tick. Rularea deasă câștigă doar viteza de recunoaștere.
 - **SL și semnale — o singură dată per lumânare închisă**, pentru că exact așa
   sunt definite: pe închidere.
 
