@@ -41,7 +41,10 @@
 
   /* ---------- starea ---------- */
 
-  var activeSalvate = [];      // triunghiurile din baza de date
+  var activeSalvate = [];      // triunghiurile încă armate
+  var consumate = [];          // cele care au tras — istoric, desenat în gri
+  var vizibile = {};           // id -> arătat pe grafic (ales de utilizator)
+  var CHEIE_VIZ = "autobot_triunghiuri_vizibile";
   var modDesen = false;
   var puncte = [];             // punctele clicului curent, {ms, pret}
   var indiciu = null;          // punctul de sub cursor, pentru previzualizare
@@ -76,9 +79,39 @@
     sus:    "#26a69a",
     jos:    "#ef5350",
     schita: "#8b949e",
+    vechi:  "#7c8794",   // triunghiurile consumate: prezente, dar retrase
     sl:     "#ef5350",   // linia de intrare devine prag de ieșire
     tp:     "#26a69a"
   };
+
+  /** Locul unde triunghiul a tras: lumânarea și prețul de închidere. */
+  function traseazaSemnal(semnal) {
+    var x = xDinMs(semnal.ora), y = yDinPret(semnal.pret);
+    if (x == null || y == null) return;
+    if (x < 0 || x > latimeUtila()) return;
+
+    var lung = semnal.tip === "long";
+    var culoare = lung ? CULORI.sus : CULORI.jos;
+
+    ctx.save();
+    ctx.fillStyle = culoare;
+    ctx.strokeStyle = culoare;
+    ctx.lineWidth = 1.5;
+
+    // un triunghiuleț care arată încotro s-a intrat
+    var d = 5, vf = lung ? y - 11 : y + 11, baza = lung ? y - 3 : y + 3;
+    ctx.beginPath();
+    ctx.moveTo(x, vf);
+    ctx.lineTo(x - d, baza);
+    ctx.lineTo(x + d, baza);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.arc(x, y, 3, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+  }
 
   /** Prag orizontal, de la marginea stângă la dreapta — TP-ul e un preț fix. */
   function traseazaPrag(pretPrag, culoare, eticheta) {
@@ -103,7 +136,13 @@
     ctx.restore();
   }
 
-  function traseazaLinie(l, culoare, punctat) {
+  /**
+   * @param limitaMs  dacă e dat, linia se oprește acolo în loc să se prelungească
+   *                  până la marginea din dreapta. Un triunghi care a tras e o
+   *                  poveste încheiată: dincolo de semnal, liniile lui nu mai
+   *                  înseamnă nimic și doar încarcă graficul.
+   */
+  function traseazaLinie(l, culoare, punctat, subtire, limitaMs) {
     var x1 = xDinMs(l.t1), y1 = yDinPret(l.p1);
     var x2 = xDinMs(l.t2), y2 = yDinPret(l.p2);
     if (x1 == null || x2 == null || y1 == null || y2 == null) return;
@@ -114,6 +153,10 @@
     // pixeli, ceea ce e corect pentru că ambele axe sunt liniare: o dreaptă în
     // (timp, preț) rămâne o dreaptă pe ecran.
     var xSfarsit = Math.max(lat, x1, x2);
+    if (limitaMs) {
+      var xLimita = xDinMs(limitaMs);
+      if (xLimita != null) xSfarsit = Math.max(xLimita, x1, x2);
+    }
     var ySfarsit = (x2 === x1)
       ? y2
       : y1 + ((y2 - y1) / (x2 - x1)) * (xSfarsit - x1);
@@ -124,7 +167,8 @@
     ctx.clip();
 
     ctx.strokeStyle = culoare;
-    ctx.lineWidth = 1.5;
+    ctx.lineWidth = subtire ? 1 : 1.5;
+    ctx.globalAlpha = subtire ? 0.75 : 1;
     ctx.setLineDash(punctat ? [5, 4] : []);
     ctx.beginPath();
     ctx.moveTo(x1, y1);
@@ -136,7 +180,7 @@
     ctx.fillStyle = culoare;
     [[x1, y1], [x2, y2]].forEach(function (p) {
       ctx.beginPath();
-      ctx.arc(p[0], p[1], 3.5, 0, Math.PI * 2);
+      ctx.arc(p[0], p[1], subtire ? 2.5 : 3.5, 0, Math.PI * 2);
       ctx.fill();
     });
     ctx.restore();
@@ -144,6 +188,15 @@
 
   function redeseneaza() {
     ctx.clearRect(0, 0, gazda.clientWidth, gazda.clientHeight);
+
+    // Întâi istoricul, ca să stea în spatele celor active.
+    consumate.forEach(function (t) {
+      if (!vizibile[t.id]) return;
+      var pana = t.semnal ? t.semnal.ora : (t.consumat_la || null);
+      if (t.linii.sus) traseazaLinie(t.linii.sus, CULORI.vechi, false, true, pana);
+      if (t.linii.jos) traseazaLinie(t.linii.jos, CULORI.vechi, false, true, pana);
+      if (t.semnal) traseazaSemnal(t.semnal);
+    });
 
     activeSalvate.forEach(function (t) {
       if (t.linii.sus) traseazaLinie(t.linii.sus, CULORI.sus, false);
@@ -258,12 +311,34 @@
     return c;
   }
 
+  function citesteVizibile() {
+    try { return JSON.parse(localStorage.getItem(CHEIE_VIZ)) || {}; }
+    catch (e) { return {}; }
+  }
+  function scrieVizibile() {
+    try { localStorage.setItem(CHEIE_VIZ, JSON.stringify(vizibile)); } catch (e) {}
+  }
+
   function incarcaTriunghiuri() {
     return fetch("api/triunghiuri.php", { cache: "no-store" })
       .then(function (r) { return r.json(); })
       .then(function (d) {
         if (!d.ok) throw new Error(d.eroare || "răspuns nevalid");
-        activeSalvate = (d.triunghiuri || []).filter(function (t) { return t.stare === "activ"; });
+        var toate = d.triunghiuri || [];
+        activeSalvate = toate.filter(function (t) { return t.stare === "activ"; });
+
+        // Consumate, cele mai recente întâi.
+        consumate = toate.filter(function (t) { return t.stare === "consumat"; })
+                         .sort(function (a, b) { return (b.consumat_la || 0) - (a.consumat_la || 0); })
+                         .slice(0, 10);
+
+        vizibile = citesteVizibile();
+        // Ultimul care a tras se arată din start: e cel pe care vrei să-l vezi
+        // după ce ai ieșit din poziție. Restul, la cerere.
+        if (consumate.length && vizibile[consumate[0].id] === undefined) {
+          vizibile[consumate[0].id] = true;
+          scrieVizibile();
+        }
         redeseneaza();
         actualizeazaBara();
         document.dispatchEvent(new CustomEvent("autobot:triunghiuri-schimbate"));
@@ -314,6 +389,10 @@
   var bara = document.getElementById("unelte");
   var mesaj = document.getElementById("desen-mesaj");
 
+  function candScurt(ms) {
+    return ms ? new Date(ms).toISOString().slice(5, 16).replace("T", " ") : "—";
+  }
+
   function spune(text, e) {
     mesaj.textContent = text;
     mesaj.classList.toggle("rau", !!e);
@@ -345,25 +424,63 @@
     }
 
     lista.textContent = "";
+
     if (!activeSalvate.length) {
       var g = document.createElement("div");
       g.className = "gol";
       g.textContent = "Niciun triunghi activ.";
       lista.appendChild(g);
     }
+
     activeSalvate.forEach(function (t) {
       var r = document.createElement("div");
       r.className = "rand-triunghi";
-      var d = new Date(t.desenat_la);
+
       var e = document.createElement("span");
-      e.textContent = "#" + t.id + " · " + d.toISOString().slice(0, 16).replace("T", " ");
-      var s = document.createElement("button");
-      s.className = "mic-buton";
-      s.textContent = "șterge";
-      s.addEventListener("click", function () { sterge(t.id); });
-      r.appendChild(e); r.appendChild(s);
+      e.textContent = "#" + t.id + " · " + candScurt(t.desenat_la);
+
+      var b = document.createElement("button");
+      b.className = "mic-buton";
+      b.textContent = "șterge";
+      b.addEventListener("click", function () { sterge(t.id); });
+
+      r.appendChild(e); r.appendChild(b);
       lista.appendChild(r);
     });
+
+    if (consumate.length) {
+      var cap = document.createElement("div");
+      cap.className = "cap-istoric";
+      cap.textContent = "au tras — bifează ca să le vezi";
+      lista.appendChild(cap);
+
+      consumate.forEach(function (t) {
+        var r = document.createElement("label");
+        r.className = "rand-triunghi vechi";
+
+        var bifa = document.createElement("input");
+        bifa.type = "checkbox";
+        bifa.checked = !!vizibile[t.id];
+        bifa.addEventListener("change", function () {
+          vizibile[t.id] = bifa.checked;
+          scrieVizibile();
+          redeseneaza();
+        });
+
+        var e = document.createElement("span");
+        e.className = "et-triunghi";
+        e.textContent = "#" + t.id + " · " + candScurt(t.consumat_la || t.desenat_la);
+
+        var sm = document.createElement("span");
+        if (t.semnal) {
+          sm.className = "semn " + t.semnal.tip;
+          sm.textContent = t.semnal.tip === "long" ? "LONG" : "SHORT";
+        }
+
+        r.appendChild(bifa); r.appendChild(e); r.appendChild(sm);
+        lista.appendChild(r);
+      });
+    }
   }
 
   document.getElementById("btn-deseneaza").addEventListener("click", function () {

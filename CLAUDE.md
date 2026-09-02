@@ -9,7 +9,7 @@ Tot lanțul e viu, în simulare cu bani fictivi:
 | Piesă | Unde | Ce face |
 |---|---|---|
 | Grafic live | `public/grafic.js` | lumânări 1h, istoric + punte REST + WebSocket |
-| Desen | `public/desen.js` | utilizatorul trage triunghiuri, se salvează |
+| Desen | `public/desen.js` | trage triunghiuri; arată și istoricul celor consumate |
 | API | `public/api/` | `stare.php`, `triunghiuri.php`, `_comun.php` |
 | Panou | `public/panou.js` | poziție, triunghi, bănci, istoric |
 | **Motor** | `motor/motor.php` | **cron orar, ia deciziile** |
@@ -56,6 +56,10 @@ Detaliile și motivele sunt în `docs/plan-tranzactionare.md` — **nu le reinve
   închidere, TP-ul oricând în timpul orei, deci TP-ul e primul prin construcție.
 - **Triunghiul expiră la vârf** dacă n-a fost spart: după intersecție, „sus"
   ajunge sub „jos" și orice lumânare verde ar da un long fals.
+- **Cele consumate rămân vizibile**: ultimul se desenează automat în gri, restul
+  se bifează din listă (alegerea se ține în localStorage). Liniile lor se opresc
+  la locul semnalului — dincolo de el nu mai înseamnă nimic — iar o săgeată arată
+  în ce direcție s-a intrat.
 - Comision 0,075% pe parte. O poziție odată; cât e deschisă, nu se caută semnale.
 
 ## Capcane deja plătite

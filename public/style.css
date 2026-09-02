@@ -432,3 +432,36 @@ body {
   background: rgba(239, 83, 80, .16);
   color: var(--jos);
 }
+
+/* ---- istoricul triunghiurilor din listă ---- */
+
+.cap-istoric {
+  margin-top: .55rem;
+  padding-top: .5rem;
+  border-top: 1px solid var(--line);
+  font-size: .6875rem;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.rand-triunghi.vechi {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: .45rem;
+  cursor: pointer;
+  color: var(--muted);
+}
+.rand-triunghi.vechi:hover { color: var(--text); }
+.rand-triunghi.vechi input { margin: 0; cursor: pointer; accent-color: var(--muted); }
+
+.rand-triunghi .semn {
+  font-size: .625rem;
+  font-weight: 600;
+  letter-spacing: .06em;
+  padding: .05rem .35rem;
+  border-radius: 3px;
+}
+.rand-triunghi .semn.long  { color: var(--sus); background: rgba(38,166,154,.14); }
+.rand-triunghi .semn.short { color: var(--jos); background: rgba(239,83,80,.14); }

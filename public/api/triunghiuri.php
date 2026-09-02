@@ -40,11 +40,27 @@ if ($metoda === 'GET') {
                 't2' => (int)$l['t2'], 'p2' => (float)$l['p2'],
             ];
         }
+        // Semnalul care a consumat triunghiul: fără el, un triunghi vechi
+        // desenat pe grafic e doar decor. Cu el se vede unde a tras și de ce.
+        $st = $pdo->prepare("SELECT triunghi_id, ora_lumanare, tip, pret_inchidere, pret_linie
+                             FROM semnale WHERE triunghi_id IN ($loc)");
+        $st->execute($ids);
+        $semnale = [];
+        foreach ($st->fetchAll() as $sm) {
+            $semnale[(int)$sm['triunghi_id']] = [
+                'ora'   => (int)$sm['ora_lumanare'],
+                'tip'   => $sm['tip'],
+                'pret'  => (float)$sm['pret_inchidere'],
+                'linie' => (float)$sm['pret_linie'],
+            ];
+        }
+
         foreach ($triunghiuri as &$t) {
             $t['id']         = (int)$t['id'];
             $t['desenat_la'] = (int)$t['desenat_la'];
             $t['consumat_la']= $t['consumat_la'] === null ? null : (int)$t['consumat_la'];
             $t['linii']      = $peTriunghi[$t['id']] ?? [];
+            $t['semnal']     = $semnale[$t['id']] ?? null;
         }
         unset($t);
     }
