@@ -21,7 +21,7 @@
      browserul rulează cod vechi — și atunci o spune, în loc să ne întrebăm de
      ce o schimbare „nu a avut efect". Se schimbă la fiecare modificare a
      fișierelor din public/. */
-  var VERSIUNE = "2026-09-02-e";
+  var VERSIUNE = "2026-09-02-f";
   window.AUTOBOT_VERSIUNE = VERSIUNE;
 
   var A = window.Autobot;
@@ -92,6 +92,98 @@
     tp:     "#26a69a"
   };
 
+  /** Culoarea fundalului graficului — pentru contur, ca marcajele să iasă. */
+  function fundal() {
+    var v = getComputedStyle(document.documentElement).getPropertyValue("--bg");
+    return (v || "").trim() || "#161b22";
+  }
+
+  /** Linie verticală pe toată înălțimea: nu se poate rata, oricât de depărtat. */
+  function verticala(x, culoare) {
+    if (x == null || x < 0 || x > latimeUtila()) return;
+    ctx.save();
+    ctx.globalAlpha = 0.4;
+    ctx.strokeStyle = culoare;
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3, 4]);
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, gazda.clientHeight);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  /**
+   * Marcaj la un preț anume, cu contur în culoarea fundalului.
+   * Conturul e ce-l face vizibil: fără el, o bulină se pierde peste corpul unei
+   * lumânări de aceeași culoare.
+   */
+  function marcajPret(x, y, culoare, fel) {
+    function traseu() {
+      ctx.beginPath();
+      if (fel === "x") {
+        var d = 5.5;
+        ctx.moveTo(x - d, y - d); ctx.lineTo(x + d, y + d);
+        ctx.moveTo(x + d, y - d); ctx.lineTo(x - d, y + d);
+      } else {
+        ctx.arc(x, y, 5, 0, Math.PI * 2);
+      }
+    }
+
+    ctx.save();
+    ctx.lineJoin = "round";
+    ctx.lineCap = "round";
+
+    ctx.strokeStyle = fundal();        // întâi conturul gros, în culoarea fundalului
+    ctx.lineWidth = 4;
+    traseu();
+    ctx.stroke();
+
+    ctx.strokeStyle = culoare;         // apoi marcajul propriu-zis
+    ctx.fillStyle = culoare;
+    ctx.lineWidth = 2.2;
+    traseu();
+    if (fel === "plin") { ctx.fill(); } else { ctx.stroke(); }
+    ctx.restore();
+  }
+
+  /**
+   * Etichetă cu fundal propriu, așezată LATERAL față de marcaj.
+   * Deasupra sau dedesubt s-ar fi lovit de săgeata intrării, care stă la 22 de
+   * pixeli de preț; lateral nu se ciocnește cu nimic.
+   */
+  function eticheta(x, y, text, culoare) {
+    ctx.save();
+    ctx.font = "600 11px ui-sans-serif, system-ui, sans-serif";
+    var w = ctx.measureText(text).width + 10, h = 16;
+    var lat = latimeUtila();
+    var ex = x + 11;                        // implicit în dreapta marcajului
+    var laStanga = (ex + w > lat - 2);
+    if (laStanga) ex = x - 11 - w;          // dacă nu încape, în stânga lui
+    ex = Math.max(2, ex);
+
+    // Mutată la stânga, eticheta ar putea cădea peste marcajul intrării, care e
+    // adesea la aceeași înălțime. O ridicăm ca să treacă pe deasupra lui.
+    var ey = y - h / 2 - (laStanga ? 16 : 0);
+
+    ctx.globalAlpha = 0.9;
+    ctx.fillStyle = fundal();
+    ctx.beginPath();
+    ctx.rect(ex, ey, w, h);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+
+    ctx.strokeStyle = culoare;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    ctx.fillStyle = culoare;
+    ctx.textBaseline = "middle";
+    ctx.textAlign = "center";
+    ctx.fillText(text, ex + w / 2, ey + h / 2 + 0.5);
+    ctx.restore();
+  }
+
   /** Unde s-a terminat tranzacția: TP sau SL. */
   function traseazaIesire(iesire) {
     var x = xDinMs(iesire.ora), y = yDinPret(iesire.pret);
@@ -100,71 +192,64 @@
     var peTP = iesire.motiv === "tp";
     var culoare = peTP ? CULORI.sus : CULORI.jos;
 
-    ctx.save();
-    ctx.strokeStyle = culoare;
-    ctx.fillStyle = culoare;
-    ctx.lineWidth = 1.8;
+    verticala(x, culoare);
+    marcajPret(x, y, culoare, peTP ? "plin" : "x");
 
-    if (peTP) {
-      ctx.beginPath();
-      ctx.arc(x, y, 4, 0, Math.PI * 2);
-      ctx.fill();
-    } else {
-      var d = 4.5;
-      ctx.beginPath();
-      ctx.moveTo(x - d, y - d); ctx.lineTo(x + d, y + d);
-      ctx.moveTo(x + d, y - d); ctx.lineTo(x - d, y + d);
-      ctx.stroke();
+    if (iesire.rezultat != null) {
+      eticheta(x, y, (iesire.rezultat > 0 ? "+" : "") + iesire.rezultat.toFixed(2) + "%",
+               culoare);
     }
-    ctx.restore();
   }
 
   /** Locul unde triunghiul a tras: lumânarea și prețul de închidere. */
   function traseazaSemnal(semnal) {
     var x = xDinMs(semnal.ora), y = yDinPret(semnal.pret);
-    if (x == null || y == null) return;
-    if (x < 0 || x > latimeUtila()) return;
+    if (x == null || y == null || x < 0 || x > latimeUtila()) return;
 
     var lung = semnal.tip === "long";
     var culoare = lung ? CULORI.sus : CULORI.jos;
 
-    ctx.save();
-    ctx.fillStyle = culoare;
-    ctx.strokeStyle = culoare;
-    ctx.lineWidth = 1.5;
+    verticala(x, culoare);
 
-    // Săgeata care arată încotro s-a intrat. Stă la distanță de lumânare:
-    // lipită de ea, se pierdea printre corpuri și umbre.
-    var LATIME = 7;    // jumătate din baza săgeții
-    var DISTANTA = 16; // de la prețul semnalului până la baza săgeții
-    var INALTIME = 13;
-
+    // Săgeata, la distanță de lumânare ca să nu se piardă printre umbre.
+    var LATIME = 7, DISTANTA = 22, INALTIME = 13;
     var sus = lung ? -1 : 1;
     var baza = y + sus * DISTANTA;
     var varf = y + sus * (DISTANTA + INALTIME);
 
-    ctx.beginPath();
-    ctx.moveTo(x, varf);
-    ctx.lineTo(x - LATIME, baza);
-    ctx.lineTo(x + LATIME, baza);
-    ctx.closePath();
+    function traseu() {
+      ctx.beginPath();
+      ctx.moveTo(x, varf);
+      ctx.lineTo(x - LATIME, baza);
+      ctx.lineTo(x + LATIME, baza);
+      ctx.closePath();
+    }
+
+    ctx.save();
+    ctx.lineJoin = "round";
+    ctx.strokeStyle = fundal();
+    ctx.lineWidth = 4;
+    traseu();
+    ctx.stroke();
+
+    ctx.fillStyle = culoare;
+    ctx.strokeStyle = culoare;
+    ctx.lineWidth = 2;
+    traseu();
     ctx.fill();
 
-    // coada, ca să lege săgeata de punctul pe care îl marchează
-    ctx.beginPath();
+    ctx.beginPath();                 // coada, până aproape de punctul marcat
     ctx.moveTo(x, baza);
-    ctx.lineTo(x, y + sus * 5);
-    ctx.stroke();
-
-    // punctul exact al închiderii care a dat semnalul
-    ctx.beginPath();
-    ctx.arc(x, y, 3, 0, Math.PI * 2);
+    ctx.lineTo(x, y + sus * 8);
     ctx.stroke();
     ctx.restore();
+
+    marcajPret(x, y, culoare, "gol");
   }
 
+
   /** Prag orizontal, de la marginea stângă la dreapta — TP-ul e un preț fix. */
-  function traseazaPrag(pretPrag, culoare, eticheta) {
+  function traseazaPrag(pretPrag, culoare, text) {
     var y = yDinPret(pretPrag);
     if (y == null) return;
     var lat = latimeUtila();
@@ -182,7 +267,7 @@
     ctx.font = "11px ui-monospace, SFMono-Regular, Menlo, monospace";
     ctx.fillStyle = culoare;
     ctx.textBaseline = "bottom";
-    ctx.fillText(eticheta, 6, y - 3);
+    ctx.fillText(text, 6, y - 3);
     ctx.restore();
   }
 

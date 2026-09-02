@@ -61,8 +61,11 @@ Detaliile și motivele sunt în `docs/plan-tranzactionare.md` — **nu le reinve
   ajunge sub „jos" și orice lumânare verde ar da un long fals.
 - **Cele consumate rămân vizibile**: ultimul se desenează automat în gri, restul
   se bifează din listă (alegerea se ține în localStorage). Liniile lor merg
-  **până la vârf**, unde triunghiul se închide singur. Pe ele: o săgeată la
-  semnal (direcția intrării) și semnul ieșirii — cerc plin pentru TP, × pentru SL.
+  **până la vârf**, unde triunghiul se închide singur.
+- **Intrarea și ieșirea se marchează cu trei lucruri deodată**, pentru că unul
+  singur se pierde printre lumânări: o linie verticală pe toată înălțimea, un
+  marcaj cu contur în culoarea fundalului (halo), și o etichetă cu rezultatul,
+  așezată lateral ca să nu lovească săgeata intrării.
 - Comision 0,075% pe parte. O poziție odată; cât e deschisă, nu se caută semnale.
 
 ## Capcane deja plătite
