@@ -98,15 +98,30 @@
     ctx.strokeStyle = culoare;
     ctx.lineWidth = 1.5;
 
-    // un triunghiuleț care arată încotro s-a intrat
-    var d = 5, vf = lung ? y - 11 : y + 11, baza = lung ? y - 3 : y + 3;
+    // Săgeata care arată încotro s-a intrat. Stă la distanță de lumânare:
+    // lipită de ea, se pierdea printre corpuri și umbre.
+    var LATIME = 7;    // jumătate din baza săgeții
+    var DISTANTA = 16; // de la prețul semnalului până la baza săgeții
+    var INALTIME = 13;
+
+    var sus = lung ? -1 : 1;
+    var baza = y + sus * DISTANTA;
+    var varf = y + sus * (DISTANTA + INALTIME);
+
     ctx.beginPath();
-    ctx.moveTo(x, vf);
-    ctx.lineTo(x - d, baza);
-    ctx.lineTo(x + d, baza);
+    ctx.moveTo(x, varf);
+    ctx.lineTo(x - LATIME, baza);
+    ctx.lineTo(x + LATIME, baza);
     ctx.closePath();
     ctx.fill();
 
+    // coada, ca să lege săgeata de punctul pe care îl marchează
+    ctx.beginPath();
+    ctx.moveTo(x, baza);
+    ctx.lineTo(x, y + sus * 5);
+    ctx.stroke();
+
+    // punctul exact al închiderii care a dat semnalul
     ctx.beginPath();
     ctx.arc(x, y, 3, 0, Math.PI * 2);
     ctx.stroke();
