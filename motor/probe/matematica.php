@@ -99,6 +99,31 @@ verifica('DUPĂ vârf, sus ajunge dedesubt', pretLinie($sus, 20*$O) < pretLinie(
 $paralele = varfulTriunghiului($sus, ['t1'=>0,'p1'=>800.0,'t2'=>10*$O,'p2'=>760.0]);
 verifica('linii paralele: fără vârf', $paralele === null, true);
 
+echo "\n=== 7. cele două ritmuri: TP des, SL pe închidere ===\n";
+/* Reproduce alegerea maximului de urmărit din motor. */
+function maximDeVazut(array $informare, array $inchisa, bool $deFacutOrarul): float {
+    return $deFacutOrarul ? max($informare['maxim'], $inchisa['maxim']) : $informare['maxim'];
+}
+$inchisa   = ['maxim' => 840.0, 'minim' => 810.0];
+$informare = ['maxim' => 828.0, 'minim' => 820.0];
+
+verifica('lumânarea închisă neprocesată: maximul ei contează',
+    maximDeVazut($informare, $inchisa, true), 840.0);
+verifica('deja procesată: doar lumânarea în formare',
+    maximDeVazut($informare, $inchisa, false), 828.0);
+
+// TP la 835: se atinge doar dacă mai punem la socoteală lumânarea închisă
+$tp = 835.0;
+verifica('TP prins la prima trecere peste ora închisă',
+    maximDeVazut($informare, $inchisa, true) >= $tp, true);
+verifica('la a doua trecere nu se reevaluează ora veche',
+    maximDeVazut($informare, $inchisa, false) >= $tp, false);
+
+// TP la 825: atins de lumânarea în formare, deci prins imediat, între ore
+$tp2 = 825.0;
+verifica('TP atins în ora curentă, prins fără să aștepte închiderea',
+    maximDeVazut($informare, $inchisa, false) >= $tp2, true);
+
 echo "\n" . str_repeat('-', 68) . "\n";
 printf("%d trecute, %d căzute\n", $treceri, $caderi);
 exit($caderi > 0 ? 1 : 0);

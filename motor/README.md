@@ -5,35 +5,46 @@ Rulează din cron, o dată pe oră. **Nu e accesibil prin web** — stă în
 
 ## Cron job-ul
 
-cPanel → **Cron Jobs** → *Add New Cron Job*:
+cPanel → **Cron Jobs** → *Add New Cron Job* → **Once Per Five Minutes**:
 
-- **Minute:** `1`
-- **Hour:** `*`  (sau, în interfața cPanel, „Once Per Hour (0 * * * *)" apoi
-  schimbi minutul în 1)
-- **Command:**
+```
+*/5 * * * *
+```
+
+Comanda:
 
 ```
 /opt/cpanel/ea-php83/root/usr/bin/php /home/marcelpa/autobot-motor/motor.php >/dev/null 2>&1
 ```
 
-Minutul 1, nu 0: lumânarea de 1h se închide fix la minutul 0, iar Binance are
-nevoie de o clipă ca s-o publice ca încheiată.
+**De ce la 5 minute și nu la o oră.** Motorul are două ritmuri. TP-ul se
+verifică la fiecare rulare, inclusiv pe lumânarea în formare: e un ordin limită
+la un preț cunoscut, deci dacă maximul l-a atins, s-ar fi executat deja — n-are
+rost să așteptăm închiderea orei ca s-o recunoaștem. Cu cronul la 5 minute,
+poziția se închide în cel mult atâta de la atingerea pragului.
+
+SL-ul și semnalele noi se judecă tot pe închiderea lumânării de 1h, o singură
+dată per lumânare. Rulările dintre ore nu le ating.
+
+Prima rulare de după minutul 0 prinde lumânarea proaspăt închisă. Nu contează
+că e la :00 sau :05 — Binance are oricum nevoie de o clipă ca s-o publice.
 
 Dacă `ea-php83` nu există, încearcă `ea-php81`. Verifici din File Manager dacă
 există calea, sau lași cPanel să aleagă cu simplul `php`.
 
 ## Ce face, în ordine
 
-1. Ia de la Binance ultima lumânare **închisă** și pe cea în formare.
-   Deschiderea celei în formare e prețul de execuție: exact acolo s-ar executa
-   un ordin la piață dat acum.
+1. Ia de la Binance ultima lumânare **închisă** și pe cea **în formare**.
+   Deschiderea celei în formare e prețul de execuție; maximul ei spune dacă
+   TP-ul a fost deja atins în ora curentă.
 2. Salvează lumânarea închisă.
-3. **TP** — dacă maximul orei (minimul, la short) a atins pragul, poziția se
-   închide acolo. Un TP e un ordin limită la un preț cunoscut: dacă prețul l-a
-   atins, s-ar fi executat, și fix la acel preț.
-4. **SL** — dacă poziția a supraviețuit, se compară închiderea cu linia de
-   intrare, evaluată la ora acelei lumânări.
-5. **Semnale** — doar dacă nu există poziție deschisă.
+3. **TP — la fiecare rulare.** Dacă maximul (minimul, la short) a atins pragul,
+   poziția se închide acolo, exact la prețul TP-ului. Lumânarea închisă intră în
+   socoteală doar dacă n-a fost încă judecată, ca să nu reevaluăm o oră veche.
+4. **SL — o singură dată per lumânare închisă.** Se compară închiderea cu linia
+   de intrare, evaluată la ora acelei lumânări.
+5. **Semnale** — tot o singură dată per lumânare, și doar dacă nu e poziție
+   deschisă.
 
 ### De ce TP-ul se verifică înaintea SL-ului
 
@@ -41,10 +52,12 @@ Nu e o preferință, e o consecință. SL-ul se judecă pe **închidere**, adic�
 ultima clipă a orei. TP-ul se poate atinge **oricând** în timpul ei. Dacă
 amândouă s-ar potrivi pentru aceeași oră, TP-ul a fost primul.
 
-## Rularea de două ori nu strică nimic
+## Rularea deasă nu strică nimic
 
-Fiecare rulare reușită se scrie în `jurnal_cron` cu ora lumânării procesate.
-Dacă cronul pornește din nou pentru aceeași lumânare, iese imediat.
+Rulările care au făcut și munca „pe închidere" se scriu în `jurnal_cron` cu ora
+lumânării. Cele dintre ore se scriu cu `ora_lumanare` gol — ele doar au verificat
+TP-ul. Așa, o lumânare nu poate fi judecată de două ori pentru SL sau semnale,
+oricât de des ar porni cronul.
 
 ## Cum vezi ce a făcut
 

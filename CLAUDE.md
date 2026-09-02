@@ -15,7 +15,7 @@ Tot lanțul e viu, în simulare cu bani fictivi:
 | **Motor** | `motor/motor.php` | **cron orar, ia deciziile** |
 | Bază de date | MySQL `marcelpa_autobot` | 8 tabele, vezi `baza-de-date/schema.sql` |
 
-- **Cron activ:** minutul 1 al fiecărei ore,
+- **Cron activ:** la fiecare 5 minute (`*/5 * * * *`),
   `/opt/cpanel/ea-php83/root/usr/bin/php /home/marcelpa/autobot-motor/motor.php`
 - **Configurarea** (parole, cheie API): `/home/marcelpa/autobot-config.php`,
   în afara zonei publice, niciodată în git.
@@ -49,6 +49,9 @@ Detaliile și motivele sunt în `docs/plan-tranzactionare.md` — **nu le reinve
 - **LONG**: lumânare verde închide peste linia de sus. **SHORT**: roșie sub cea de jos.
 - **TP**: +1%, urmărit în timp real (pe maximul/minimul orei — un TP e un ordin
   limită la un preț cunoscut). **SL**: lumânarea închide înapoi peste linia de intrare.
+- **Două ritmuri:** TP-ul se verifică la FIECARE rulare a cronului, inclusiv pe
+  lumânarea în formare (e un ordin limită — dacă maximul l-a atins, s-a executat).
+  SL-ul și semnalele se judecă o singură dată per lumânare închisă.
 - **TP se verifică înaintea SL**, și nu din preferință: SL-ul se judecă pe
   închidere, TP-ul oricând în timpul orei, deci TP-ul e primul prin construcție.
 - **Triunghiul expiră la vârf** dacă n-a fost spart: după intersecție, „sus"

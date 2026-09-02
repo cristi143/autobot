@@ -2,22 +2,20 @@
 /**
  * Motorul — rulează din cron, o dată pe oră, la minutul 1.
  *
- * La fiecare rulare, în ordinea asta:
- *   1. ia de la Binance ultima lumânare ÎNCHISĂ (și pe cea în formare, pentru
- *      prețul de deschidere);
- *   2. o salvează;
- *   3. verifică TP-ul poziției deschise — pe maximul/minimul orei, pentru că TP-ul
- *      e un ordin limită care s-ar fi executat oricând în timpul ei;
- *   4. dacă poziția a supraviețuit, verifică SL-ul — pe ÎNCHIDERE, pentru că așa
- *      e definit;
- *   5. dacă nu există poziție deschisă, caută semnale pe triunghiurile active.
+ * DOUĂ RITMURI DIFERITE, INTENȚIONAT:
  *
- * ORDINEA TP ÎNAINTEA SL NU E O ALEGERE, E O CONSECINȚĂ: SL-ul se evaluează în
- * ultima clipă a orei, TP-ul oricând în timpul ei. Dacă amândouă s-ar potrivi
- * pentru aceeași oră, TP-ul a fost primul.
+ *   TP-ul se verifică LA FIECARE RULARE, inclusiv pe lumânarea în formare.
+ *   Un TP e un ordin limită la un preț cunoscut: dacă maximul l-a atins, s-ar fi
+ *   executat deja. Nu are rost să așteptăm închiderea orei ca s-o recunoaștem —
+ *   cu cronul la 5 minute, poziția se închide în cel mult atâta.
  *
- * Rularea e idempotentă: dacă cronul pornește de două ori pentru aceeași
- * lumânare, a doua oară nu face nimic.
+ *   SL-ul și semnalele noi se evaluează O SINGURĂ DATĂ PER LUMÂNARE ÎNCHISĂ,
+ *   pentru că așa sunt definite: pe închidere. O rulare care prinde aceeași
+ *   lumânare a doua oară nu le mai atinge.
+ *
+ * De aici și ordinea: TP înaintea SL. Nu e o preferință — SL-ul se judecă în
+ * ultima clipă a orei, TP-ul oricând în timpul ei, deci TP-ul e primul prin
+ * construcție.
  */
 
 declare(strict_types=1);
@@ -123,21 +121,32 @@ $inchisa = [
     'inchidere'  => (float)$k[0][4],
     'volum'      => (float)$k[0][5],
 ];
-$pretExecutie = (float)$k[1][1];   // deschiderea lumânării în formare
+// Lumânarea în formare: de aici luăm prețul de execuție și maximul atins până
+// acum, pentru TP.
+$informare = [
+    'deschidere' => (float)$k[1][1],
+    'maxim'      => (float)$k[1][2],
+    'minim'      => (float)$k[1][3],
+    'inchidere'  => (float)$k[1][4],
+];
+$pretExecutie = $informare['deschidere'];
 
-spune(sprintf("Lumânarea %s UTC: O %.2f H %.2f L %.2f C %.2f · execuție la %.2f",
+spune(sprintf("Lumânarea %s UTC: O %.2f H %.2f L %.2f C %.2f · în formare acum: %.2f",
     gmdate('Y-m-d H:i', intdiv($inchisa['ora'], 1000)),
     $inchisa['deschidere'], $inchisa['maxim'], $inchisa['minim'],
-    $inchisa['inchidere'], $pretExecutie));
+    $inchisa['inchidere'], $informare['inchidere']));
 
-/* ---------------------------------------------- am procesat-o deja cumva? */
+/* ------------------------------------- ce parte din treabă mai e de făcut? */
 
+// Munca „pe închidere" — SL și semnale — se face o singură dată per lumânare.
+// TP-ul se verifică oricum, la fiecare rulare.
 $st = $pdo->prepare("SELECT COUNT(*) FROM jurnal_cron
                      WHERE ora_lumanare = ? AND rezultat = 'ok'");
 $st->execute([$inchisa['ora']]);
-if ((int)$st->fetchColumn() > 0) {
-    spune("Lumânarea a fost deja procesată. Nu fac nimic.");
-    incheie('ok', $inchisa['ora']);
+$deFacutOrarul = ((int)$st->fetchColumn() === 0);
+
+if (!$deFacutOrarul) {
+    spune("Lumânarea închisă e deja procesată — verific doar TP-ul.");
 }
 
 /* -------------------------------------------------------- salvăm lumânarea */
@@ -259,14 +268,25 @@ if ($pozitie) {
     $tip = $pozitie['banca'];
     $tp  = (float)$pozitie['tp_pret'];
 
-    // --- TP: ordin limită, s-ar fi executat oricând în timpul orei ---
-    $atinsTP = ($tip === 'long')
-        ? $inchisa['maxim'] >= $tp
-        : $inchisa['minim'] <= $tp;
+    // --- TP: ordin limită, s-ar fi executat oricând ---
+    // Se uită și la lumânarea în formare: dacă maximul de până acum a atins
+    // pragul, ordinul s-a executat deja, nu are rost să așteptăm închiderea.
+    // Lumânarea închisă intră în socoteală doar dacă n-a fost încă procesată,
+    // altfel am reevalua o oră deja judecată.
+    $maximDeVazut = $informare['maxim'];
+    $minimDeVazut = $informare['minim'];
+    if ($deFacutOrarul) {
+        $maximDeVazut = max($maximDeVazut, $inchisa['maxim']);
+        $minimDeVazut = min($minimDeVazut, $inchisa['minim']);
+    }
+
+    $atinsTP = ($tip === 'long') ? $maximDeVazut >= $tp : $minimDeVazut <= $tp;
 
     if ($atinsTP) {
         inchidePozitia($pozitie, $tp, 'tp');
         $pozitie = null;
+    } elseif (!$deFacutOrarul) {
+        spune(sprintf("Poziția %s rămâne deschisă. TP %.2f, încă neatins.", $tip, $tp));
     } else {
         // --- SL: se judecă pe închidere, față de linia care a dat intrarea ---
         $prag = pretLinie($pozitie, $inchisa['ora']);
@@ -285,6 +305,11 @@ if ($pozitie) {
 }
 
 /* ============================ 2. semnale noi ============================= */
+
+if (!$deFacutOrarul) {
+    // Lumânarea închisă a fost deja judecată la o rulare anterioară.
+    incheie('ok', null);
+}
 
 if ($pozitie) {
     spune("Poziție încă deschisă — nu caut semnale noi.");

@@ -123,19 +123,29 @@ SL-ul se evaluează în ultima clipă a orei; TP-ul se poate atinge oricând în
 **Deci dacă ambele se întâmplă în aceeași oră, TP-ul a fost întotdeauna primul, prin
 construcție.** Nu e o presupunere optimistă, e o consecință a definițiilor.
 
-### De ce cronul orar e suficient pentru un TP „în timp real"
+### Cronul rulează la 5 minute, cu două ritmuri
 
-Un TP la +1% e un ordin limită la un preț cunoscut. Dacă maximul orei a atins prețul
-ăla, ordinul s-ar fi executat — și exact la +1%, pentru că așa se comportă un ordin
-limită. După închiderea orei, `high` (respectiv `low` pentru short) spune cu
-certitudine dacă TP-ul a fost atins și la ce preț. Se pierde doar minutul exact, nu
-și banii din calcul.
+**Corectare față de prima versiune a planului.** Scrisesem că un cron orar
+„reproduce exact" un TP în timp real. Adevărat despre **prețul** de execuție —
+un ordin limită se execută fix la pragul lui — dar fals despre **moment**: cu
+verificare orară, o poziție atinsă la 10:05 rămâne marcată deschisă până la 11:01.
 
-### Ordinea de evaluare, la fiecare oră
+Deci:
 
-1. **întâi TP** — a atins `high` (sau `low`) pragul de 1%?
-2. **apoi SL** — dacă poziția e încă deschisă, a închis lumânarea de partea greșită?
-3. **apoi semnalele noi de intrare**
+- **TP — la fiecare rulare**, inclusiv pe lumânarea în formare. Dacă maximul de
+  până acum a atins pragul, ordinul s-a executat deja. Poziția se închide în cel
+  mult 5 minute de la atingere.
+- **SL și semnale — o singură dată per lumânare închisă**, pentru că exact așa
+  sunt definite: pe închidere.
+
+Rulările dintre ore se scriu în jurnal cu `ora_lumanare` gol, ca o lumânare să nu
+poată fi judecată de două ori pentru SL sau semnale.
+
+### Ordinea de evaluare
+
+1. **întâi TP** — a atins maximul (sau minimul) pragul de 1%?
+2. **apoi SL** — doar dacă lumânarea închisă n-a fost încă judecată
+3. **apoi semnalele noi de intrare** — tot o singură dată per lumânare
 
 ## Cele două bănci — atenție la capcană
 
