@@ -19,7 +19,10 @@ Tot lanțul e viu, în simulare cu bani fictivi:
   `/opt/cpanel/ea-php83/root/usr/bin/php /home/marcelpa/autobot-motor/motor.php`
 - **Configurarea** (parole, cheie API): `/home/marcelpa/autobot-config.php`,
   în afara zonei publice, niciodată în git.
-- **Băncile pornesc** cu 500 USDC (long) și echivalentul în ZEC (short).
+- **Băncile pornesc** cu 1000 USDC (long) și 1 ZEC (short) — cifre rotunde, ca
+  randamentul să se citească direct din sold. `capital_initial` din configurare
+  trebuie să fie 1000; pornirea băncii de short se citește din rândul de
+  `initializare` din `miscari`.
 
 **Etapele 0, 1 și 2 sunt gata.** Rămân: parola pe site (3), analiza liniilor
 pentru un model matematic (4), bani reali (5) — și o pagină de statistici,

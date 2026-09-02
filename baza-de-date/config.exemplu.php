@@ -27,7 +27,7 @@ return [
     'reguli' => [
         'tp_procent'         => 1.0,    // ieșire la intrare × 1.01
         'comision_o_parte'   => 0.075,  // %, deci 0.15 dus-întors
-        'capital_initial'    => 500.0,  // USDC per bancă
+        'capital_initial'    => 1000.0, // USDC în banca de long
     ],
 
     // Cheie simplă care apără scrierile din API (salvare/ștergere de triunghiuri).

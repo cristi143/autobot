@@ -159,8 +159,13 @@ sunt aceeași strategie măsurată în două monede:
 
 | Banca | Pornește cu | Se măsoară în | Răspunde la |
 |---|---|---|---|
-| LONG | 500 USDC | USDC | bate „cumpăr și țin ZEC"? |
-| SHORT | 500 USDC în ZEC | **ZEC** | adună mai mult ZEC decât „stau pe USDC"? |
+| LONG | **1000 USDC** | USDC | bate „cumpăr și țin ZEC"? |
+| SHORT | **1 ZEC** | **ZEC** | adună mai mult ZEC decât „stau pe USDC"? |
+
+Cifre rotunde, alese pentru citire: cu 1 ZEC la pornire, un sold de 1,0086 ZEC
+înseamnă +0,86% fără niciun calcul. Cele două bănci **nu pornesc de la aceeași
+valoare** — 1 ZEC valora ~822 USDC la rebazare — și nici nu trebuie: se măsoară
+în monede diferite, deci nu se compară una cu alta.
 
 **Se afișează mereu în moneda de măsură**, nu în cea ținută. Banca de long arată
 USDC și când e în poziție ținând ZEC; cea de short arată ZEC și când stă pe USDC.
