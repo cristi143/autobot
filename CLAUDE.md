@@ -63,6 +63,11 @@ Detaliile și motivele sunt în `docs/plan-tranzactionare.md` — **nu le reinve
 - Comision 0,075% pe parte. O poziție odată; cât e deschisă, nu se caută semnale.
 
 ## Capcane deja plătite
+- **Starea unei bănci nu se poate deduce din solduri.** „Are USDC și n-are ZEC"
+  descrie și o bancă de short neinițializată, și una aflată în mijlocul unei
+  poziții. Prima versiune verifica soldurile și reinițializa banca peste o
+  poziție deschisă, ștergându-i banii. Condițiile se pun pe fapte consemnate
+  (există o mișcare de tip `initializare`?), nu pe stări care se pot confunda.
 - **`logicalToCoordinate` întoarce 0, nu null, pentru indici din afara datelor.**
   Nu extrapolează în viitor. Orice punct de după ultima lumânare — vârful unui
   triunghi, de pildă — trebuie aflat **în pixeli**, nu prin bibliotecă: o

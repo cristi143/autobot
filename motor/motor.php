@@ -208,8 +208,22 @@ function scrieBanca(string $care, float $usdc, float $zec, string $fel,
 
 /* ------------------------------- banca de short pornește ținând ZEC, nu USDC */
 
+// ATENȚIE: condiția NU se poate deduce din solduri.
+//
+// „Are USDC și n-are ZEC" descrie și o bancă neinițializată, și una aflată în
+// mijlocul unei poziții short — care tocmai a vândut ZEC-ul. Prima versiune
+// verifica soldurile și, la rularea de după deschiderea unui short, „reinițializa"
+// banca: îi convertea USDC-ul poziției în ZEC. La închidere, răscumpărarea se
+// calcula din USDC-ul care nu mai era acolo, deci ieșea zero, și banca rămânea
+// goală. Banii dispăreau din evidență.
+//
+// Singura întrebare fără echivoc e dacă inițializarea s-a făcut vreodată.
+$aFostInitializata = (int)$pdo->query(
+    "SELECT COUNT(*) FROM miscari WHERE banca = 'short' AND fel = 'initializare'"
+)->fetchColumn() > 0;
+
 $bancaShort = citesteBanca('short');
-if ((float)$bancaShort['sold_zec'] == 0.0 && (float)$bancaShort['sold_usdc'] > 0) {
+if (!$aFostInitializata && (float)$bancaShort['sold_usdc'] > 0) {
     // Finanțare inițială, nu tranzacție — fără comision. Banca de short e „în
     // piață" implicit: se măsoară în ZEC, deci trebuie să pornească ținând ZEC.
     $zec = (float)$bancaShort['sold_usdc'] / $pretExecutie;

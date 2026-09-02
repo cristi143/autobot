@@ -124,6 +124,24 @@ $tp2 = 825.0;
 verifica('TP atins în ora curentă, prins fără să aștepte închiderea',
     maximDeVazut($informare, $inchisa, false) >= $tp2, true);
 
+echo "\n=== 8. inițializarea băncii de short ===\n";
+/* Reproduce cele două variante de condiție, ca să se vadă de ce cea veche
+   distrugea o poziție deschisă. */
+function initVeche(float $usdc, float $zec): bool { return $zec == 0.0 && $usdc > 0; }
+function initNoua(bool $aFostInitializata, float $usdc): bool { return !$aFostInitializata && $usdc > 0; }
+
+// bancă proaspătă, finanțată cu 500 USDC
+verifica('veche: bancă nouă -> inițializează',      initVeche(500.0, 0.0), true);
+verifica('nouă:  bancă nouă -> inițializează',      initNoua(false, 500.0), true);
+
+// bancă în mijlocul unui short: a vândut ZEC, stă pe USDC
+verifica('veche: short deschis -> GREȘIT, reinițializează', initVeche(512.4, 0.0), true);
+verifica('nouă:  short deschis -> nu se atinge',            initNoua(true, 512.4), false);
+
+// bancă în repaus, ținând ZEC
+verifica('veche: stă pe ZEC -> nu se atinge', initVeche(0.0, 0.61), false);
+verifica('nouă:  stă pe ZEC -> nu se atinge', initNoua(true, 0.0),  false);
+
 echo "\n" . str_repeat('-', 68) . "\n";
 printf("%d trecute, %d căzute\n", $treceri, $caderi);
 exit($caderi > 0 ? 1 : 0);
