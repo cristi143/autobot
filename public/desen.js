@@ -524,6 +524,12 @@
       cap.textContent = "au tras — bifează ca să le vezi";
       lista.appendChild(cap);
 
+      // Lista are înălțime mărginită și derulează dincolo de ea: istoricul
+      // crește la nesfârșit, iar panoul are alte lucruri de arătat sub el.
+      var cutie = document.createElement("div");
+      cutie.className = "istoric-lista";
+      lista.appendChild(cutie);
+
       consumate.forEach(function (t) {
         var r = document.createElement("label");
         r.className = "rand-triunghi vechi";
@@ -548,7 +554,7 @@
         }
 
         r.appendChild(bifa); r.appendChild(e); r.appendChild(sm);
-        lista.appendChild(r);
+        cutie.appendChild(r);
       });
     }
   }

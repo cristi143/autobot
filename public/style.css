@@ -465,3 +465,20 @@ body {
 }
 .rand-triunghi .semn.long  { color: var(--sus); background: rgba(38,166,154,.14); }
 .rand-triunghi .semn.short { color: var(--jos); background: rgba(239,83,80,.14); }
+
+/* Istoricul triunghiurilor: cel mult cinci rânduri, apoi derulează.
+   Fără limita asta, lista ar crește la nesfârșit și ar împinge băncile și
+   tranzacțiile jos de tot. */
+.istoric-lista {
+  max-height: 8rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.istoric-lista::-webkit-scrollbar { width: 6px; }
+.istoric-lista::-webkit-scrollbar-thumb {
+  background: var(--line);
+  border-radius: 3px;
+}
+.istoric-lista::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+.istoric-lista { scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
