@@ -482,3 +482,9 @@ body {
 }
 .istoric-lista::-webkit-scrollbar-thumb:hover { background: var(--muted); }
 .istoric-lista { scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
+
+.banca-tine {
+  font-size: .6875rem;
+  color: var(--muted);
+  margin-top: -.15rem;
+}

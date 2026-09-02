@@ -18,6 +18,7 @@
     pozitie:  { deschisa: false },
     triunghi: { exista: false },
     banci:    {},
+    pret_initial: null,
     istoric:  [],
     motor:    { implementat: false }
   };
@@ -122,25 +123,63 @@
   /* ---------- băncile ---------- */
 
   function redaBanci() {
+    var P = pretCurent;
+
     [["long", "bl"], ["short", "bs"]].forEach(function (par) {
       var b = S.banci[par[0]], pre = par[1];
       if (!b) {
-        $(pre + "-stare").textContent = "—";
-        $(pre + "-sold").textContent  = "—";
-        $(pre + "-rand").textContent  = "—";
-        $(pre + "-vs").textContent    = "—";
+        [pre + "-stare", pre + "-sold", pre + "-tine", pre + "-rand", pre + "-vs"]
+          .forEach(function (id) { $(id).textContent = "—"; });
         return;
       }
-      $(pre + "-stare").textContent = "în " + b.moneda;
-      $(pre + "-sold").textContent  = (b.moneda === "ZEC")
-        ? Number(b.sold_zec).toFixed(4) + " ZEC"
-        : Number(b.sold_usdc).toFixed(2) + " USDC";
-      // Randamentul și comparația cu „nu fac nimic" au nevoie de tranzacții
-      // închise ca să însemne ceva. Până atunci, nu inventăm cifre.
-      $(pre + "-rand").textContent = S.istoric.length ? proc(b.randament, true) : "—";
-      $(pre + "-vs").textContent   = S.istoric.length ? proc(b.vs_hold, true)  : "—";
-      semn($(pre + "-rand"), b.randament);
-      semn($(pre + "-vs"),   b.vs_hold);
+
+      var inZEC = b.masurata_in === "ZEC";
+
+      // Valoarea băncii ÎN MONEDA EI DE MĂSURĂ, oricare ar fi cea pe care o ține
+      // acum. Banca de long se judecă în USDC chiar când stă în ZEC; cea de
+      // short în ZEC chiar când stă în USDC. Altfel, în timpul unei poziții,
+      // cifra ar sări dintr-o monedă în alta și n-ai mai avea niciun reper.
+      var valoare = null;
+      if (P) {
+        valoare = inZEC ? (b.sold_zec + b.sold_usdc / P)
+                        : (b.sold_usdc + b.sold_zec * P);
+      }
+
+      $(pre + "-stare").textContent = "măsurată în " + b.masurata_in;
+
+      $(pre + "-sold").textContent = (valoare == null)
+        ? "—"
+        : (inZEC ? valoare.toFixed(4) + " ZEC" : valoare.toFixed(2) + " USDC");
+
+      // Ce ține de fapt, ca linie secundară — util cât e într-o poziție.
+      var tine = $(pre + "-tine");
+      if (b.tine === "ZEC" && b.sold_zec > 0) {
+        tine.textContent = "ține " + Number(b.sold_zec).toFixed(4) + " ZEC";
+      } else if (b.sold_usdc > 0) {
+        tine.textContent = "ține " + Number(b.sold_usdc).toFixed(2) + " USDC";
+      } else {
+        tine.textContent = "";
+      }
+      tine.hidden = (b.tine === b.masurata_in);
+
+      // Randamentul, față de punctul de pornire al băncii.
+      var rand = null;
+      if (valoare != null && b.pornire) rand = (valoare / b.pornire - 1) * 100;
+      $(pre + "-rand").textContent = proc(rand, true);
+      semn($(pre + "-rand"), rand);
+
+      // Reperul e cealaltă monedă: dacă ai fi stat pur și simplu în ea.
+      //   long  -> „cumpăr ZEC la început și țin", exprimat în USDC
+      //   short -> „stau pe USDC", exprimat în cât ZEC ar cumpăra acum
+      var vs = null;
+      if (valoare != null && S.pret_initial && P) {
+        var reper = inZEC
+          ? (S.banci.short.pornire * S.pret_initial) / P   // USDC-ul de start, în ZEC azi
+          : b.pornire * (P / S.pret_initial);              // ZEC cumpărat la start, în USDC azi
+        if (reper > 0) vs = (valoare / reper - 1) * 100;
+      }
+      $(pre + "-vs").textContent = proc(vs, true);
+      semn($(pre + "-vs"), vs);
     });
   }
 
@@ -186,6 +225,7 @@
           pozitie:  d.pozitie  || { deschisa: false },
           triunghi: d.triunghi || { exista: false },
           banci:    d.banci    || {},
+          pret_initial: d.pret_initial || null,
           istoric:  d.istoric  || [],
           motor:    d.motor    || { implementat: false }
         };
@@ -239,6 +279,7 @@
   document.addEventListener("autobot:pret", function (ev) {
     pretCurent = ev.detail;
     redaPozitie();
+    redaBanci();   // valoarea băncilor e exprimată la prețul curent
   });
 
   // după ce se salvează sau se șterge un triunghi, starea s-a schimbat

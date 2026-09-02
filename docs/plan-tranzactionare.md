@@ -159,8 +159,17 @@ sunt aceeași strategie măsurată în două monede:
 
 | Banca | Pornește cu | Se măsoară în | Răspunde la |
 |---|---|---|---|
-| LONG | 500 USDC | USDC | bate „stau pe USDC"? |
-| SHORT | 500 USDC în ZEC | **ZEC** | adună mai mult ZEC decât „cumpăr și țin"? |
+| LONG | 500 USDC | USDC | bate „cumpăr și țin ZEC"? |
+| SHORT | 500 USDC în ZEC | **ZEC** | adună mai mult ZEC decât „stau pe USDC"? |
+
+**Se afișează mereu în moneda de măsură**, nu în cea ținută. Banca de long arată
+USDC și când e în poziție ținând ZEC; cea de short arată ZEC și când stă pe USDC.
+Altfel cifra ar sări dintr-o monedă în alta la fiecare intrare și n-ar mai exista
+niciun reper. Ce ține de fapt apare ca linie secundară.
+
+**Reperul fiecăreia e cealaltă monedă** — acolo e informația. Pentru long, „stau
+pe USDC" ar fi mereu 500, deci comparația utilă e cu „cumpăr ZEC la început și
+țin". Pentru short, invers.
 
 A doua întrebare e cea ratată de obicei: o strategie poate câștiga în USDC și
 totuși să te lase cu mai puțin ZEC decât dacă nu făceai nimic.

@@ -21,7 +21,7 @@
      browserul rulează cod vechi — și atunci o spune, în loc să ne întrebăm de
      ce o schimbare „nu a avut efect". Se schimbă la fiecare modificare a
      fișierelor din public/. */
-  var VERSIUNE = "2026-09-02-c";
+  var VERSIUNE = "2026-09-02-d";
   window.AUTOBOT_VERSIUNE = VERSIUNE;
 
   var A = window.Autobot;

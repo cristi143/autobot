@@ -69,18 +69,33 @@ if ($p) {
     ];
 }
 
-/* ---- băncile ---- */
+/* ---- băncile ----
+   Fiecare bancă are o monedă în care SE MĂSOARĂ, alta decât cea pe care o ține
+   în clipa asta: cea de long se judecă în USDC, cea de short în ZEC. Serverul
+   trimite ambele solduri și punctele de pornire; conversia o face pagina, cu
+   prețul live din grafic, care e mai proaspăt decât ultima lumânare închisă. */
+
+$capital = (float)($reguli['capital_initial'] ?? 500.0);
+
+// Prețul la care a fost finanțată banca de short — reperul pentru „cumpăr și țin".
+$init = $pdo->query("SELECT pret, cantitate_zec FROM miscari
+                     WHERE fel = 'initializare' AND banca = 'short'
+                     ORDER BY moment ASC LIMIT 1")->fetch() ?: null;
 
 $banci = [];
 foreach ($pdo->query("SELECT * FROM banci") as $b) {
-    $usdc = (float)$b['sold_usdc'];
-    $zec  = (float)$b['sold_zec'];
     $banci[$b['banca']] = [
-        'moneda'    => $zec > 0 ? 'ZEC' : 'USDC',
-        'sold_usdc' => $usdc,
-        'sold_zec'  => $zec,
+        'tine'      => (float)$b['sold_zec'] > 0 ? 'ZEC' : 'USDC',
+        'sold_usdc' => (float)$b['sold_usdc'],
+        'sold_zec'  => (float)$b['sold_zec'],
     ];
 }
+$banci['long']['masurata_in']  = 'USDC';
+$banci['short']['masurata_in'] = 'ZEC';
+$banci['long']['pornire']  = $capital;                                    // USDC
+$banci['short']['pornire'] = $init ? (float)$init['cantitate_zec'] : null; // ZEC
+
+$pretInitial = $init ? (float)$init['pret'] : null;
 
 /* ---- ultimele tranzacții închise ---- */
 
@@ -134,6 +149,7 @@ raspunde([
     'pozitie'  => $pozitie,
     'triunghi' => $triunghi ?? ['exista' => false],
     'banci'    => $banci,
+    'pret_initial' => $pretInitial,
     'istoric'  => $istoric,
     'reguli'   => [
         'tp_procent'       => (float)($reguli['tp_procent'] ?? 1.0),
