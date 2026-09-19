@@ -1,5 +1,20 @@
 # autobot.dunitru.ro — context de lucru
 
+**Domeniul găzduiește DOUĂ sisteme fără nicio legătură între ele.** Nu le
+amesteca: cod separat, tabele separate, cron separat, bani fictivi separați.
+
+| | Unde | Ce e | Sursa de adevăr |
+|---|---|---|---|
+| **Botul cu triunghiuri** | `/` | automat: desenezi triunghiuri, motorul decide singur, pe 1h | `docs/plan-tranzactionare.md` |
+| **Unealta manuală** | `/unealta/` | manual: tu pui nivelurile, sistemul doar execută, pe 15m | `docs/plan-unealta.md` |
+
+Singurele lucruri comune: serverul, baza de date (tabele cu prefix `u_` pentru
+unealtă), fișierul de configurare și cheia de scriere din API.
+
+---
+
+# 1. Botul cu triunghiuri
+
 Platformă de tranzacționare automată pe Binance, ZECUSDC pe 1h.
 
 ## Stare la 2 septembrie 2026: SISTEMUL RULEAZĂ
@@ -30,9 +45,12 @@ pentru un model matematic (4), bani reali (5) — și o pagină de statistici,
 cerută separat.
 
 ## La începutul fiecărei sesiuni
-Citește **`docs/plan-tranzactionare.md`** — regulile de tranzacționare exacte,
-sursa de adevăr. Apoi **`DEPLOY.md`** (hosting, deploy, cum e construit
-graficul) și **`motor/README.md`** (cum funcționează motorul și cronul).
+Citește întâi ce ține de partea la care lucrezi:
+
+- **botul cu triunghiuri** → `docs/plan-tranzactionare.md`, apoi `motor/README.md`
+- **unealta manuală** → `docs/plan-unealta.md`
+
+În ambele cazuri, **`DEPLOY.md`** (hosting, deploy, cele trei cronuri).
 
 ## Reguli de lucru
 - Tot ce ajunge pe web stă în **`public/`**. Deploy-ul nu copiază nimic altceva.
@@ -154,6 +172,70 @@ serverul ajunge la Binance · IP de ieșire `86.107.43.56`.
 - Când se scrie cod care trimite ordine reale, se cere confirmare explicită și se
   implementează întâi pe **testnet Binance** / mod paper-trading.
 - Nu se propune rularea motorului pe shared hosting — nu funcționează, vezi DEPLOY.md §3.
+
+---
+
+# 2. Unealta manuală — `/unealta/`
+
+Adăugată pe 19 septembrie 2026. **Sursa de adevăr: `docs/plan-unealta.md`.**
+Citește-o înainte să schimbi ceva — regulile de mai jos sunt doar rezumatul.
+
+Utilizatorul spune unde crede că ajunge prețul; sistemul așteaptă acolo și
+execută. **Nu decide nimic singur, nu caută semnale, nu desenează.** Fără o
+setare scrisă de om, unealta nu face nimic.
+
+| Piesă | Unde |
+|---|---|
+| Pagina (fără grafice) | `public/unealta/index.html` · `unealta.js` · `unealta.css` |
+| API | `public/api/unealta.php` |
+| Motor | `motor/unealta.php`, cron la un minut |
+| **Reguli pure** | `motor/unealta-reguli.php` |
+| Probe | `motor/probe/unealta-matematica.php` — **88 de probe** |
+| Tabele | `u_setari`, `u_pozitii`, `u_banci`, `u_miscari`, `u_lumanari_15m`, `u_jurnal` |
+| Bănci | **1000 USDC** (long) și **1 ZEC** (short), separate de ale botului vechi |
+
+## Regulile, pe scurt
+
+- **Nu se intră la atingere, ci la revenire.** Prețul trebuie să treacă dincolo
+  de nivel cu `depasire_minima`, apoi să se întoarcă. Un ordin limită la 800
+  s-ar executa pe drumul în jos; aici vrem dovada că a fost acolo și s-a întors.
+- **Pragul de intrare urmărește extremul** (`extrem ± revenire`), plafonat la
+  nivelul ales: doar se depărtează de el, niciodată nu se apropie.
+- **Ținta de ieșire e absolută** — nu se mută cu prețul real de intrare. Intrat
+  mai jos → câștig mai mare. Asta e intenția, nu o scăpare.
+- **După atingerea țintei, pragul de ieșire urmărește maximul** (`maxim −
+  urmarire`), plafonat la țintă. **Doar urcă.**
+- **Totul se declanșează pe ÎNCHIDEREA unei lumânări de 15m**, deci prețul de
+  execuție e acea închidere, nu pragul. **Excepție: stopul**, evaluat pe
+  atingere, fix la prag.
+- **Extremele se iau din MECURI**, declanșările din ÎNCHIDERI. Mecurile spun
+  unde a fost prețul; închiderile spun dacă s-a rupt ceva.
+- **Stop și ieșire în aceeași lumânare → se ia stopul.** Aceeași convenție
+  pesimistă ca la botul vechi.
+- **O setare activă pe bancă**, dar băncile merg în paralel.
+
+## Capcane deja plătite (găsite pe date reale, nu la proiectare)
+
+- **Stopul atins ÎNAINTE de intrare omoară setarea** (starea `expirat`). Fără
+  regula asta, pragul de intrare cobora cu minimul până sub stop, iar „stopul”
+  se declanșa imediat, pe profit: nivel 1450, stop 1380, preț căzut la 1200,
+  intrare la 1227, „stop” la 1380 cu **+12,23%**. Absurd. Consecința de ținut
+  minte: **stopul mărginește cât de jos poate coborî pragul de intrare.**
+- **Stopul trebuie să fie dincolo de pragul de armare**, nu doar dincolo de
+  nivel. `nivel 800, coborâre 20, stop 780` e imposibil din construcție: exact
+  atingerea care armează setarea o și omoară. Validarea o refuză.
+- **Regulile stau într-un singur fișier** (`motor/unealta-reguli.php`), cerut de
+  motor, de API și de probe. Rescrise în fiecare, simetria long/short s-ar
+  desincroniza tăcut. API-ul îl cere pe cale absolută din
+  `/home/marcelpa/autobot-motor/`, la fel cum cere configurarea.
+- **API-ul nu atinge banii.** Scrie doar intenții (o setare, un steag de
+  închidere); soldurile le mișcă exclusiv motorul. De asta „ieși acum” se
+  execută la următoarea rulare, în cel mult 60 de secunde — un singur scriitor
+  face mai mult decât un minut câștigat.
+- **`VERSIUNE` din `public/unealta/unealta.js`** se schimbă la fiecare
+  modificare din `public/unealta/`, exact ca la `desen.js`.
+
+---
 
 ## Context vecin
 Același cont cPanel (`marcelpa`) găzduiește și `marcel-parcel.ro` și `dunitru.ro`.

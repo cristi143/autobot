@@ -1,4 +1,9 @@
-# Motorul
+# Motorul botului cu triunghiuri
+
+> **Atenție: există două motoare.** Ăsta e al botului cu triunghiuri
+> (`motor.php`, pe 1h). Celălalt e al uneltei manuale (`unealta.php`, pe 15m),
+> și n-au nimic în comun — alte tabele, alți bani, alt cron. Vezi
+> `../docs/plan-unealta.md`.
 
 Rulează din cron, o dată pe oră. **Nu e accesibil prin web** — stă în
 `/home/marcelpa/autobot-motor/`, în afara oricărui document root.

@@ -1,7 +1,8 @@
 # autobot.dunitru.ro — ghid de deploy
 
 Sistem identic cu `dunitru.ro` și `marcel-parcel.ro`: GitHub → cPanel Git Version
-Control → Deploy. Deocamdată site static („în construcție").
+Control → Deploy. Domeniul găzduiește **două sisteme separate**: botul cu
+triunghiuri la `/` și unealta manuală la `/unealta/`.
 
 ---
 
@@ -67,11 +68,58 @@ Deploy-ul rămâne manual, ca până acum — cronul aduce doar codul.
 Reverificat pe 19.09.2026, cu un commit nou pe GitHub: butonul tot nu trage. Cronul
 a adus commitul în mai puțin de 5 minute.
 
-> **⚠ În aceeași listă de Cron Jobs stă și cronul motorului** (`motor.php`, la fiecare
-> minut — vezi `motor/README.md`). Sunt două lucruri fără legătură, unul lângă altul.
-> La ștergerea unuia s-a dus din greșeală și celălalt, iar motorul a stat 11 ore fără
-> ca nimic să se plângă în afară de banda din panou. Când umbli aici, citește comanda
-> întreagă înainte de a apăsa Delete.
+> **⚠ În aceeași listă de Cron Jobs stau TREI lucruri fără legătură între ele.**
+> La ștergerea unuia s-a dus din greșeală și altul, iar motorul a stat 11 ore fără
+> ca nimic să se plângă în afară de banda din panou. **Citește comanda întreagă
+> înainte de a apăsa Delete.**
+
+| Cron | Ce face | Cât de des |
+|---|---|---|
+| `motor.php` | botul cu triunghiuri (`motor/README.md`) | la un minut |
+| `unealta.php` | unealta manuală (`docs/plan-unealta.md`) | la un minut |
+| `git fetch` | aduce codul de pe GitHub, ocolind butonul stricat | la 5 minute |
+
+---
+
+## 2.1 Unealta manuală — ce mai trebuie făcut o dată
+
+Adăugată pe 19.09.2026, la `/unealta/`. Trei lucruri, **în ordinea asta**:
+
+### a) Migrația, ÎNAINTE de deploy-ul codului
+
+cPanel → phpMyAdmin → baza `marcelpa_autobot` → tabul SQL → conținutul lui
+`baza-de-date/migratii/2026-09-19-unealta.sql`. Creează cele șase tabele `u_*` și
+pornește băncile cu 1000 USDC și 1 ZEC.
+
+Nu atinge niciunul dintre cele opt tabele ale botului vechi, deci e sigur de rulat
+cu motorul pornit. **Dar dacă deploy-ul codului ajunge primul, motorul uneltei
+pică la prima rulare, pe tabele care nu există.**
+
+Verificare, după: `SHOW TABLES LIKE 'u\_%';` trebuie să întoarcă șase.
+
+### b) Cronul uneltei
+
+cPanel → Cron Jobs → *Add New Cron Job* → **Once Per Minute** (`* * * * *`):
+
+```
+/opt/cpanel/ea-php83/root/usr/bin/php /home/marcelpa/autobot-motor/unealta.php >/dev/null 2>&1
+```
+
+Atenție să fie `unealta.php`, nu `motor.php` — sunt două motoare diferite, cu
+aceeași cale până la numele fișierului.
+
+### c) ⚠ Parola pe tot site-ul — capcana care o șterge tăcut
+
+cPanel → **Directory Privacy** pe `autobot.dunitru.ro` scrie liniile de
+autentificare în `.htaccess`-ul din document root. **Exact fișierul pe care
+deploy-ul îl suprascrie** cu `public/.htaccess` din repo. Configurată doar din
+cPanel, parola dispare la primul deploy și **nimic nu anunță**.
+
+Deci: o configurezi din cPanel, apoi din File Manager copiezi din `.htaccess`-ul
+document root-ului liniile `AuthType` / `AuthName` / `AuthUserFile` /
+`Require valid-user` și le pui permanent în `public/.htaccess`, în git. Fișierul
+`.htpasswd` rămâne unde l-a pus cPanel, în afara document root-ului, deci el
+supraviețuiește deploy-urilor.
 
 ---
 
@@ -109,8 +157,11 @@ autobot/
 │   ├── config.exemplu.php
 │   └── README.md        cum se pregătește baza
 ├── motor/               → /home/marcelpa/autobot-motor/ (ÎN AFARA webului)
-│   ├── motor.php        motorul, rulat din cron orar
-│   ├── probe/matematica.php
+│   ├── motor.php            motorul botului cu triunghiuri (1h)
+│   ├── unealta.php          motorul uneltei manuale (15m)
+│   ├── unealta-reguli.php   regulile uneltei: funcții pure, cerute și de API
+│   ├── probe/matematica.php          61 de probe (botul vechi)
+│   ├── probe/unealta-matematica.php  88 de probe (unealta)
 │   └── README.md
 ├── tools/
 │   └── agrega_1h.py     agregă 1m -> 1h în public/data/
@@ -120,7 +171,8 @@ autobot/
     ├── rsi.js           panoul RSI de dedesubt
     ├── desen.js         desenarea triunghiurilor
     ├── panou.js         poziție, bănci, istoric
-    ├── api/             _comun.php · stare.php · triunghiuri.php
+    ├── api/             _comun.php · stare.php · triunghiuri.php · unealta.php
+    ├── unealta/        pagina uneltei manuale (index.html · unealta.js · unealta.css)
     ├── data/            ZECUSDC-1h.json — istoricul adânc
     ├── style.css, favicon.svg, robots.txt, .htaccess
 ```
