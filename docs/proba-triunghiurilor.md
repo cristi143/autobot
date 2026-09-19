@@ -225,3 +225,28 @@ praguri mai depărtate ar dilua comisionul e rezonabilă — e chiar concluzia a
 doua din tabelul etalon al planului — dar e o **ipoteză nouă**, și cere propriul
 ei protocol, cu propria ei perioadă ținută deoparte. Reglată pe datele de aici,
 n-ar mai însemna nimic.
+
+---
+
+# ÎNCHIS — decizia utilizatorului, 20 septembrie 2026
+
+După verdict, Cristi a decis să **renunțe complet la direcția cu triunghiuri**,
+inclusiv la întrebarea a doua:
+
+> „chiar dacă desenele mele sunt mai bune tot nu cred că merită să continuăm să
+> mergem în direcția asta. dacă erau rezultate foarte bune iar eu cumva
+> optimizam era ceva, dar rezultatele sunt slabe."
+
+**Raționamentul e corect și nu se contrazice.** Informația valorează doar dacă
+schimbă o decizie. El știa dinainte că nici un rezultat pozitiv la desenul orb
+nu l-ar face să tranzacționeze un tipar al cărui avantaj brut e 41% din comision.
+Deci experimentul nu mai avea valoare de decizie — doar de curiozitate.
+
+Unealta de desen orb **rămâne în repo, construită și funcțională**
+(`analiza/desen-orb.html`, 60 de ferestre). N-a fost folosită. Dacă vreodată
+cineva vrea să răspundă la întrebarea a doua, e gata de pornit.
+
+**Pentru o sesiune viitoare:** nu reporni subiectul. Dacă apare o idee nouă cu
+linii de trend, triunghiuri, spargeri de canal sau alte tipare geometrice, dă
+cifra măsurată (+0,062% brut față de 0,150% comision, pe 40.832 de tranzacții
+și 26 de simboluri) și lasă decizia la el. Nu reface proba.

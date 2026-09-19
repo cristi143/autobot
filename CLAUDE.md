@@ -245,6 +245,24 @@ setare scrisă de om, unealta nu face nimic.
 
 ---
 
+## ⛔ Triunghiurile: subiect ÎNCHIS (20.09.2026)
+
+Botul cu triunghiuri **rămâne pornit** — cronul costă zero și site-ul merge —
+dar **nu se mai dezvoltă**. Cristi a renunțat la direcție după proba mecanică.
+
+Motivul, în cifre: tiparul are un avantaj real de **+0,062% brut** pe
+tranzacție, confirmat statistic pe 40.832 de triunghiuri și 26 de simboluri, pe
+o perioadă ținută deoparte. **Comisionul e 0,150%.** Informație există, dar e
+41% din cât ar trebui.
+
+**Nu repropune linii de trend, triunghiuri, spargeri de canal sau alte tipare
+geometrice.** Dacă subiectul revine, dă cifra și lasă decizia la el. Povestea
+întreagă: `docs/proba-triunghiurilor.md`.
+
+Etapa 4 din `docs/plan-tranzactionare.md` e **închisă prin decizie**, nu prin
+lipsă de mijloace: unealta de desen orb e construită și gata de pornit, în
+`analiza/`, dar nu se folosește.
+
 ## Cercetarea — `analiza/`
 
 Folder de laborator, **nu ajunge pe server**: `.cpanel.yml` copiază doar
