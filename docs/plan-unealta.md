@@ -248,9 +248,16 @@ date. Verifică simetria long/short, monotonia pragurilor („doar urcă”, „
 coboară”), convenția pesimistă, expirarea și validările. Se rulează după orice
 atingere a regulilor.
 
-## Capcana de la parolă
+## Parola — amânată, și capcana care o va aștepta
 
-Utilizatorul a ales parolă pe **tot** site-ul (rezolvă și etapa 3 a botului vechi).
+**Revizuire, 19.09.2026:** utilizatorul alesese parolă pe tot site-ul, apoi a
+decis să o amâne: *„deocamdată sunt doar date fictive"*. Site-ul rămâne deschis.
+A cerut să fie întrebat din nou înainte să apară bani reali, chei API sau date
+care nu se pot reface. **Nu insista până atunci** — e o decizie luată în
+cunoștință de cauză, nu un lucru uitat.
+
+Când se va face, e parolă pe **tot** site-ul (rezolvă și etapa 3 a botului vechi),
+iar capcana e următoarea.
 
 ⚠ cPanel → Directory Privacy scrie liniile de autentificare în `.htaccess`-ul din
 document root — **exact fișierul pe care deploy-ul îl suprascrie** cu

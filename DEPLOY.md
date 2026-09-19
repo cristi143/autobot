@@ -83,7 +83,8 @@ a adus commitul în mai puțin de 5 minute.
 
 ## 2.1 Unealta manuală — ce mai trebuie făcut o dată
 
-Adăugată pe 19.09.2026, la `/unealta/`. Trei lucruri, **în ordinea asta**:
+Adăugată pe 19.09.2026, la `/unealta/`. Două lucruri de făcut, **în ordinea asta**
+— plus unul amânat deliberat:
 
 ### a) Migrația, ÎNAINTE de deploy-ul codului
 
@@ -108,12 +109,21 @@ cPanel → Cron Jobs → *Add New Cron Job* → **Once Per Minute** (`* * * * *`
 Atenție să fie `unealta.php`, nu `motor.php` — sunt două motoare diferite, cu
 aceeași cale până la numele fișierului.
 
-### c) ⚠ Parola pe tot site-ul — capcana care o șterge tăcut
+### c) Parola — AMÂNATĂ DELIBERAT (19.09.2026)
 
-cPanel → **Directory Privacy** pe `autobot.dunitru.ro` scrie liniile de
-autentificare în `.htaccess`-ul din document root. **Exact fișierul pe care
-deploy-ul îl suprascrie** cu `public/.htaccess` din repo. Configurată doar din
-cPanel, parola dispare la primul deploy și **nimic nu anunță**.
+**Site-ul rămâne deschis, și e o decizie, nu o scăpare.** Cât timp băncile sunt
+simulate, cel mai rău lucru pe care îl poate face un străin care nimerește adresa
+e să strice o simulare. Asta acoperă și etapa 3 din `docs/plan-tranzactionare.md`,
+care rămâne nefăcută din același motiv.
+
+**De reluat subiectul** când se apropie ceva din lista asta: bani reali (etapa 5),
+chei API de Binance pe server, orice date care nu sunt fictive, sau dacă adresa
+ajunge să fie dată altcuiva. Utilizatorul a cerut explicit să fie întrebat atunci.
+
+⚠ **Când se face, capcana e aici, și șterge parola tăcut.** cPanel → *Directory
+Privacy* scrie liniile de autentificare în `.htaccess`-ul din document root —
+**exact fișierul pe care deploy-ul îl suprascrie** cu `public/.htaccess` din repo.
+Configurată doar din cPanel, parola dispare la primul deploy și nimic nu anunță.
 
 Deci: o configurezi din cPanel, apoi din File Manager copiezi din `.htaccess`-ul
 document root-ului liniile `AuthType` / `AuthName` / `AuthUserFile` /

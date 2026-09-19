@@ -40,9 +40,14 @@ Tot lanțul e viu, în simulare cu bani fictivi:
   trebuie să fie 1000; pornirea băncii de short se citește din rândul de
   `initializare` din `miscari`.
 
-**Etapele 0, 1 și 2 sunt gata.** Rămân: parola pe site (3), analiza liniilor
-pentru un model matematic (4), bani reali (5) — și o pagină de statistici,
-cerută separat.
+**Etapele 0, 1 și 2 sunt gata.** Rămân: analiza liniilor pentru un model
+matematic (4), bani reali (5) — și o pagină de statistici, cerută separat.
+
+**Etapa 3 (parola) e amânată deliberat**, din 19.09.2026: „deocamdată sunt doar
+date fictive". Site-ul e deschis, intenționat. Utilizatorul a cerut să fie
+întrebat din nou înainte de bani reali, chei API pe server sau orice date care nu
+se pot reface. Până atunci nu insista. Capcana de la deploy, pentru când se va
+face: `DEPLOY.md` §2.1 c).
 
 ## La începutul fiecărei sesiuni
 Citește întâi ce ține de partea la care lucrezi:
