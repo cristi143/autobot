@@ -180,7 +180,7 @@ if ($metoda === 'GET') {
        Browserul o compară cu fișierul pe care chiar l-a încărcat: diferite =
        rulează cod vechi din cache, iar pagina o spune. */
     $versiune = null;
-    $cale = __DIR__ . '/../unealta/unealta.js';
+    $cale = __DIR__ . '/../unealta.js';
     if (is_readable($cale)) {
         $cap = (string)file_get_contents($cale, false, null, 0, 2048);
         if (preg_match('/VERSIUNE\s*=\s*"([^"]+)"/', $cap, $m)) { $versiune = $m[1]; }

@@ -16,11 +16,11 @@ cPanel → **MySQL® Databases**:
 
 Reține exact cum arată numele cu prefix — le vei pune în configurare.
 
-## 2. Rulezi schema
+## 2. Rulezi migrația
 
 cPanel → **phpMyAdmin** → **click pe `marcelpa_autobot` în panoul din stânga**,
 astfel încât bara de sus să arate `Server: localhost » Database: marcelpa_autobot`
-→ tab **Import** → încarci `schema.sql` → **Go**.
+→ tab **Import** → încarci `migratii/2026-09-19-unealta.sql` → **Go**.
 
 Selectarea bazei contează: pornit de la nivelul serverului, importul eșuează cu
 `#1046 - No database selected`. Schema conține și un `USE marcelpa_autobot;` ca

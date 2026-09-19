@@ -13,6 +13,10 @@ RewriteCond %{HTTPS} !=on
 RewriteCond %{HTTP:X-Forwarded-Proto} !https
 RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
+# Unealta a fost mutată la rădăcină pe 20.09.2026. Vechea adresă rămâne
+# funcțională, ca un semn de carte să nu dea în gol.
+RedirectMatch 301 ^/unealta/?$ /
+
 DirectoryIndex index.html
 Options -Indexes
 

@@ -28,6 +28,6 @@ deployment:
 
     - 'BASE=/home/marcelpa/autobot.dunitru.ro; LOG=/home/marcelpa/deploy-autobot.log; DEST="$BASE"; if [ -d "$BASE/public_html" ]; then DEST="$BASE/public_html"; fi; echo "[1/5] document root ales: $DEST" >> "$LOG"; mkdir -p "$DEST" >> "$LOG" 2>&1; if [ -f "$DEST/index.php" ]; then echo "STOP: document root-ul conține index.php — nu pare a fi site-ul static autobot. Nu șterg nimic." >> "$LOG"; exit 1; fi; echo "[2/5] golire document root (păstrez fișierele proprii ale cPanel)" >> "$LOG"; find "$DEST" -mindepth 1 -maxdepth 1 ! -name .well-known ! -name cgi-bin ! -name .user.ini ! -name php.ini -exec rm -rf {} + >> "$LOG" 2>&1; echo "[3/5] copiere public/ -> $DEST" >> "$LOG"; cp -a public/. "$DEST"/ >> "$LOG" 2>&1; echo "[4/5] conținut publicat:" >> "$LOG"; ls -la "$DEST" >> "$LOG" 2>&1'
 
-    - 'MOT=/home/marcelpa/autobot-motor; LOG=/home/marcelpa/deploy-autobot.log; echo "[5/5] motorul -> $MOT" >> "$LOG"; mkdir -p "$MOT" >> "$LOG" 2>&1; cp -a motor/. "$MOT"/ >> "$LOG" 2>&1; ls -la "$MOT" >> "$LOG" 2>&1'
+    - 'MOT=/home/marcelpa/autobot-motor; LOG=/home/marcelpa/deploy-autobot.log; echo "[5/5] motorul -> $MOT" >> "$LOG"; mkdir -p "$MOT" >> "$LOG" 2>&1; rm -f "$MOT"/motor.php "$MOT"/README.md "$MOT"/probe/matematica.php >> "$LOG" 2>&1; cp -a motor/. "$MOT"/ >> "$LOG" 2>&1; ls -la "$MOT" >> "$LOG" 2>&1'
 
     - 'echo "=== DEPLOY DONE $(date) ===" >> /home/marcelpa/deploy-autobot.log'

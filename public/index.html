@@ -3,215 +3,193 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Autobot — ZECUSDC 1h</title>
+<title>Autobot — unealtă de tranzacționare</title>
 <meta name="robots" content="noindex, nofollow">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/unealta.css">
 </head>
 <body>
-  <header class="bara">
-    <div class="identitate">
-      <span class="marca">Autobot</span>
-      <span class="simbol" id="simbol">ZECUSDC</span>
-      <span class="interval">1h</span>
-      <span class="live asteapta" id="live">se conectează…</span>
+
+<header class="bara">
+  <div class="identitate">
+    <span class="marca">Autobot</span>
+    <span class="titlu">Unealtă manuală</span>
+    <span class="simbol">ZECUSDC</span>
+    <span class="interval">15m</span>
+  </div>
+  <div class="pret-zona">
+    <span class="pret-eticheta">preț</span>
+    <span class="pret" id="pret">—</span>
+    <span class="pret-detaliu" id="pret-detaliu">sfertul de oră în formare</span>
+  </div>
+</header>
+
+<div class="banda" id="banda" hidden></div>
+
+<main class="corp">
+
+  <!-- ================= BANCA LONG ================= -->
+  <section class="banca" id="banca-long" data-banca="long">
+    <header class="banca-cap">
+      <h2>Long <span class="masura">măsurată în USDC</span></h2>
+      <div class="sold">
+        <span class="sold-cifra" id="l-sold">—</span>
+        <span class="sold-rand" id="l-randament"></span>
+      </div>
+    </header>
+    <p class="sold-detaliu" id="l-sold-detaliu"></p>
+
+    <!-- starea curentă -->
+    <div class="stare-cutie" id="l-stare" hidden>
+      <div class="stare-titlu" id="l-stare-titlu"></div>
+      <dl class="cifre" id="l-cifre"></dl>
+      <p class="nota" id="l-nota" hidden></p>
+      <div class="butoane">
+        <button type="button" class="buton" data-act="editeaza" data-banca="long">Modifică</button>
+        <button type="button" class="buton sters" data-act="anuleaza" data-banca="long">Anulează setarea</button>
+        <button type="button" class="buton iesi" data-act="inchide" data-banca="long" hidden>Ieși acum</button>
+      </div>
     </div>
-    <div class="ohlc" id="ohlc" aria-live="polite"></div>
-    <nav class="spre-unealta"><a href="/unealta/">unealta manuală →</a></nav>
-  </header>
 
-  <div class="corp">
-    <div class="grafic-invelis">
-      <div id="grafic"></div>
-
-      <div class="rsi-invelis">
-        <div id="rsi"></div>
-        <div class="rsi-legenda">
-          RSI <span class="per">14</span>
-          <span class="vl" id="rsi-valoare">—</span>
-        </div>
+    <!-- formular -->
+    <form class="formular" id="l-form" hidden>
+      <p class="formular-intro">
+        Prețul trebuie să <b>coboare</b> sub nivel și apoi să se <b>întoarcă</b>.
+        Nu cumpărăm la atingere.
+      </p>
+      <label>Nivelul unde crezi că ajunge
+        <input type="number" step="any" name="prag_intrare" required inputmode="decimal">
+      </label>
+      <label>Coborâre minimă sub el
+        <input type="number" step="any" name="depasire_minima" required inputmode="decimal">
+        <span class="ajutor">dovada că a fost acolo</span>
+      </label>
+      <label>Revenire, de la minim
+        <input type="number" step="any" name="revenire" required inputmode="decimal">
+        <span class="ajutor">cât trebuie să urce înapoi ca să cumpărăm</span>
+      </label>
+      <label>Ținta de ieșire
+        <input type="number" step="any" name="prag_iesire" required inputmode="decimal">
+        <span class="ajutor">absolută — nu se mută cu prețul real de intrare</span>
+      </label>
+      <label>Urmărire, sub maxim
+        <input type="number" step="any" name="urmarire" required inputmode="decimal">
+        <span class="ajutor" id="l-ajutor-urmarire">după ce ținta e atinsă, pragul urcă cu maximul</span>
+      </label>
+      <label>Stop <span class="optional">opțional</span>
+        <input type="number" step="any" name="prag_stop" inputmode="decimal">
+        <span class="ajutor">gol = poziția așteaptă oricât</span>
+      </label>
+      <label class="lat">Notă <span class="optional">opțional</span>
+        <input type="text" name="nota" maxlength="255" placeholder="ce vezi acolo">
+      </label>
+      <p class="formular-eroare" id="l-eroare" hidden></p>
+      <div class="butoane">
+        <button type="submit" class="buton primar" id="l-trimite">Pornește setarea</button>
+        <button type="button" class="buton" data-act="renunta" data-banca="long" hidden>Renunță</button>
       </div>
+    </form>
+  </section>
 
-      <div class="stare" id="stare">Se încarcă datele…</div>
+  <!-- ================= BANCA SHORT ================= -->
+  <section class="banca" id="banca-short" data-banca="short">
+    <header class="banca-cap">
+      <h2>Short <span class="masura">măsurată în ZEC</span></h2>
+      <div class="sold">
+        <span class="sold-cifra" id="s-sold">—</span>
+        <span class="sold-rand" id="s-randament"></span>
+      </div>
+    </header>
+    <p class="sold-detaliu" id="s-sold-detaliu"></p>
+
+    <div class="stare-cutie" id="s-stare" hidden>
+      <div class="stare-titlu" id="s-stare-titlu"></div>
+      <dl class="cifre" id="s-cifre"></dl>
+      <p class="nota" id="s-nota" hidden></p>
+      <div class="butoane">
+        <button type="button" class="buton" data-act="editeaza" data-banca="short">Modifică</button>
+        <button type="button" class="buton sters" data-act="anuleaza" data-banca="short">Anulează setarea</button>
+        <button type="button" class="buton iesi" data-act="inchide" data-banca="short" hidden>Ieși acum</button>
+      </div>
     </div>
 
-    <aside class="panou" id="panou">
-      <div class="avertisment">
-        Date de exemplu — motorul nu e încă implementat
+    <form class="formular" id="s-form" hidden>
+      <p class="formular-intro">
+        Prețul trebuie să <b>urce</b> peste nivel și apoi să <b>coboare</b> înapoi.
+        Atunci vindem ZEC-ul.
+      </p>
+      <label>Nivelul unde crezi că ajunge
+        <input type="number" step="any" name="prag_intrare" required inputmode="decimal">
+      </label>
+      <label>Urcare minimă peste el
+        <input type="number" step="any" name="depasire_minima" required inputmode="decimal">
+        <span class="ajutor">dovada că a fost acolo</span>
+      </label>
+      <label>Revenire, de la maxim
+        <input type="number" step="any" name="revenire" required inputmode="decimal">
+        <span class="ajutor">cât trebuie să coboare înapoi ca să vindem</span>
+      </label>
+      <label>Ținta de ieșire
+        <input type="number" step="any" name="prag_iesire" required inputmode="decimal">
+        <span class="ajutor">sub nivelul de intrare — acolo răscumpărăm</span>
+      </label>
+      <label>Urmărire, peste minim
+        <input type="number" step="any" name="urmarire" required inputmode="decimal">
+        <span class="ajutor">după ce ținta e atinsă, pragul coboară cu minimul</span>
+      </label>
+      <label>Stop <span class="optional">opțional</span>
+        <input type="number" step="any" name="prag_stop" inputmode="decimal">
+        <span class="ajutor">deasupra intrării</span>
+      </label>
+      <label class="lat">Notă <span class="optional">opțional</span>
+        <input type="text" name="nota" maxlength="255" placeholder="ce vezi acolo">
+      </label>
+      <p class="formular-eroare" id="s-eroare" hidden></p>
+      <div class="butoane">
+        <button type="submit" class="buton primar" id="s-trimite">Pornește setarea</button>
+        <button type="button" class="buton" data-act="renunta" data-banca="short" hidden>Renunță</button>
       </div>
+    </form>
+  </section>
 
-      <nav class="file" role="tablist" aria-label="Secțiunile panoului">
-        <button type="button" class="fila activa" role="tab" id="fila-curent"
-                aria-selected="true" aria-controls="p-curent" data-fila="curent">Curent</button>
-        <button type="button" class="fila" role="tab" id="fila-banci"
-                aria-selected="false" aria-controls="p-banci" data-fila="banci">Bănci</button>
-        <button type="button" class="fila" role="tab" id="fila-statistici"
-                aria-selected="false" aria-controls="p-statistici" data-fila="statistici">Statistici</button>
-      </nav>
+</main>
 
-      <div class="continut" id="p-curent" role="tabpanel" aria-labelledby="fila-curent">
-
-      <!-- ---------- poziția ---------- -->
-      <section class="bloc">
-        <h2 class="titlu-bloc">Poziție</h2>
-
-        <div class="stare-poz" id="stare-poz">
-          <span class="pastila long" id="poz-tip">LONG deschis</span>
-          <span class="poz-varsta" id="poz-varsta">de 3 ore</span>
-        </div>
-
-
-        <dl class="perechi">
-          <div><dt>Intrare</dt><dd class="n" id="poz-intrare">—</dd></div>
-          <div><dt>Preț acum</dt><dd class="n" id="poz-acum">—</dd></div>
-          <div class="separator"></div>
-          <div>
-            <dt>TP <span class="mic" id="poz-tp-et" title="Distanța e un multiplu de ATR, așezat la intrare și înghețat acolo.">fix</span></dt>
-            <dd class="n sus" id="poz-tp">—</dd>
-          </div>
-          <div>
-            <dt>SL <span class="mic" id="poz-sl-et" title="Prag fix, așezat la intrare. Nu mai depinde de linie — linia se depărta cu fiecare oră.">fix</span></dt>
-            <dd class="n jos" id="poz-sl">—</dd>
-          </div>
-          <div class="separator"></div>
-          <div><dt>Câștig curent</dt><dd class="n" id="poz-pl">—</dd></div>
-          <div>
-            <dt>A fost la <span class="mic" title="Cât de departe a mers prețul, în favoare și împotrivă, de la intrare încoace. Brut, fără comisioane.">max / min</span></dt>
-            <dd class="n" id="poz-excursie">—</dd>
-          </div>
-          <div><dt>Stop de timp</dt><dd class="n" id="poz-timp">—</dd></div>
-        </dl>
-
-        <div class="masura" id="masura" aria-hidden="true">
-          <div class="masura-bara">
-            <span class="masura-umplere" id="masura-umplere"></span>
-            <span class="masura-ac" id="masura-ac"></span>
-          </div>
-          <div class="masura-capete"><span id="masura-jos">SL</span><span id="masura-sus">TP</span></div>
-        </div>
-      </section>
-
-      <!-- ---------- uneltele de desen ---------- -->
-      <section class="bloc" id="unelte">
-        <h2 class="titlu-bloc">Triunghiuri</h2>
-
-        <button type="button" class="buton" id="btn-deseneaza">Desenează triunghi</button>
-        <p class="desen-mesaj" id="desen-mesaj" aria-live="polite"></p>
-
-        <div class="confirmare" id="confirmare" hidden>
-          <p id="conf-detaliu"></p>
-          <input type="text" class="nota-camp" id="nota-camp" maxlength="255"
-                 placeholder="ce ai văzut aici? (opțional)"
-                 aria-label="Notă despre triunghi">
-          <div class="confirmare-butoane">
-            <button type="button" class="buton mic" id="btn-salveaza">Salvează</button>
-            <button type="button" class="buton mic sters" id="btn-renunta">Renunță</button>
-          </div>
-        </div>
-
-        <div class="lista-triunghiuri" id="lista-triunghiuri"></div>
-      </section>
-
-      <!-- ---------- triunghiul ---------- -->
-      <section class="bloc">
-        <h2 class="titlu-bloc">Triunghi activ</h2>
-        <div id="triunghi-gol" class="gol" hidden>Niciun triunghi desenat.</div>
-        <dl class="perechi" id="triunghi-date">
-          <div><dt>Linia de sus <span class="mic">long la spargere</span></dt><dd class="n" id="tri-sus">—</dd></div>
-          <div><dt>Linia de jos <span class="mic">short la spargere</span></dt><dd class="n" id="tri-jos">—</dd></div>
-          <div><dt>Desenat</dt><dd class="n" id="tri-cand">—</dd></div>
-        </dl>
-        <p class="nota-triunghi" id="tri-nota" hidden></p>
-        <p class="nota-bloc">Prețurile liniilor sunt cele de la ora curentă — se strâng pe măsură ce trece timpul.</p>
-      </section>
-
-      <!-- ---------- istoric ---------- -->
-      <section class="bloc">
-        <h2 class="titlu-bloc">Ultimele tranzacții</h2>
-        <div class="istoric" id="istoric"></div>
-      </section>
-      </div>
-
-      <div class="continut" id="p-banci" role="tabpanel" aria-labelledby="fila-banci" hidden>
-
-      <!-- ---------- băncile ---------- -->
-      <section class="bloc">
-        <h2 class="titlu-bloc">Bănci</h2>
-
-        <div class="banca" id="banca-long">
-          <div class="banca-cap">
-            <span class="banca-nume long">LONG</span>
-            <span class="banca-stare" id="bl-stare">în ZEC</span>
-          </div>
-          <div class="banca-sold n" id="bl-sold">—</div>
-            <div class="banca-tine n" id="bl-tine"></div>
-          <div class="banca-linii">
-            <span>randament</span><span class="n" id="bl-rand">—</span>
-            <span>vs. „cumpăr și țin ZEC"</span><span class="n" id="bl-vs">—</span>
-          </div>
-        </div>
-
-        <div class="banca" id="banca-short">
-          <div class="banca-cap">
-            <span class="banca-nume short">SHORT</span>
-            <span class="banca-stare" id="bs-stare">în ZEC</span>
-          </div>
-          <div class="banca-sold n" id="bs-sold">—</div>
-            <div class="banca-tine n" id="bs-tine"></div>
-          <div class="banca-linii">
-            <span>randament</span><span class="n" id="bs-rand">—</span>
-            <span>vs. „stau pe USDC"</span><span class="n" id="bs-vs">—</span>
-          </div>
-        </div>
-      </section>
-
-      </div>
-
-      <div class="continut" id="p-statistici" role="tabpanel" aria-labelledby="fila-statistici" hidden>
-        <section class="bloc">
-          <h2 class="titlu-bloc">Tranzacții încheiate</h2>
-          <dl class="perechi">
-            <div><dt>Total</dt><dd class="n" id="st-total">—</dd></div>
-            <div><dt>Ieșite pe TP</dt><dd class="n sus" id="st-tp">—</dd></div>
-            <div><dt>Ieșite pe SL</dt><dd class="n jos" id="st-sl">—</dd></div>
-            <div><dt>Rată de reușită</dt><dd class="n" id="st-rata">—</dd></div>
-          </dl>
-        </section>
-
-        <section class="bloc">
-          <h2 class="titlu-bloc">Rezultate</h2>
-          <dl class="perechi">
-            <div><dt>Câștig mediu <span class="mic">pe TP</span></dt><dd class="n sus" id="st-med-tp">—</dd></div>
-            <div><dt>Pierdere medie <span class="mic">pe SL</span></dt><dd class="n jos" id="st-med-sl">—</dd></div>
-            <div class="separator"></div>
-            <div><dt>Cea mai bună</dt><dd class="n" id="st-max">—</dd></div>
-            <div><dt>Cea mai slabă</dt><dd class="n" id="st-min">—</dd></div>
-          </dl>
-          <p class="nota-bloc" id="st-nota"></p>
-        </section>
-
-        <section class="bloc">
-          <h2 class="titlu-bloc">Ce urmează aici</h2>
-          <p class="nota-bloc">
-            Cel mai lung șir de pierderi, timpul mediu în piață, distribuția
-            rezultatelor, și — după 30–40 de triunghiuri — ce s-ar fi întâmplat
-            cu alt TP, cu trailing sau cu un SL fix.
-          </p>
-        </section>
-      </div>
-
-    </aside>
+<section class="istoric-zona">
+  <h2>Ce s-a închis</h2>
+  <div class="tabel-invelis">
+    <table class="istoric">
+      <thead>
+        <tr>
+          <th>Banca</th><th>Intrare</th><th>Ieșire</th><th>Motiv</th>
+          <th class="nr">Rezultat</th><th class="nr">A mers până la</th><th>Notă</th>
+        </tr>
+      </thead>
+      <tbody id="istoric"><tr><td colspan="7" class="gol">Încă nimic.</td></tr></tbody>
+    </table>
   </div>
 
-  <footer class="subsol">
-    <span id="rezumat"></span>
-    <span class="nota">ore UTC · istoric agregat local + live de la Binance</span>
-  </footer>
+  <details class="retrase">
+    <summary>Setări încheiate fără poziție <span id="anulate-cate"></span></summary>
+    <ul id="anulate"></ul>
+    <p class="marunt">
+      Două feluri, ținute separat: <b>retrasă</b> e decizia ta, <b>expirată</b> e
+      verdictul pieței — prețul a atins stopul înainte să apucăm să intrăm, deci
+      teza picase deja. Amândouă rămân în listă; contopite, n-ar mai spune nimic.
+    </p>
+  </details>
+</section>
 
-<script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.2.3/dist/lightweight-charts.standalone.production.js"></script>
-<script src="/grafic.js"></script>
-<script src="/rsi.js"></script>
-<script src="/panou.js"></script>
-<script src="/desen.js"></script>
+<footer class="subsol">
+  <p>
+    <b>Cum decide:</b> armarea și extremele se iau din <b>wick-uri</b> — contează unde
+    a fost prețul cu adevărat. Intrarea și ieșirea pe urmărire se declanșează doar
+    pe <b>închiderea unei lumânări de 15 minute</b>, deci prețul de execuție e acea
+    închidere, nu pragul. <b>Stopul</b> e singurul evaluat pe atingere, fix la prag.
+    Comision <span id="comision">0,075</span>% pe parte. Bani fictivi.
+  </p>
+  <p class="marunt" id="motor-linie">—</p>
+</footer>
+
+<script src="/unealta.js"></script>
 </body>
 </html>
