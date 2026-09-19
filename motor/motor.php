@@ -2,20 +2,28 @@
 /**
  * Motorul — rulează din cron, o dată pe oră, la minutul 1.
  *
+ * IEȘIRILE NU MAI ȚIN DE LINII (19.09.2026). Triunghiul dă doar semnalul de
+ * intrare; TP și SL sunt două praguri fixe, așezate la intrare, la distanțe
+ * proporționale cu ATR(14). Motivul, pe scurt: linia de intrare fiind
+ * convergentă, ea cobora (urca) oră de oră, deci pragul de SL se îndepărta de
+ * prețul de intrare cu fiecare oră petrecută în poziție — riscul creștea cu
+ * timpul, în timp ce câștigul rămânea plafonat. Raționamentul complet și
+ * măsurătorile care l-au susținut: docs/plan-tranzactionare.md.
+ *
  * DOUĂ RITMURI DIFERITE, INTENȚIONAT:
  *
- *   TP-ul se verifică LA FIECARE RULARE, inclusiv pe lumânarea în formare.
- *   Un TP e un ordin limită la un preț cunoscut: dacă maximul l-a atins, s-ar fi
- *   executat deja. Nu are rost să așteptăm închiderea orei ca s-o recunoaștem —
- *   cu cronul la 5 minute, poziția se închide în cel mult atâta.
+ *   TP și SL se verifică LA FIECARE RULARE, inclusiv pe lumânarea în formare.
+ *   Amândouă sunt ordine la preț cunoscut: dacă maximul (minimul) l-a atins,
+ *   s-ar fi executat deja. Cu cronul la un minut, poziția se închide în cel
+ *   mult atâta.
  *
- *   SL-ul și semnalele noi se evaluează O SINGURĂ DATĂ PER LUMÂNARE ÎNCHISĂ,
- *   pentru că așa sunt definite: pe închidere. O rulare care prinde aceeași
- *   lumânare a doua oară nu le mai atinge.
+ *   SEMNALELE noi se evaluează O SINGURĂ DATĂ PER LUMÂNARE ÎNCHISĂ, pentru că
+ *   așa sunt definite: pe închidere. O rulare care prinde aceeași lumânare a
+ *   doua oară nu le mai atinge.
  *
- * De aici și ordinea: TP înaintea SL. Nu e o preferință — SL-ul se judecă în
- * ultima clipă a orei, TP-ul oricând în timpul ei, deci TP-ul e primul prin
- * construcție.
+ * Când TP și SL cad în aceeași fereastră de preț, se ia SL. Din lumânări de o
+ * oră nu se poate ști care a fost primul, iar o simulare care presupune ordinea
+ * favorabilă minte în favoarea strategiei.
  */
 
 declare(strict_types=1);
@@ -41,8 +49,24 @@ if (!is_readable(CALE_CONFIG)) {
 }
 $config = require CALE_CONFIG;
 $simbol   = $config['piata']['simbol'] ?? 'ZECUSDC';
-$tpProc   = (float)($config['reguli']['tp_procent'] ?? 1.0);
 $comision = (float)($config['reguli']['comision_o_parte'] ?? 0.075) / 100.0;
+
+// Fișierul de configurare stă pe server, în afara git-ului, deci codul nou poate
+// ajunge acolo înaintea cheilor noi. De asta fiecare are o valoare implicită
+// rezonabilă: motorul nu se oprește dacă `autobot-config.php` n-a fost încă
+// completat, doar folosește valorile de aici.
+$atrPerioada = max(2, (int)($config['reguli']['atr_perioada'] ?? 14));
+$tpAtr       = (float)($config['reguli']['tp_atr'] ?? 1.5);
+$slAtr       = (float)($config['reguli']['sl_atr'] ?? 1.0);
+// Plafoane, în procente din prețul de intrare. Cel de jos apără de ținte mai
+// mici decât comisionul (0,15% dus-întors mănâncă un TP de 0,3%); cel de sus, de
+// o oră sălbatică: în istoricul lui ZEC există o lumânare de 1h cu amplitudine
+// de 52%, iar un SL de „1 ATR" calculat atunci ar fi fost sinucidere curată.
+$distMin     = (float)($config['reguli']['distanta_minima_proc'] ?? 0.5);
+$distMax     = (float)($config['reguli']['distanta_maxima_proc'] ?? 4.0);
+// Stop de timp: o poziție care n-a atins nici TP, nici SL, nu trebuie să stea
+// la infinit. Zero oprește regula.
+$oreMaxime   = (int)($config['reguli']['ore_maxime'] ?? 48);
 // capital_initial nu se citește aici: banca de long își ia soldul din tabel, iar
 // cea de short se finanțează din ce are deja. Îl folosește doar stare.php, ca
 // punct de referință pentru randament.
@@ -110,28 +134,70 @@ function binance(string $url): array {
     return $d;
 }
 
-// limit=2: prima e ultima lumânare ÎNCHISĂ, a doua e cea în formare — iar
-// deschiderea ei e exact prețul la care s-ar executa un ordin dat acum.
-$k = binance("https://api.binance.com/api/v3/klines?symbol=$simbol&interval=1h&limit=2");
-if (count($k) < 2) { spune("Binance a dat mai puțin de două lumânări."); incheie('fara_date'); }
+/**
+ * ATR(n) după Wilder, în USDC, peste lumânări ÎNCHISE, în ordine cronologică.
+ *
+ * Prima medie e una simplă, peste primele n intervale reale; de acolo încolo,
+ * netezire cu 1/n. De aceea cerem mult mai multe lumânări decât n: cu exact n+1
+ * am obține doar media simplă, care sare la fiecare oră. Cu ~5n, netezirea a
+ * convers și cifra e stabilă.
+ */
+function atr(array $inchise, int $n): ?float {
+    $m = count($inchise);
+    if ($m < $n + 1) return null;
 
+    $tr = [];
+    for ($i = 1; $i < $m; $i++) {
+        $h  = (float)$inchise[$i][2];
+        $l  = (float)$inchise[$i][3];
+        $pc = (float)$inchise[$i - 1][4];
+        // Intervalul adevărat include golul față de închiderea anterioară —
+        // altfel o oră care se deschide cu salt ar părea liniștită.
+        $tr[] = max($h - $l, abs($h - $pc), abs($l - $pc));
+    }
+
+    $a = array_sum(array_slice($tr, 0, $n)) / $n;
+    for ($i = $n; $i < count($tr); $i++) {
+        $a = ($a * ($n - 1) + $tr[$i]) / $n;
+    }
+    return $a;
+}
+
+// Ultima din șir e lumânarea ÎN FORMARE, penultima e ultima ÎNCHISĂ. Cerem
+// ~5 × perioada, ca ATR-ul să fie netezit, nu doar o medie simplă.
+$nevoie = $atrPerioada * 5 + 2;
+$k = binance("https://api.binance.com/api/v3/klines?symbol=$simbol&interval=1h&limit=$nevoie");
+if (count($k) < $atrPerioada + 2) {
+    spune("Binance a dat prea puține lumânări (" . count($k) . ") pentru ATR($atrPerioada).");
+    incheie('fara_date');
+}
+
+$uc = count($k) - 1;          // indicele lumânării în formare
 $inchisa = [
-    'ora'        => (int)$k[0][0],
-    'deschidere' => (float)$k[0][1],
-    'maxim'      => (float)$k[0][2],
-    'minim'      => (float)$k[0][3],
-    'inchidere'  => (float)$k[0][4],
-    'volum'      => (float)$k[0][5],
+    'ora'        => (int)$k[$uc - 1][0],
+    'deschidere' => (float)$k[$uc - 1][1],
+    'maxim'      => (float)$k[$uc - 1][2],
+    'minim'      => (float)$k[$uc - 1][3],
+    'inchidere'  => (float)$k[$uc - 1][4],
+    'volum'      => (float)$k[$uc - 1][5],
 ];
-// Lumânarea în formare: de aici luăm prețul de execuție și maximul atins până
-// acum, pentru TP.
+// Lumânarea în formare: de aici luăm prețul de execuție și maximul/minimul atins
+// până acum, pentru TP și SL.
 $informare = [
-    'deschidere' => (float)$k[1][1],
-    'maxim'      => (float)$k[1][2],
-    'minim'      => (float)$k[1][3],
-    'inchidere'  => (float)$k[1][4],
+    'deschidere' => (float)$k[$uc][1],
+    'maxim'      => (float)$k[$uc][2],
+    'minim'      => (float)$k[$uc][3],
+    'inchidere'  => (float)$k[$uc][4],
 ];
 $pretExecutie = $informare['deschidere'];
+
+$atrAcum = atr(array_slice($k, 0, $uc), $atrPerioada);
+if ($atrAcum === null || $atrAcum <= 0) {
+    spune("ATR nedeterminabil — nu pot așeza praguri, mă opresc.");
+    incheie('fara_date');
+}
+spune(sprintf("ATR(%d) = %.2f USDC (%.2f%% din preț)",
+    $atrPerioada, $atrAcum, $atrAcum / $informare['inchidere'] * 100));
 
 spune(sprintf("Lumânarea %s UTC: O %.2f H %.2f L %.2f C %.2f · în formare acum: %.2f",
     gmdate('Y-m-d H:i', intdiv($inchisa['ora'], 1000)),
@@ -237,9 +303,9 @@ if (!$aFostInitializata && (float)$bancaShort['sold_usdc'] > 0) {
 
 /* ============================ 1. poziția deschisă ========================= */
 
-$st = $pdo->prepare("SELECT p.*, l.t1, l.p1, l.t2, l.p2
-                     FROM pozitii p JOIN linii l ON l.id = p.linie_sl_id
-                     WHERE p.stare = 'deschisa' LIMIT 1");
+// Nu mai avem nevoie de geometria liniei: pragurile sunt două prețuri stocate
+// pe poziție. Linia rămâne legată de poziție doar ca arhivă pentru etapa 4.
+$st = $pdo->prepare("SELECT * FROM pozitii WHERE stare = 'deschisa' LIMIT 1");
 $st->execute();
 $pozitie = $st->fetch();
 
@@ -281,14 +347,17 @@ function inchidePozitia(array $p, float $pretIesire, string $motiv): void {
 }
 
 if ($pozitie) {
-    $tip = $pozitie['banca'];
-    $tp  = (float)$pozitie['tp_pret'];
+    $tip     = $pozitie['banca'];
+    $intrare = (float)$pozitie['intrare_pret'];
+    $tp      = (float)$pozitie['tp_pret'];
+    // Pozițiile dinaintea trecerii pe praguri fixe (19.09.2026) n-au sl_pret.
+    // Nu există niciuna deschisă, dar dacă ar apărea, TP-ul și stopul de timp o
+    // scot oricum — mai bine decât să inventăm un prag.
+    $sl = ($pozitie['sl_pret'] === null) ? null : (float)$pozitie['sl_pret'];
+    if ($sl === null) { spune("ATENȚIE: poziție fără sl_pret (dinainte de 19.09.2026)."); }
 
-    // --- TP: ordin limită, s-ar fi executat oricând ---
-    // Se uită și la lumânarea în formare: dacă maximul de până acum a atins
-    // pragul, ordinul s-a executat deja, nu are rost să așteptăm închiderea.
-    // Lumânarea închisă intră în socoteală doar dacă n-a fost încă procesată,
-    // altfel am reevalua o oră deja judecată.
+    // Fereastra de preț pe care o judecăm acum: lumânarea în formare, plus cea
+    // închisă dacă n-a mai fost văzută. Altfel am reevalua o oră deja judecată.
     $maximDeVazut = $informare['maxim'];
     $minimDeVazut = $informare['minim'];
     if ($deFacutOrarul) {
@@ -296,26 +365,56 @@ if ($pozitie) {
         $minimDeVazut = min($minimDeVazut, $inchisa['minim']);
     }
 
-    $atinsTP = ($tip === 'long') ? $maximDeVazut >= $tp : $minimDeVazut <= $tp;
+    /* --- cât de departe a mers, în favoare și împotrivă ---
+       MFE și MAE sunt materialul cu care se va răspunde, peste 20–30 de
+       tranzacții, la întrebările care acum n-au răspuns: ar fi ajutat un stop
+       mutat la break-even? cât las pe masă cu TP-ul așezat aici? Se scriu la
+       fiecare rulare, pentru că sunt maxime pe tot drumul — retroactiv nu se
+       mai pot afla. */
+    if ($tip === 'long') {
+        $favorabil = ($maximDeVazut - $intrare) / $intrare * 100;
+        $potrivnic = ($minimDeVazut - $intrare) / $intrare * 100;
+    } else {
+        $favorabil = ($intrare - $minimDeVazut) / $intrare * 100;
+        $potrivnic = ($intrare - $maximDeVazut) / $intrare * 100;
+    }
+    $pdo->prepare("UPDATE pozitii SET mfe_proc = GREATEST(mfe_proc, ?),
+                                      mae_proc = LEAST(mae_proc, ?)
+                   WHERE id = ?")
+        ->execute([round($favorabil, 4), round($potrivnic, 4), (int)$pozitie['id']]);
 
-    if ($atinsTP) {
+    $atinsTP = ($tip === 'long') ? $maximDeVazut >= $tp : $minimDeVazut <= $tp;
+    $atinsSL = $sl !== null &&
+               (($tip === 'long') ? $minimDeVazut <= $sl : $maximDeVazut >= $sl);
+
+    if ($atinsTP && $atinsSL) {
+        // Amândouă în aceeași fereastră. Din lumânări de o oră nu se poate ști
+        // care a fost primul, iar convenția trebuie să fie pesimistă: o
+        // simulare care presupune ordinea favorabilă minte în favoarea
+        // strategiei, și exact pe minciuna aia s-ar paria bani adevărați.
+        spune("TP și SL atinse în aceeași fereastră — se ia SL (convenție pesimistă).");
+        inchidePozitia($pozitie, $sl, 'sl');
+        $pozitie = null;
+    } elseif ($atinsTP) {
         inchidePozitia($pozitie, $tp, 'tp');
         $pozitie = null;
-    } elseif (!$deFacutOrarul) {
-        spune(sprintf("Poziția %s rămâne deschisă. TP %.2f, încă neatins.", $tip, $tp));
+    } elseif ($atinsSL) {
+        spune(sprintf("SL atins: prețul a trecut de %.2f", $sl));
+        inchidePozitia($pozitie, $sl, 'sl');
+        $pozitie = null;
     } else {
-        // --- SL: se judecă pe închidere, față de linia care a dat intrarea ---
-        $prag = pretLinie($pozitie, $inchisa['ora']);
-        $rupt = ($tip === 'long')
-            ? $inchisa['inchidere'] < $prag
-            : $inchisa['inchidere'] > $prag;
-
-        if ($rupt) {
-            spune(sprintf("SL: închiderea %.2f a trecut înapoi de linie (%.2f)", $inchisa['inchidere'], $prag));
-            inchidePozitia($pozitie, $pretExecutie, 'sl');
+        $ore = ($inceput - (int)$pozitie['intrare_ora']) / 3600000.0;
+        if ($oreMaxime > 0 && $ore >= $oreMaxime) {
+            // Nici TP, nici SL: piața a uitat de noi. Ieșim la prețul de acum,
+            // ca să nu blocăm banca la nesfârșit într-o poziție moartă.
+            spune(sprintf("Stop de timp: %.0f ore în piață, fără TP sau SL.", $ore));
+            inchidePozitia($pozitie, $informare['inchidere'], 'timp');
             $pozitie = null;
         } else {
-            spune(sprintf("Poziția %s rămâne deschisă. TP %.2f, linia acum %.2f", $tip, $tp, $prag));
+            spune(sprintf("Poziția %s rămâne deschisă. TP %.2f · SL %s · %.0f h în piață"
+                        . " · a fost la %+.2f%% / %+.2f%%",
+                $tip, $tp, $sl === null ? '—' : sprintf('%.2f', $sl), $ore,
+                $favorabil, $potrivnic));
         }
     }
 }
@@ -400,26 +499,42 @@ foreach ($triunghiuri as $t) {
 
         $banca = citesteBanca($semnal['tip']);
 
+        /* --- pragurile, așezate acum și înghețate aici ---
+           Distanțele sunt multipli de ATR, nu procente fixe: 1% înseamnă altceva
+           într-o săptămână liniștită decât într-una agitată, iar pragurile trebuie
+           să fie în afara zgomotului orei, nu înăuntrul lui. Plafoanele apără de
+           cele două capete: ATR minuscul (comisionul ar mânca ținta) și ATR
+           exploziv (un stop la 50%). */
+        $dTp = $atrAcum * $tpAtr;
+        $dSl = $atrAcum * $slAtr;
+        $minAbs = $pretExecutie * $distMin / 100;
+        $maxAbs = $pretExecutie * $distMax / 100;
+        $dTp = min(max($dTp, $minAbs), $maxAbs);
+        $dSl = min(max($dSl, $minAbs), $maxAbs);
+
         if ($semnal['tip'] === 'long') {
             $usdc = (float)$banca['sold_usdc'];
             if ($usdc <= 0) { throw new RuntimeException('banca de long n-are USDC'); }
             $cant = ($usdc / $pretExecutie) * (1 - $comision);
-            $tp   = $pretExecutie * (1 + $tpProc / 100);
+            $tp   = $pretExecutie + $dTp;
+            $sl   = $pretExecutie - $dSl;
             $comisionIntrare = $usdc * $comision;          // plătit din USDC-ul dat
         } else {
             $zec = (float)$banca['sold_zec'];
             if ($zec <= 0) { throw new RuntimeException('banca de short n-are ZEC'); }
             $cant = $zec;
-            $tp   = $pretExecutie * (1 - $tpProc / 100);
+            $tp   = $pretExecutie - $dTp;
+            $sl   = $pretExecutie + $dSl;
             $comisionIntrare = $zec * $pretExecutie * $comision;   // din USDC-ul încasat
         }
 
         $pdo->prepare("INSERT INTO pozitii
                          (semnal_id, banca, stare, intrare_ora, intrare_pret, cantitate,
-                          tp_pret, linie_sl_id, comision_total)
-                       VALUES (?,?,'deschisa',?,?,?,?,?,?)")
+                          tp_pret, sl_pret, atr_intrare, linie_intrare_id, comision_total)
+                       VALUES (?,?,'deschisa',?,?,?,?,?,?,?,?)")
             ->execute([$semnalId, $semnal['tip'], $inceput, $pretExecutie,
-                       round($cant, 8), round($tp, 8), $semnal['linie']['id'],
+                       round($cant, 8), round($tp, 8), round($sl, 8),
+                       round($atrAcum, 8), $semnal['linie']['id'],
                        round($pretExecutie * $cant * $comision, 8)]);
         $pozitieId = (int)$pdo->lastInsertId();
 
@@ -440,9 +555,10 @@ foreach ($triunghiuri as $t) {
     }
 
     spune(sprintf("SEMNAL %s din triunghiul #%d: închiderea %.2f a rupt linia (%.2f). "
-                . "Intrare la %.2f, TP %.2f",
+                . "Intrare la %.2f · TP %.2f (%+.2f%%) · SL %.2f (%+.2f%%) · ATR %.2f",
         strtoupper($semnal['tip']), $t['id'], $inchisa['inchidere'], $semnal['prag'],
-        $pretExecutie, $tp));
+        $pretExecutie, $tp, ($tp / $pretExecutie - 1) * 100,
+        $sl, ($sl / $pretExecutie - 1) * 100, $atrAcum));
 
     incheie('ok', $inchisa['ora']);   // o singură poziție odată
 }

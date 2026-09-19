@@ -13,7 +13,7 @@ Tot lanțul e viu, în simulare cu bani fictivi:
 | Desen | `public/desen.js` | trage triunghiuri; arată și istoricul celor consumate |
 | API | `public/api/` | `stare.php`, `triunghiuri.php`, `_comun.php` |
 | Panou | `public/panou.js` | trei file: Curent, Bănci, Statistici |
-| **Motor** | `motor/motor.php` | **cron orar, ia deciziile** |
+| **Motor** | `motor/motor.php` | **cron la un minut, ia deciziile** |
 | Bază de date | MySQL `marcelpa_autobot` | 8 tabele, vezi `baza-de-date/schema.sql` |
 
 - **Cron activ:** la fiecare minut (`* * * * *`),
@@ -54,13 +54,20 @@ Detaliile și motivele sunt în `docs/plan-tranzactionare.md` — **nu le reinve
 - **Triunghi** = două linii convergente. Trage **o singură dată**, apoi ambele
   linii trec în istoric. Fără triunghi activ, motorul nu face nimic.
 - **LONG**: lumânare verde închide peste linia de sus. **SHORT**: roșie sub cea de jos.
-- **TP**: +1%, urmărit în timp real (pe maximul/minimul orei — un TP e un ordin
-  limită la un preț cunoscut). **SL**: lumânarea închide înapoi peste linia de intrare.
-- **Două ritmuri:** TP-ul se verifică la FIECARE rulare a cronului, inclusiv pe
-  lumânarea în formare (e un ordin limită — dacă maximul l-a atins, s-a executat).
-  SL-ul și semnalele se judecă o singură dată per lumânare închisă.
-- **TP se verifică înaintea SL**, și nu din preferință: SL-ul se judecă pe
-  închidere, TP-ul oricând în timpul orei, deci TP-ul e primul prin construcție.
+- **Ieșirile nu mai țin de linii (19.09.2026).** TP și SL sunt praguri fixe, așezate
+  la intrare: `intrare ± tp_atr × ATR(14)` și `intrare ∓ sl_atr × ATR(14)`
+  (implicit 1,5 și 1,0), plafonate între 0,5% și 4%. Plus un **stop de timp** la 48h.
+  Linia rămâne doar arhivă pentru etapa 4. **Nu propune întoarcerea la SL pe linie**
+  fără să citești de ce a picat: ea se depărta de intrare cu fiecare oră, deci riscul
+  creștea cu timpul iar câștigul rămânea plafonat. `docs/plan-tranzactionare.md`.
+- **Două ritmuri:** TP și SL se verifică la FIECARE rulare a cronului, inclusiv pe
+  lumânarea în formare. Semnalele se judecă o singură dată per lumânare închisă.
+- **TP și SL în aceeași fereastră → se ia SL.** Din lumânări de o oră nu se știe care
+  a fost primul, iar convenția trebuie să fie pesimistă.
+- **Etalonul e cunoscut:** cu ieșiri mecanice, rata unei intrări la întâmplare a fost
+  măsurată pe 6.856 de ore (tabelul din plan). Desenul trebuie s-o bată. Și: **orice
+  schemă de TP/SL are așteptare zero înainte de comisioane** — ieșirea nu creează
+  avantaj, doar intrarea poate.
 - **Triunghiul expiră la vârf** dacă n-a fost spart: după intersecție, „sus"
   ajunge sub „jos" și orice lumânare verde ar da un long fals. Primește starea
   `expirat`, **distinctă de `sters`** — unul e verdictul pieței, celălalt decizia
@@ -103,8 +110,12 @@ Detaliile și motivele sunt în `docs/plan-tranzactionare.md` — **nu le reinve
   din `_comun.php`, json_encode scrie 0.075 ca 0.07499999999999999722…
 - **Atributul `hidden` nu ascunde** elementele stilate cu `display:flex`; de aceea
   există `[hidden] { display: none !important; }` în style.css.
-- Verificarea matematicii: `php motor/probe/matematica.php` — 26 de probe, fără
+- Verificarea matematicii: `php motor/probe/matematica.php` — 61 de probe, fără
   bază de date. Rulează-le după orice atingere a formulelor.
+- **Migrațiile de bază de date sunt MANUALE și nu rulează la deploy.** Se scriu în
+  `baza-de-date/migratii/`, se rulează din cPanel → phpMyAdmin, **înaintea**
+  deploy-ului codului care le cere. Altfel motorul pică la primul semnal, pe o
+  coloană care nu există.
 
 ## Graficul
 - Pagina principală = grafic de lumânări 1h **live**, cu `lightweight-charts` de la

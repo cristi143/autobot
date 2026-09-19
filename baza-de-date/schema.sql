@@ -45,8 +45,9 @@ CREATE TABLE IF NOT EXISTS lumanari_1h (
 
 -- ---------------------------------------------------------------------------
 -- Triunghiurile — unitatea de lucru. Două linii convergente, un singur semnal.
--- „consumat" înseamnă că a tras; liniile rămân în bază pentru că SL-ul se
--- evaluează în continuare față de linia de intrare.
+-- „consumat" înseamnă că a tras. Liniile rămân în bază ca arhivă: din
+-- 19.09.2026 ieșirile nu mai depind de ele, dar geometria deciziei e tocmai
+-- materialul etapei 4.
 --
 -- STĂRILE ÎNSEAMNĂ LUCRURI DIFERITE, ȘI NU SE AMESTECĂ:
 --   activ    — desenat, așteaptă o spargere
@@ -109,7 +110,7 @@ CREATE TABLE IF NOT EXISTS linii (
 CREATE TABLE IF NOT EXISTS semnale (
     id              INT UNSIGNED NOT NULL AUTO_INCREMENT,
     triunghi_id     INT UNSIGNED NOT NULL,
-    linie_id        INT UNSIGNED NOT NULL COMMENT 'linia spartă — și pragul de SL',
+    linie_id        INT UNSIGNED NOT NULL COMMENT 'linia spartă',
     ora_lumanare    BIGINT       NOT NULL COMMENT 'lumânarea care a declanșat',
     tip             ENUM('long','short') NOT NULL,
     pret_inchidere  DECIMAL(20,8) NOT NULL COMMENT 'close-ul care a rupt linia',
@@ -123,8 +124,13 @@ CREATE TABLE IF NOT EXISTS semnale (
 
 
 -- ---------------------------------------------------------------------------
--- Pozițiile. TP-ul e un preț fix, calculat la intrare. SL-ul NU e un preț fix:
--- e linia, care se mișcă — de aceea păstrăm `linie_sl_id`, nu o valoare.
+-- Pozițiile. TP ȘI SL sunt amândouă prețuri fixe, așezate la intrare, la
+-- distanțe proporționale cu ATR(14) — vezi docs/plan-tranzactionare.md.
+--
+-- Până pe 19.09.2026, SL-ul era linia de intrare, evaluată la fiecare oră. Ea
+-- fiind convergentă, se depărta de prețul de intrare cu fiecare oră petrecută în
+-- poziție: riscul creștea cu timpul, câștigul rămânea plafonat. De aceea acum se
+-- stochează un preț, iar linia rămâne doar ca urmă a deciziei.
 -- ---------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS pozitii (
     id             INT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -135,20 +141,29 @@ CREATE TABLE IF NOT EXISTS pozitii (
     intrare_ora    BIGINT       NOT NULL COMMENT 'deschiderea lumânării următoare',
     intrare_pret   DECIMAL(20,8) NOT NULL,
     cantitate      DECIMAL(30,8) NOT NULL COMMENT 'ZEC cumpărat sau vândut',
-    tp_pret        DECIMAL(20,8) NOT NULL COMMENT 'intrare × 1.01 (sau × 0.99)',
-    linie_sl_id    INT UNSIGNED NOT NULL COMMENT 'pragul de SL se calculează din ea',
+    tp_pret        DECIMAL(20,8) NOT NULL COMMENT 'intrare ± tp_atr × ATR, înghețat la intrare',
+    sl_pret        DECIMAL(20,8) NULL     COMMENT 'intrare ∓ sl_atr × ATR; NULL doar la pozițiile dinainte de 19.09.2026',
+    atr_intrare    DECIMAL(20,8) NULL     COMMENT 'ATR(14) în USDC, în momentul intrării',
+    linie_intrare_id INT UNSIGNED NOT NULL COMMENT 'linia care a dat semnalul — arhivă pentru etapa 4, NU mai e stop loss',
 
     iesire_ora     BIGINT       NULL,
     iesire_pret    DECIMAL(20,8) NULL,
-    motiv_iesire   ENUM('tp','sl') NULL,
+    motiv_iesire   ENUM('tp','sl','timp') NULL,
 
     comision_total DECIMAL(20,8) NOT NULL DEFAULT 0 COMMENT 'ambele părți, în USDC',
     rezultat_proc  DECIMAL(10,4) NULL COMMENT 'net, după comisioane',
 
+    -- Cât de departe a mers prețul cât timp poziția era deschisă, brut, în %.
+    -- Nu se pot reconstitui după închidere: sunt maxime de pe tot drumul.
+    -- Cu ele se răspunde la „ar fi ajutat un stop la break-even?" și
+    -- „cât las pe masă cu TP-ul aici?" — altfel, opinie contra opinie.
+    mfe_proc       DECIMAL(10,4) NOT NULL DEFAULT 0 COMMENT 'cel mai mult în favoare',
+    mae_proc       DECIMAL(10,4) NOT NULL DEFAULT 0 COMMENT 'cel mai adânc în minus',
+
     PRIMARY KEY (id),
     KEY idx_stare (stare),
-    CONSTRAINT fk_pozitie_semnal FOREIGN KEY (semnal_id)   REFERENCES semnale (id),
-    CONSTRAINT fk_pozitie_linie  FOREIGN KEY (linie_sl_id) REFERENCES linii (id)
+    CONSTRAINT fk_pozitie_semnal FOREIGN KEY (semnal_id)        REFERENCES semnale (id),
+    CONSTRAINT fk_pozitie_linie  FOREIGN KEY (linie_intrare_id) REFERENCES linii (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 

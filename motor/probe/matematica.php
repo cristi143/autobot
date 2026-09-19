@@ -13,10 +13,17 @@ $f = 0.075 / 100;   // comision pe o parte
 $treceri = 0; $caderi = 0;
 function verifica(string $ce, $obtinut, $asteptat, float $toleranta = 1e-9): void {
     global $treceri, $caderi;
-    $ok = is_bool($asteptat) ? ($obtinut === $asteptat) : (abs($obtinut - $asteptat) < $toleranta);
+    // Numerele se compară cu toleranță; tot restul — bool, șir, null — exact.
+    $exact = is_bool($asteptat) || is_string($asteptat) || $asteptat === null;
+    $ok = $exact ? ($obtinut === $asteptat) : (abs($obtinut - $asteptat) < $toleranta);
     $ok ? $treceri++ : $caderi++;
-    printf("  %-3s %-52s obținut %s\n", $ok ? 'ok' : 'NU', $ce,
-        is_bool($obtinut) ? ($obtinut ? 'true' : 'false') : rtrim(rtrim(sprintf('%.6f', $obtinut), '0'), '.'));
+
+    if (is_bool($obtinut))      { $text = $obtinut ? 'true' : 'false'; }
+    elseif ($obtinut === null)  { $text = 'null'; }
+    elseif (is_string($obtinut)){ $text = $obtinut; }
+    else                        { $text = rtrim(rtrim(sprintf('%.6f', $obtinut), '0'), '.'); }
+
+    printf("  %-3s %-52s obținut %s\n", $ok ? 'ok' : 'NU', $ce, $text);
 }
 
 echo "=== 1. prețul liniei prin prelungire ===\n";
@@ -67,13 +74,27 @@ verifica('roșie sub linia de jos -> SHORT', $rosu && $lumR['inchidere'] < 822.0
 verifica('roșie DEASUPRA liniei de jos -> nimic', $rosu && $lumR['inchidere'] < 810.0, false);
 verifica('verde peste linia de jos nu dă short', $verde && $lum['inchidere'] < 822.0, false);
 
-echo "\n=== 5. TP înaintea SL, în aceeași oră ===\n";
-// long deschis la 818.40, TP 826.58, linia de SL la 830 (deja ruptă la închidere)
-$tp = 826.58; $inaltime = 828.0; $inchidere = 815.0; $linieSL = 820.0;
-$atinsTP = $inaltime >= $tp;
-verifica('maximul a atins TP-ul', $atinsTP, true);
-verifica('închiderea ar fi dat și SL', $inchidere < $linieSL, true);
-verifica('câștigă TP-ul (se verifică primul)', $atinsTP, true);
+echo "\n=== 5. TP și SL în aceeași fereastră: câștigă SL ===\n";
+/* Din 19.09.2026 amândouă sunt praguri fixe, verificate pe aceeași fereastră de
+   preț. Din lumânări de o oră nu se poate ști care a fost primul, deci convenția
+   e pesimistă: se ia pierderea. O simulare care presupune ordinea favorabilă
+   minte exact în direcția în care s-ar paria bani adevărați. */
+function iesire(string $tip, float $tp, float $sl, float $maxim, float $minim): ?string {
+    $atinsTP = ($tip === 'long') ? $maxim >= $tp : $minim <= $tp;
+    $atinsSL = ($tip === 'long') ? $minim <= $sl : $maxim >= $sl;
+    if ($atinsTP && $atinsSL) return 'sl';
+    if ($atinsTP) return 'tp';
+    if ($atinsSL) return 'sl';
+    return null;
+}
+verifica('long: doar TP atins',        iesire('long',  830.0, 810.0, 832.0, 815.0), 'tp');
+verifica('long: doar SL atins',        iesire('long',  830.0, 810.0, 825.0, 808.0), 'sl');
+verifica('long: amândouă -> SL',       iesire('long',  830.0, 810.0, 832.0, 808.0), 'sl');
+verifica('long: niciunul -> rămâne',   iesire('long',  830.0, 810.0, 825.0, 815.0), null);
+verifica('short: doar TP atins',       iesire('short', 790.0, 810.0, 805.0, 788.0), 'tp');
+verifica('short: doar SL atins',       iesire('short', 790.0, 810.0, 812.0, 795.0), 'sl');
+verifica('short: amândouă -> SL',      iesire('short', 790.0, 810.0, 812.0, 788.0), 'sl');
+verifica('short: niciunul -> rămâne',  iesire('short', 790.0, 810.0, 805.0, 795.0), null);
 
 
 echo "\n=== 6. vârful triunghiului ===\n";
@@ -99,7 +120,7 @@ verifica('DUPĂ vârf, sus ajunge dedesubt', pretLinie($sus, 20*$O) < pretLinie(
 $paralele = varfulTriunghiului($sus, ['t1'=>0,'p1'=>800.0,'t2'=>10*$O,'p2'=>760.0]);
 verifica('linii paralele: fără vârf', $paralele === null, true);
 
-echo "\n=== 7. cele două ritmuri: TP des, SL pe închidere ===\n";
+echo "\n=== 7. cele două ritmuri: pragurile des, semnalele pe închidere ===\n";
 /* Reproduce alegerea maximului de urmărit din motor. */
 function maximDeVazut(array $informare, array $inchisa, bool $deFacutOrarul): float {
     return $deFacutOrarul ? max($informare['maxim'], $inchisa['maxim']) : $informare['maxim'];
@@ -141,6 +162,90 @@ verifica('nouă:  short deschis -> nu se atinge',            initNoua(true, 512.
 // bancă în repaus, ținând ZEC
 verifica('veche: stă pe ZEC -> nu se atinge', initVeche(0.0, 0.61), false);
 verifica('nouă:  stă pe ZEC -> nu se atinge', initNoua(true, 0.0),  false);
+
+echo "\n=== 9. ATR(n) după Wilder ===\n";
+/* Copie fidelă a funcției din motor. O lumânare = [t, o, h, l, c, v]. */
+function atr(array $inchise, int $n): ?float {
+    $m = count($inchise);
+    if ($m < $n + 1) return null;
+    $tr = [];
+    for ($i = 1; $i < $m; $i++) {
+        $h  = (float)$inchise[$i][2];
+        $l  = (float)$inchise[$i][3];
+        $pc = (float)$inchise[$i - 1][4];
+        $tr[] = max($h - $l, abs($h - $pc), abs($l - $pc));
+    }
+    $a = array_sum(array_slice($tr, 0, $n)) / $n;
+    for ($i = $n; $i < count($tr); $i++) { $a = ($a * ($n - 1) + $tr[$i]) / $n; }
+    return $a;
+}
+
+/** Lumânare cu amplitudine fixă în jurul unui preț, fără gol față de cea dinainte. */
+function lum(float $c, float $amplitudine): array {
+    return [0, $c, $c + $amplitudine / 2, $c - $amplitudine / 2, $c, 0];
+}
+
+$plate = [];
+for ($i = 0; $i < 30; $i++) { $plate[] = lum(800.0, 10.0); }
+verifica('amplitudine constantă 10 -> ATR 10', atr($plate, 14), 10.0, 1e-9);
+verifica('prea puține lumânări -> null', atr(array_slice($plate, 0, 10), 14), null);
+verifica('exact n+1 lumânări -> media simplă', atr(array_slice($plate, 0, 15), 14), 10.0, 1e-9);
+
+// Golul contează: o oră îngustă, dar deschisă departe de închiderea anterioară,
+// nu e o oră liniștită. Fără |h - close_anterior|, ATR-ul ar rata saltul.
+$cuGol = $plate;
+$cuGol[] = [0, 850.0, 852.0, 848.0, 850.0, 0];     // h-l = 4, dar golul e ~47
+$faraGol = $plate;
+$faraGol[] = lum(800.0, 4.0);
+verifica('lumânarea cu gol ridică ATR-ul', atr($cuGol, 14) > atr($faraGol, 14), true);
+
+echo "\n=== 10. pragurile așezate din ATR ===\n";
+/* Reproduce calculul din motor, inclusiv plafoanele. */
+function praguri(string $tip, float $exec, float $atr, float $tpAtr, float $slAtr,
+                 float $minProc, float $maxProc): array {
+    $minAbs = $exec * $minProc / 100;
+    $maxAbs = $exec * $maxProc / 100;
+    $dTp = min(max($atr * $tpAtr, $minAbs), $maxAbs);
+    $dSl = min(max($atr * $slAtr, $minAbs), $maxAbs);
+    return ($tip === 'long') ? [$exec + $dTp, $exec - $dSl] : [$exec - $dTp, $exec + $dSl];
+}
+
+// ATR 1,72% din 800 = 13,76 · TP 1,5 ATR = 20,64 · SL 1 ATR = 13,76
+[$tp, $sl] = praguri('long', 800.0, 13.76, 1.5, 1.0, 0.5, 4.0);
+verifica('long: TP la 1,5 ATR', $tp, 820.64, 1e-6);
+verifica('long: SL la 1 ATR',   $sl, 786.24, 1e-6);
+verifica('raportul câștig/risc e 1,5', ($tp - 800.0) / (800.0 - $sl), 1.5, 1e-9);
+
+[$tpS, $slS] = praguri('short', 800.0, 13.76, 1.5, 1.0, 0.5, 4.0);
+verifica('short: pragurile se oglindesc', 800.0 - $tpS, $tp - 800.0, 1e-9);
+verifica('short: SL deasupra intrării', $slS > 800.0, true);
+
+// ATR minuscul: plafonul de jos apără de o țintă mâncată de comision
+[$tpMic, $slMic] = praguri('long', 800.0, 0.5, 1.5, 1.0, 0.5, 4.0);
+verifica('ATR mic -> TP dus la minimul de 0,5%', $tpMic, 804.0, 1e-9);
+verifica('ATR mic -> SL dus la minimul de 0,5%', $slMic, 796.0, 1e-9);
+verifica('minimul bate comisionul dus-întors',
+    ($tpMic / 800.0 - 1) * 100 > (1 - (1 - $f) * (1 - $f)) * 100, true);
+
+// ATR exploziv (ora de 52% din istoricul lui ZEC): plafonul de sus taie
+[$tpMare, $slMare] = praguri('long', 800.0, 100.0, 1.5, 1.0, 0.5, 4.0);
+verifica('ATR uriaș -> TP tăiat la 4%', $tpMare, 832.0, 1e-9);
+verifica('ATR uriaș -> SL tăiat la 4%', $slMare, 768.0, 1e-9);
+
+echo "\n=== 11. MFE și MAE ===\n";
+/* Cât de departe a mers prețul, în favoare și împotrivă. Brut, în procente. */
+function excursie(string $tip, float $intrare, float $maxim, float $minim): array {
+    return ($tip === 'long')
+        ? [($maxim - $intrare) / $intrare * 100, ($minim - $intrare) / $intrare * 100]
+        : [($intrare - $minim) / $intrare * 100, ($intrare - $maxim) / $intrare * 100];
+}
+[$mfe, $mae] = excursie('long', 800.0, 816.0, 792.0);
+verifica('long: MFE +2%', $mfe,  2.0, 1e-9);
+verifica('long: MAE −1%', $mae, -1.0, 1e-9);
+[$mfeS, $maeS] = excursie('short', 800.0, 816.0, 792.0);
+verifica('short: MFE +1% (prețul a scăzut)', $mfeS,  1.0, 1e-9);
+verifica('short: MAE −2% (prețul a urcat)',  $maeS, -2.0, 1e-9);
+verifica('MFE nu e niciodată sub MAE', $mfe >= $mae, true);
 
 echo "\n" . str_repeat('-', 68) . "\n";
 printf("%d trecute, %d căzute\n", $treceri, $caderi);

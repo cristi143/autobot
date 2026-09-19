@@ -24,8 +24,17 @@ return [
         'interval' => '1h',
     ],
 
+    // Ieșirile sunt praguri fixe, așezate la intrare, la distanțe proporționale
+    // cu ATR — nu procente fixe. Un procent fix înseamnă altceva într-o
+    // săptămână liniștită decât într-una agitată; ATR-ul se scalează singur.
+    // Motivele și măsurătorile: docs/plan-tranzactionare.md.
     'reguli' => [
-        'tp_procent'         => 1.0,    // ieșire la intrare × 1.01
+        'atr_perioada'       => 14,
+        'tp_atr'             => 1.5,    // ținta, în ATR-uri
+        'sl_atr'             => 1.0,    // stopul, în ATR-uri
+        'distanta_minima_proc' => 0.5,  // sub asta, comisionul mănâncă ținta
+        'distanta_maxima_proc' => 4.0,  // peste asta, o oră sălbatică ar da un stop absurd
+        'ore_maxime'         => 48,     // stop de timp; 0 îl oprește
         'comision_o_parte'   => 0.075,  // %, deci 0.15 dus-întors
         'capital_initial'    => 1000.0, // USDC în banca de long
     ],

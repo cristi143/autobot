@@ -65,15 +65,20 @@
           <div><dt>Preț acum</dt><dd class="n" id="poz-acum">—</dd></div>
           <div class="separator"></div>
           <div>
-            <dt>TP <span class="mic">fix, +1%</span></dt>
+            <dt>TP <span class="mic" id="poz-tp-et" title="Distanța e un multiplu de ATR, așezat la intrare și înghețat acolo.">fix</span></dt>
             <dd class="n sus" id="poz-tp">—</dd>
           </div>
           <div>
-            <dt>SL <span class="mic" title="Pragul e prețul liniei de intrare la ora curentă. Linia fiind înclinată, se schimbă la fiecare oră — săgeata arată încotro.">se mișcă</span></dt>
+            <dt>SL <span class="mic" id="poz-sl-et" title="Prag fix, așezat la intrare. Nu mai depinde de linie — linia se depărta cu fiecare oră.">fix</span></dt>
             <dd class="n jos" id="poz-sl">—</dd>
           </div>
           <div class="separator"></div>
           <div><dt>Câștig curent</dt><dd class="n" id="poz-pl">—</dd></div>
+          <div>
+            <dt>A fost la <span class="mic" title="Cât de departe a mers prețul, în favoare și împotrivă, de la intrare încoace. Brut, fără comisioane.">max / min</span></dt>
+            <dd class="n" id="poz-excursie">—</dd>
+          </div>
+          <div><dt>Stop de timp</dt><dd class="n" id="poz-timp">—</dd></div>
         </dl>
 
         <div class="masura" id="masura" aria-hidden="true">

@@ -93,9 +93,10 @@ Consecințe:
 - **arhiva e materialul pentru etapa 4** — fiecare triunghi păstrat e o decizie
   luată de utilizator, cu puncte exacte și moment. Exemple etichetate.
 
-**Atenție la implementare:** „arhivat" nu înseamnă „șters". Geometria liniei de
-intrare rămâne necesară după consumarea triunghiului, pentru că SL-ul se evaluează
-față de ea, iar linia continuă să se prelungească în timp.
+**Atenție la implementare:** „arhivat" nu înseamnă „șters". Geometria liniilor
+rămâne în bază pentru totdeauna — nu pentru SL (din 19.09.2026 ieșirile nu mai
+depind de ea), ci pentru că e materialul etapei 4: fiecare triunghi e o decizie a
+utilizatorului, cu puncte exacte și moment.
 
 ### Rolul liniei — dedus la desenare
 
@@ -108,20 +109,119 @@ Rolul se fixează la desenare și nu se mai schimbă (liniile convergente s-ar
 intersecta altfel și rolurile s-ar inversa singure). Se afișează pe ecran ca să fie
 verificabil, cu posibilitatea de a-l inversa dintr-un clic.
 
-## Ieșirea din poziție
+## Ieșirea din poziție — rescrisă pe 19.09.2026
 
-| | Când | Cum se evaluează |
+> Regulile vechi (SL = linia de intrare, evaluată pe închidere; TP fix +1%) sunt
+> păstrate mai jos, în secțiunea „Ce era înainte", cu motivul pentru care au picat.
+
+| | Unde | Cum se evaluează |
 |---|---|---|
-| **SL** | lumânarea închide înapoi de partea cealaltă a **liniei care a dat intrarea** | la **închiderea** lumânării |
-| **TP** | prețul atinge **+1%** față de intrare, **brut pe preț** (ieșire la `intrare × 1,01`; net rămân ~0,85% după comisioane) | **în timp real**, oricând în timpul orei |
+| **TP** | `intrare ± tp_atr × ATR(14)`, așezat la intrare și **înghețat acolo** | la **fiecare rulare**, pe maximul/minimul lumânării în formare |
+| **SL** | `intrare ∓ sl_atr × ATR(14)`, la fel | la fel |
+| **Stop de timp** | după `ore_maxime` ore fără TP și fără SL | ieșire la prețul de atunci |
 
-Ieșirea pe SL **nu are condiție de culoare** (spre deosebire de intrare).
+Valori implicite: `tp_atr = 1,5`, `sl_atr = 1,0`, `ore_maxime = 48`. Distanțele sunt
+plafonate între **0,5%** și **4%** din prețul de intrare.
 
-### De ce nu există ambiguitate TP vs. SL
+**Liniile nu mai au niciun rol după intrare.** Triunghiul dă semnalul, apoi iese
+din poveste. Geometria rămâne în bază ca arhivă pentru etapa 4 — acolo e valoroasă,
+nu în managementul poziției.
 
-SL-ul se evaluează în ultima clipă a orei; TP-ul se poate atinge oricând în timpul ei.
-**Deci dacă ambele se întâmplă în aceeași oră, TP-ul a fost întotdeauna primul, prin
-construcție.** Nu e o presupunere optimistă, e o consecință a definițiilor.
+### De ce a picat SL-ul pe linie
+
+Trei mecanisme, dintre care al treilea e cel grav:
+
+1. **Se judeca pe închidere** — o oră întreagă de mișcare potrivnică era absorbită
+   integral. Amplitudinea mediană a unei ore de ZEC e 1,54%; a nouăzecea percentilă,
+   3,68%.
+2. **Execuția la deschiderea orei următoare** mai adăuga un gol peste atât.
+3. **Linia fugea de poziție.** Laturile fiind convergente, linia de sus coboară spre
+   vârf oră de oră. După un long, pragul de SL se **îndepărta** de prețul de intrare
+   cu fiecare oră petrecută în poziție: cu cât stăteai mai mult, cu atât aveai voie
+   să pierzi mai mult, în timp ce câștigul rămânea plafonat la 1%.
+
+Rezultatul, pe primele patru tranzacții reale: TP mediu **+0,85%**, singurul SL
+**−1,97%**. Rata de reușită necesară doar ca să ieși pe zero: **69,8%**.
+
+### Ce au spus datele
+
+Măsurat pe cele 6.856 de ore din `public/data/ZECUSDC-1h.json` (nov. 2025 – aug. 2026):
+
+- **ATR(14) median: 1,72%** din preț. Amplitudinea unei ore obișnuite: 1,54%.
+  **TP-ul de 1% era 0,58 ATR** — adică sub zgomotul unei singure ore. Se lua profit
+  dinăuntrul zgomotului, plătind comision pentru el.
+- Simulare cu **intrări la întâmplare**, la fiecare oră, în ambele sensuri, cu TP și
+  SL mecanice, orizont 48h, convenție pesimistă la ambiguitate:
+
+  | TP/SL | reușită | prag necesar | așteptare/tranzacție |
+  |---|---|---|---|
+  | 1,0 / 1,00 | 45,8% | 57,5% | −0,233% |
+  | 1,0 / 0,50 | 28,7% | 43,3% | −0,220% |
+  | 1,5 / 1,00 | 38,0% | 46,0% | −0,200% |
+  | 2,0 / 2,00 | 49,3% | 53,8% | −0,176% |
+  | 3,0 / 1,50 | 33,6% | 36,7% | −0,138% |
+  | 3,4 / 1,72 | 34,7% | 36,5% | −0,091% |
+
+**Două concluzii, și sunt de natură diferită.**
+
+1. **Toate combinațiile pierd, cu aproximativ exact costul comisioanelor.** Nu e
+   statistică, e matematică: pe o piață fără direcție previzibilă, orice schemă de
+   TP/SL are așteptare zero înainte de costuri. Ridici ținta → scade rata de reușită
+   fix cât trebuie. **Schema de ieșire nu poate crea avantaj.** Doar intrarea poate.
+2. **Țintele mici pierd de 2,5 ori mai mult.** Comisionul e o taxă fixă de 0,15%: la
+   un TP de 1% înseamnă 15% din mișcare, la 3,4% doar 4,4%. Asta **nu** e o
+   consecință a hazardului, ci a aritmeticii, și se aplică oricât de bună ar fi
+   intrarea.
+
+De aici alegerea: praguri departe de zgomot, scalate cu volatilitatea, nu procente
+fixe. Un procent fix înseamnă altceva într-o săptămână liniștită decât într-una
+agitată; ATR-ul se scalează singur.
+
+### Etalonul
+
+Tabelul de mai sus e de acum **linia de zero a proiectului**. Cu ieșiri mecanice,
+rata de reușită a unei maimuțe e cunoscută pentru fiecare pereche de praguri;
+desenul utilizatorului trebuie s-o bată cu mai mult decât costul comisioanelor.
+Cu regulile vechi, întrebarea „desenez bine?" nu se putea separa de „ies bine?",
+pentru că ieșirea depindea de desen. Acum se poate.
+
+### Convenția pentru ambiguitate
+
+Dacă TP și SL cad în aceeași fereastră de preț, **se ia SL**. Din lumânări de o oră
+nu se poate ști care a fost primul; cronul la un minut o va ști aproape mereu în
+realitate, dar convenția trebuie să fie pesimistă. O simulare care presupune ordinea
+favorabilă minte exact în direcția în care s-ar paria bani adevărați.
+
+### O optimism cunoscut, de ținut minte
+
+Ieșirea pe SL se socotește **fix la prețul pragului**. Un TP e un ordin limită, deci
+acolo cifra e corectă; un stop e, în realitate, un ordin la piață, cu alunecare.
+La etapa 5 diferența devine reală și trebuie măsurată, nu presupusă.
+
+### Ce se înregistrează acum, și nu se putea reconstitui
+
+Pe fiecare poziție: **ATR-ul la intrare**, **MFE** (cât de departe a mers în favoare)
+și **MAE** (cât de adânc a intrat în minus). Sunt maxime de pe tot drumul — după
+închidere nu se mai pot afla. Cu ele se răspunde, peste 20–30 de tranzacții, la
+întrebări care acum n-au răspuns: câte SL-uri ar fi fost evitate de un stop mutat la
+break-even? cât se lasă pe masă cu ținta așezată aici? ar fi ținut un stop mai strâns?
+
+### Ce era înainte
+
+| | Când | Cum se evalua |
+|---|---|---|
+| **SL** | lumânarea închidea înapoi de partea cealaltă a **liniei care a dat intrarea** | la **închiderea** lumânării |
+| **TP** | prețul atingea **+1%** față de intrare (`intrare × 1,01`) | în timp real, oricând în timpul orei |
+
+Ieșirea pe SL nu avea condiție de culoare (spre deosebire de intrare) — nici acum nu
+are, pragurile nu se uită la culoarea lumânării.
+
+### Ambiguitatea TP vs. SL — rezolvată prin convenție, nu prin construcție
+
+Până pe 19.09.2026 nu exista: SL-ul se judeca în ultima clipă a orei, TP-ul oricând
+în timpul ei, deci TP-ul era primul prin definiție. **Acum amândouă sunt praguri
+verificate pe aceeași fereastră**, iar din lumânări de o oră nu se știe care a fost
+primul. Convenția: **se ia SL**. Vezi „Convenția pentru ambiguitate" mai sus.
 
 ### Cronul rulează la fiecare minut, cu două ritmuri
 
@@ -132,24 +232,26 @@ verificare orară, o poziție atinsă la 10:05 rămâne marcată deschisă pân�
 
 Deci:
 
-- **TP — la fiecare rulare**, inclusiv pe lumânarea în formare. Dacă maximul de
-  până acum a atins pragul, ordinul s-a executat deja. Poziția se închide în cel
-  mult 60 de secunde de la atingere.
+- **TP și SL — la fiecare rulare**, inclusiv pe lumânarea în formare. Dacă maximul
+  (minimul) de până acum a atins pragul, ordinul s-a executat deja. Poziția se
+  închide în cel mult 60 de secunde de la atingere.
 
-  Atingerea nu se ratează niciodată, oricât de rar ar rula cronul: `high` al
-  lumânării în formare e maximul oricărei tranzacții de la începutul orei,
-  actualizat la fiecare tick. Rularea deasă câștigă doar viteza de recunoaștere.
-- **SL și semnale — o singură dată per lumânare închisă**, pentru că exact așa
-  sunt definite: pe închidere.
+  Atingerea nu se ratează niciodată, oricât de rar ar rula cronul: `high` și `low`
+  ale lumânării în formare sunt extremele oricărei tranzacții de la începutul orei,
+  actualizate la fiecare tick. Rularea deasă câștigă doar viteza de recunoaștere.
+- **Semnalele — o singură dată per lumânare închisă**, pentru că exact așa sunt
+  definite: pe închidere.
 
 Rulările dintre ore se scriu în jurnal cu `ora_lumanare` gol, ca o lumânare să nu
 poată fi judecată de două ori pentru SL sau semnale.
 
 ### Ordinea de evaluare
 
-1. **întâi TP** — a atins maximul (sau minimul) pragul de 1%?
-2. **apoi SL** — doar dacă lumânarea închisă n-a fost încă judecată
-3. **apoi semnalele noi de intrare** — tot o singură dată per lumânare
+1. **MFE/MAE** — se actualizează întâi, ca să prindă și fereastra în care poziția
+   se închide
+2. **TP și SL împreună**, pe aceeași fereastră de preț; amândouă atinse → SL
+3. **stopul de timp** — doar dacă n-a ieșit pe praguri
+4. **semnalele noi de intrare** — o singură dată per lumânare închisă
 
 ## Cele două bănci — atenție la capcană
 
@@ -232,8 +334,9 @@ o perioadă nevăzută.
 - **Cron Jobs există** în cPanel.
 - Băncile reacționează la **aceleași linii**.
 - Intrare cu **toată banca**.
-- **TP fix 1%**, în timp real. Poate deveni trailing mai târziu.
-- **SL la închidere de lumânare**, înapoi peste linia de intrare.
+- ~~**TP fix 1%**, în timp real~~ · ~~**SL la închidere**, peste linia de intrare~~
+  — **înlocuite pe 19.09.2026** cu praguri fixe la multipli de ATR. Vezi „Ieșirea
+  din poziție".
 - Comision **0,075% pe parte**.
 - **Linii de unică folosință**, arhivate după ce trag.
 
@@ -242,8 +345,9 @@ o perioadă nevăzută.
 1. **Spargere cu lumânare de culoarea greșită** — o roșie care închide peste linia
    de sus nu e semnal. Triunghiul **rămâne armat** până apare o lumânare cu ambele
    condiții.
-2. **Prețul de execuție** — intrarea și SL-ul la **deschiderea lumânării
-   următoare**; TP-ul exact la `intrare × 1,01`, fiind ordin limită.
+2. **Prețul de execuție** — intrarea la **deschiderea lumânării următoare**.
+   Ieșirile se socotesc exact la prag: TP-ul pe drept (e ordin limită), SL-ul cu
+   optimismul cunoscut de mai sus (un stop real alunecă).
 
 ## Adăugat după prima folosire pe date reale
 
@@ -261,9 +365,10 @@ cu explicație în `nota`.
 
 ## Ce urmează
 
-TP-ul de 1% e fix deocamdată. Utilizatorul vrea să-l facă mai târziu configurabil
-sau adaptiv, posibil trailing — de prevăzut în structura datelor, nu de implementat
-acum.
+Pragurile sunt acum configurabile (`tp_atr`, `sl_atr`) și adaptive prin ATR.
+Rămâne de încercat, **după ce se strâng 20–30 de tranzacții cu MFE/MAE**, nu
+înainte: stop mutat la break-even, trailing, și un filtru de intrare care refuză
+semnalele cu raport prost. Fără datele acelea, orice alegere e ghicit.
 
 ## Reguli ferme
 

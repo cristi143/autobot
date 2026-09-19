@@ -21,7 +21,7 @@
      browserul rulează cod vechi — și atunci o spune, în loc să ne întrebăm de
      ce o schimbare „nu a avut efect". Se schimbă la fiecare modificare a
      fișierelor din public/. */
-  var VERSIUNE = "2026-09-19-a";
+  var VERSIUNE = "2026-09-19-b";
   window.AUTOBOT_VERSIUNE = VERSIUNE;
 
   var A = window.Autobot;
@@ -378,10 +378,11 @@
       if (t.linii.jos) traseazaLinie(t.linii.jos, CULORI.jos, false);
     });
 
-    // Poziția deschisă: linia de intrare e stop loss-ul, iar TP-ul un preț fix.
-    if (pozitie && pozitie.linie) {
-      traseazaLinie(pozitie.linie, CULORI.sl, true);
-      if (pozitie.tp) traseazaPrag(pozitie.tp, CULORI.tp, "TP " + pozitie.tp.toFixed(2));
+    // Poziția deschisă: din 19.09.2026 amândouă pragurile sunt prețuri fixe, deci
+    // două linii orizontale. Înainte, SL-ul era linia înclinată de intrare.
+    if (pozitie) {
+      if (pozitie.tp != null) traseazaPrag(pozitie.tp, CULORI.tp, "TP " + pozitie.tp.toFixed(2));
+      if (pozitie.sl != null) traseazaPrag(pozitie.sl, CULORI.sl, "SL " + pozitie.sl.toFixed(2));
     }
 
     // linia terminată din desenul curent

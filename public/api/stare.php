@@ -3,9 +3,7 @@
  * Starea pe care o afișează panoul lateral: poziție, triunghi activ, bănci,
  * ultimele tranzacții.
  *
- * Deocamdată pozițiile și tranzacțiile sunt mereu goale — motorul, care le
- * produce, vine la etapa 2. Băncile și triunghiurile sunt însă reale, citite
- * din baza de date.
+ * Totul e real, scris de motor în baza de date.
  */
 
 declare(strict_types=1);
@@ -39,14 +37,13 @@ if ($rand) {
     ];
 }
 
-/* ---- poziția deschisă (nu există până la etapa 2) ---- */
+/* ---- poziția deschisă ---- */
 
 $pozitie = ['deschisa' => false];
 
-$p = $pdo->query("SELECT p.*, l.t1, l.p1, l.t2, l.p2
-                  FROM pozitii p
-                  JOIN linii l ON l.id = p.linie_sl_id
-                  WHERE p.stare = 'deschisa' LIMIT 1")->fetch();
+$oreMaxime = (int)($reguli['ore_maxime'] ?? 48);
+
+$p = $pdo->query("SELECT * FROM pozitii WHERE stare = 'deschisa' LIMIT 1")->fetch();
 if ($p) {
     $pozitie = [
         'deschisa'   => true,
@@ -55,18 +52,18 @@ if ($p) {
         'intrare'    => (float)$p['intrare_pret'],
         'intrare_ms' => (int)$p['intrare_ora'],
         'cantitate'  => (float)$p['cantitate'],
+        // Din 19.09.2026 amândouă sunt prețuri fixe, așezate la intrare. Nu mai
+        // e nimic de evaluat la fiecare cerere — și nici de desenat ca linie
+        // înclinată: sunt două praguri orizontale.
         'tp'         => (float)$p['tp_pret'],
-        // SL-ul nu e un preț stocat: e linia, evaluată acum și cu o oră în urmă,
-        // ca panoul să poată arăta încotro se mișcă.
-        'sl_acum'          => round(pret_linie($p, $acum), 8),
-        'sl_ora_trecuta'   => round(pret_linie($p, $acum - 3600000), 8),
-        // Geometria liniei, ca graficul s-o poată desena. Cât timp poziția e
-        // deschisă, linia asta E stop loss-ul — trebuie văzută, nu doar citită
-        // ca număr. Triunghiul e deja consumat, deci nu se mai desenează singur.
-        'sl_linie' => [
-            't1' => (int)$p['t1'], 'p1' => (float)$p['p1'],
-            't2' => (int)$p['t2'], 'p2' => (float)$p['p2'],
-        ],
+        'sl'         => $p['sl_pret'] === null ? null : (float)$p['sl_pret'],
+        'atr'        => $p['atr_intrare'] === null ? null : (float)$p['atr_intrare'],
+        // Cât de departe a mers prețul de când e deschisă, brut, în procente.
+        'mfe'        => (float)$p['mfe_proc'],
+        'mae'        => (float)$p['mae_proc'],
+        'expira_ms'  => $oreMaxime > 0
+            ? (int)$p['intrare_ora'] + $oreMaxime * 3600000
+            : null,
     ];
 }
 
@@ -179,7 +176,10 @@ raspunde([
     'istoric'  => $istoric,
     'statistici' => $statistici,
     'reguli'   => [
-        'tp_procent'       => (float)($reguli['tp_procent'] ?? 1.0),
+        'tp_atr'           => (float)($reguli['tp_atr'] ?? 1.5),
+        'sl_atr'           => (float)($reguli['sl_atr'] ?? 1.0),
+        'atr_perioada'     => (int)($reguli['atr_perioada'] ?? 14),
+        'ore_maxime'       => $oreMaxime,
         'comision_o_parte' => (float)($reguli['comision_o_parte'] ?? 0.075),
     ],
 ]);

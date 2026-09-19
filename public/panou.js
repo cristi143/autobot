@@ -37,6 +37,11 @@
     return (cuSemn && v > 0 ? "+" : "") + Number(v).toFixed(2) + "%";
   }
 
+  /** 1.5 -> „1,5", 1 -> „1". Multiplii de ATR se citesc mai bine fără zerouri. */
+  function nrScurt(v) {
+    return Number(v).toFixed(2).replace(/\.?0+$/, "").replace(".", ",");
+  }
+
   /** Momentele vin ca milisecunde UTC. Le arătăm tot în UTC, ca graficul. */
   function candUTC(ms, scurt) {
     if (!ms) return "—";
@@ -68,7 +73,8 @@
       tip.textContent = "fără poziție";
       tip.className = "pastila goala";
       varsta.textContent = "aștept o spargere";
-      ["poz-intrare", "poz-acum", "poz-tp", "poz-sl", "poz-pl"].forEach(function (id) {
+      ["poz-intrare", "poz-acum", "poz-tp", "poz-sl", "poz-pl",
+       "poz-excursie", "poz-timp"].forEach(function (id) {
         $(id).textContent = "—";
         $(id).classList.remove("sus", "jos");
       });
@@ -88,9 +94,33 @@
 
     $("poz-tp").textContent = pret(p.tp) + "   " + proc(((p.tp - baza) / baza) * 100, true) + " de aici";
 
-    var sageata = p.sl_acum > p.sl_ora_trecuta ? " ↑" : (p.sl_acum < p.sl_ora_trecuta ? " ↓" : "");
-    var distSL = ((baza - p.sl_acum) / baza) * 100;
-    $("poz-sl").textContent = pret(p.sl_acum) + sageata + "   −" + Math.abs(distSL).toFixed(2) + "% de aici";
+    if (p.sl == null) {
+      $("poz-sl").textContent = "—";
+    } else {
+      var distSL = Math.abs((p.sl - baza) / baza) * 100;
+      $("poz-sl").textContent = pret(p.sl) + "   −" + distSL.toFixed(2) + "% de aici";
+    }
+
+    // Etichetele spun în ATR-uri, pentru că așa au fost așezate pragurile;
+    // procentul de sub ele e doar traducerea de moment.
+    var r = S.reguli || {};
+    if (r.tp_atr) $("poz-tp-et").textContent = nrScurt(r.tp_atr) + " × ATR";
+    if (r.sl_atr) $("poz-sl-et").textContent = nrScurt(r.sl_atr) + " × ATR";
+
+    // MFE și MAE: cât de departe a mers, în ambele sensuri. Brut, fără
+    // comisioane — sunt drumul prețului, nu rezultatul.
+    $("poz-excursie").textContent =
+      (p.mfe == null ? "—" : proc(p.mfe, true)) + "  /  " +
+      (p.mae == null ? "—" : proc(p.mae, true));
+
+    if (p.expira_ms) {
+      var ramase = (p.expira_ms - Date.now()) / 3600000;
+      $("poz-timp").textContent = ramase > 0
+        ? "peste " + (ramase >= 2 ? Math.round(ramase) + " ore" : Math.round(ramase * 60) + " min")
+        : "acum, la următoarea rulare";
+    } else {
+      $("poz-timp").textContent = "fără";
+    }
 
     if (pretCurent != null) {
       var plProc = ((pretCurent - p.intrare) / p.intrare) * 100;
@@ -100,12 +130,14 @@
       el.textContent = proc(plProc, true) + "   " + (plUsdc >= 0 ? "+" : "") + plUsdc.toFixed(2) + " USDC";
       semn(el, plProc);
 
-      var interval = p.tp - p.sl_acum;
-      var poz = interval !== 0 ? ((pretCurent - p.sl_acum) / interval) * 100 : 50;
-      $("masura-ac").style.left = Math.max(0, Math.min(100, poz)) + "%";
-      $("masura-jos").textContent = "SL " + pret(p.sl_acum);
-      $("masura-sus").textContent = "TP " + pret(p.tp);
-      $("masura").hidden = false;
+      if (p.sl != null) {
+        var interval = p.tp - p.sl;
+        var poz = interval !== 0 ? ((pretCurent - p.sl) / interval) * 100 : 50;
+        $("masura-ac").style.left = Math.max(0, Math.min(100, poz)) + "%";
+        $("masura-jos").textContent = "SL " + pret(p.sl);
+        $("masura-sus").textContent = "TP " + pret(p.tp);
+        $("masura").hidden = false;
+      }
     }
   }
 
@@ -269,7 +301,7 @@
         // nu se mai afișează singur, iar linia lui rămâne pragul de ieșire.
         document.dispatchEvent(new CustomEvent("autobot:pozitie", {
           detail: S.pozitie && S.pozitie.deschisa ? {
-            tip: S.pozitie.tip, linie: S.pozitie.sl_linie, tp: S.pozitie.tp
+            tip: S.pozitie.tip, sl: S.pozitie.sl, tp: S.pozitie.tp
           } : null
         }));
       })
