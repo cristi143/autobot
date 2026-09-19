@@ -92,9 +92,54 @@ body {
   align-items: stretch;
 }
 
-.grafic-invelis { position: relative; flex: 1; min-width: 0; min-height: 0; }
+/* Graficul și panoul RSI stau unul peste altul, în coloană: axa de timp e
+   desenată o singură dată, jos, de panoul RSI. */
+.grafic-invelis {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
 
-#grafic { position: absolute; inset: 0; }
+#grafic { position: relative; flex: 1; min-height: 0; }
+
+.rsi-invelis {
+  position: relative;
+  flex: 0 0 9.5rem;
+  min-height: 0;
+  border-top: 1px solid var(--line);
+}
+
+#rsi { position: absolute; inset: 0; }
+
+/* banda 30–70, desenată peste grafic (biblioteca trage linii, nu umple între ele) */
+.rsi-banda { position: absolute; inset: 0; pointer-events: none; z-index: 2; }
+
+.rsi-legenda {
+  position: absolute;
+  top: .3rem;
+  left: .6rem;
+  z-index: 3;
+  pointer-events: none;
+  font-size: .75rem;
+  color: var(--muted);
+  letter-spacing: .02em;
+}
+
+.rsi-legenda .per { opacity: .7; }
+
+.rsi-legenda .vl {
+  margin-left: .25rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.rsi-legenda .vl.sus { color: var(--jos); }   /* peste 70: supracumpărat */
+.rsi-legenda .vl.jos { color: var(--sus); }   /* sub 30: supravândut */
 
 .stare {
   position: absolute;
@@ -351,6 +396,7 @@ body {
 @media (max-width: 60rem) {
   .corp { flex-direction: column; }
   .grafic-invelis { flex: 0 0 60vh; }
+  .rsi-invelis { flex-basis: 7rem; }
   .panou {
     width: auto;
     flex: 1 1 auto;

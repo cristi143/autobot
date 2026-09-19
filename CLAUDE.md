@@ -9,6 +9,7 @@ Tot lanțul e viu, în simulare cu bani fictivi:
 | Piesă | Unde | Ce face |
 |---|---|---|
 | Grafic live | `public/grafic.js` | lumânări 1h, istoric + punte REST + WebSocket |
+| RSI | `public/rsi.js` | RSI(14) sub grafic, cu reperele 70 / 30 |
 | Desen | `public/desen.js` | trage triunghiuri; arată și istoricul celor consumate |
 | API | `public/api/` | `stare.php`, `triunghiuri.php`, `_comun.php` |
 | Panou | `public/panou.js` | trei file: Curent, Bănci, Statistici |
@@ -38,7 +39,10 @@ graficul) și **`motor/README.md`** (cum funcționează motorul și cronul).
 - Se lucrează pe `main`: commit + push. Înainte de push, **arată-i utilizatorului
   ce s-a modificat** ca să confirme.
 - Deploy-ul îl face utilizatorul manual din cPanel (Update from Remote →
-  Deploy HEAD Commit).
+  Deploy HEAD Commit). **Butonul „Update from Remote" a fost găsit stricat pe
+  18.09.2026** — zice „up-to-date" fără să tragă nimic. Înainte de deploy,
+  amintește-i să verifice data lui `.git/FETCH_HEAD` și, dacă e tot ruptă, să facă
+  Cron Job-ul din DEPLOY.md §2.
 - Mesajele de commit au diacritice → fișier cu `-F`, nu `-m`.
 - Se comite cu identitate explicită dacă repo-ul n-o are:
   `git -c user.name="Cristi Iorga" -c user.email="cristi.s.iorga@gmail.com"`
@@ -116,6 +120,10 @@ Detaliile și motivele sunt în `docs/plan-tranzactionare.md` — **nu le reinve
 - JSON-ul se regenerează doar când apar date noi de 1 minut:
   `python3 tools/agrega_1h.py ZECUSDC`, commit, deploy. Graficul rămâne la zi singur.
 - Simbolul afișat se schimbă din `var SIMBOL` în `public/grafic.js`.
+- **RSI(14) într-un panou propriu dedesubt** (`public/rsi.js`), cu 70 / 50 / 30 și
+  banda dintre 70 și 30 umbrită. v4 n-are panouri, deci e un al doilea grafic
+  sincronizat: aliniere pe **indici logici** (puncte goale pe primele 14 lumânări),
+  scale de preț aduse la aceeași lățime, axa de timp doar jos. Detalii în DEPLOY.md §5.
 - Fișierele 1m rămân în afara git-ului; doar JSON-ul agregat intră.
 
 ## Mediul serverului (verificat 2 sept. 2026)

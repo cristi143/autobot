@@ -32,6 +32,42 @@ De aceea folosim arborele separat `/home/marcelpa/autobot.dunitru.ro/`.
 
 Log: `/home/marcelpa/deploy-autobot.log`
 
+### ⚠ „Update from Remote" a fost găsit stricat (18.09.2026)
+
+Butonul **răspunde „The repository is up-to-date" fără să tragă nimic** — clona de
+pe server rămâne pe commitul vechi, iar „Deploy HEAD Commit" publică liniștit
+versiunea veche. Descoperit pe `marcel-parcel`, **același cont cPanel**, deci
+privește la fel toate site-urile de aici.
+
+Nu e greșeală de configurare: s-au verificat una câte una `.git/config`, fișierele
+`.lock`, ștergerea și recrearea repo-ului, tokenul GitHub, cheia SSH de deploy și
+rețeaua serverului spre github.com (DNS, 443, 22) — toate în regulă. Un `git fetch`
+rulat din cron merge perfect. Povestea completă și tabelul verificărilor:
+`../../02_Marcel/marcel-parcel/DEPLOY.md`, secțiunea 4.1.
+
+**Verificarea care nu minte**, din File Manager: data de modificare a
+`/home/marcelpa/repositories/autobot/.git/FETCH_HEAD`. Git o rescrie doar după un
+fetch reușit — dacă e veche, n-a tras nimic, indiferent ce zice cPanel. Iar în
+*Basic Information* compari **HEAD Commit** cu ce ai împins tu.
+
+**Ocolirea** (o are deja `marcel-parcel`, aici **rămâne de făcut**): un Cron Job în
+cPanel → Advanced → Cron Jobs, la 5 minute, care rulează exact ce refuză butonul:
+
+```
+cd /home/marcelpa/repositories/autobot; { date; git fetch origin; git merge --ff-only origin/main; } > /home/marcelpa/git-pull-autobot.log 2>&1
+```
+
+- `>` (nu `>>`): log-ul ține doar ultima rulare, deci nu crește la nesfârșit.
+- `--ff-only`: dacă ar apărea un commit direct în clona serverului, merge-ul se
+  oprește în loc să inventeze o îmbinare.
+- log separat de cel al lui `marcel-parcel` (`git-pull.log`), ca să nu se calce.
+
+Deploy-ul rămâne manual, ca până acum — cronul aduce doar codul.
+
+> **De verificat înainte de a face cronul:** poate s-a reparat între timp. Dai push,
+> apeși „Update from Remote" și te uiți la data lui `FETCH_HEAD`. Dacă s-a mișcat,
+> butonul merge; dacă nu, faci cronul de mai sus.
+
 ---
 
 ## 3. Arhitectură — unde rulează botul (important)
@@ -76,6 +112,7 @@ autobot/
 └── public/              → document root
     ├── index.html       graficul + panoul lateral
     ├── grafic.js        lumânări (lightweight-charts, prin CDN)
+    ├── rsi.js           panoul RSI de dedesubt
     ├── desen.js         desenarea triunghiurilor
     ├── panou.js         poziție, bănci, istoric
     ├── api/             _comun.php · stare.php · triunghiuri.php
@@ -123,6 +160,34 @@ nu se albește pagina.
 
 Indicatorul din antet: **live** (verde, pulsând) · **se conectează / reconectare**
 (chihlimbar) · **doar istoric** (gri).
+
+### Panoul RSI de dedesubt
+
+Sub lumânări stă un RSI(14), cu reperele obișnuite: **70** (supracumpărat, roșu),
+**30** (supravândut, verde) și 50 punctat la mijloc. Banda dintre 70 și 30 e
+umbrită discret — zona în care indicatorul nu spune nimic, ca ieșirile din ea să
+sară în ochi. Valoarea exactă se citește în legenda din colț și se colorează când
+trece de praguri; cu cursorul pe grafic, arată valoarea lumânării de sub el.
+
+`lightweight-charts` 4.x **nu are panouri** (au apărut în v5), deci panoul e un al
+doilea grafic, lipit dedesubt și ținut în pas cu primul. Ce trebuie știut dacă îl
+atingi:
+
+- **Alinierea se face pe indici logici, nu pe timp.** Seria de RSI are câte un punct
+  pentru fiecare lumânare, inclusiv primele 14, unde RSI-ul încă nu există: acolo se
+  trimit puncte goale (doar `time`). Fără ele, indicele 0 al panoului ar cădea peste
+  lumânarea 14 și cele două grafice ar fi decalate.
+- **Scalele de preț trebuie să aibă aceeași lățime**, altfel zonele de desen diferă
+  și graficele se decalează cu câțiva pixeli. `aliniazaScale()` le duce pe amândouă
+  la cea mai lată.
+- **Axa de timp se desenează o singură dată**, în panoul RSI; graficul de sus o are
+  ascunsă (`timeScale.visible: false`).
+- **Scala RSI e fixată 0–100** printr-un `autoscaleInfoProvider`. Lăsată să se
+  auto-încadreze, liniile de 70 și 30 ar sări de la o fereastră la alta — exact
+  reperele care trebuie să stea pe loc.
+- Formula e cea a lui Wilder (netezire cu 1/14), ca la TradingView. Se recalculează
+  complet doar când apare o lumânare nouă; cât timp se mișcă doar cea în formare,
+  se reface un singur punct.
 
 ### Cum se regenerează istoricul
 

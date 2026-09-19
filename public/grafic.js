@@ -64,7 +64,10 @@
     layout:     { background: { color: t.fundal }, textColor: t.text, fontSize: 12 },
     grid:       { vertLines: { color: t.linii }, horzLines: { color: t.linii } },
     rightPriceScale: { borderColor: t.linii, scaleMargins: { top: 0.08, bottom: 0.26 } },
-    timeScale:  { borderColor: t.linii, timeVisible: true, secondsVisible: false },
+    // Axa de timp se desenează o singură dată, în panoul RSI de dedesubt —
+    // altfel ar apărea o a doua scară de ore în mijlocul paginii.
+    timeScale:  { borderColor: t.linii, timeVisible: true, secondsVisible: false,
+                  visible: false },
     crosshair:  {
       mode: LightweightCharts.CrosshairMode.Normal,
       vertLine: { color: t.cruce, width: 1, style: 3, labelBackgroundColor: t.cruce },
@@ -378,6 +381,11 @@
     chart: chart,
     serie: serieLum,
     lumanari: function () { return lumanari; },
+    tema: tema,
+
+    /* Panoul RSI stă pe alt grafic, deci mutările făcute acolo trebuie să
+       oprească reîncadrarea automată la fel ca cele de pe lumânări. */
+    interactiuneUmana: function () { fixat = true; },
 
     /** moment (ms) -> indice logic pe axa graficului, extrapolat în afara datelor */
     msLaIndice: function (ms) {
@@ -419,5 +427,6 @@
       crosshair: { vertLine: { color: n.cruce, labelBackgroundColor: n.cruce },
                    horzLine: { color: n.cruce, labelBackgroundColor: n.cruce } }
     });
+    document.dispatchEvent(new CustomEvent("autobot:tema", { detail: n }));
   });
 })();
