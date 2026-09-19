@@ -245,6 +245,28 @@ setare scrisă de om, unealta nu face nimic.
 
 ---
 
+## Cercetarea — `analiza/`
+
+Folder de laborator, **nu ajunge pe server**: `.cpanel.yml` copiază doar
+`public/` și `motor/`.
+
+- **`docs/proba-triunghiurilor.md`** — protocolul probei mecanice, scris înainte
+  de rezultate, cu verdictul la final. **Citește-l înainte să propui orice
+  schimbare de reguli**, ca să nu reinventezi un test deja făcut.
+- **Verdictul, pe scurt:** tiparul are un avantaj real de ~0,062% brut pe
+  tranzacție, măsurat pe 40.832 de triunghiuri și 26 de simboluri, perioadă
+  ținută deoparte. Comisionul e 0,150%. **Informație există, dar sub cost.**
+- **`analiza/desen-orb.html`** — 60 de ferestre anonimizate, cu viitorul ascuns.
+  Răspunde la întrebarea a doua: alege utilizatorul de ~2,5 ori mai bine decât
+  media triunghiurilor care se calificau? Vezi `analiza/README.md`.
+- Cache-ul de 1h pentru toate simbolurile stă în `../historical_data/_1h/`,
+  **în afara git-ului**, ca și datele de 1 minut.
+- **Nu regla regulile de ieșire pe datele probei.** Ipoteza că praguri mai
+  depărtate ar dilua comisionul e rezonabilă, dar cere protocol propriu și
+  perioadă proprie ținută deoparte.
+
+---
+
 ## Context vecin
 Același cont cPanel (`marcelpa`) găzduiește și `marcel-parcel.ro` și `dunitru.ro`.
 Sunt proiecte complet separate, cu repo-uri separate — nu se modifică nimic acolo

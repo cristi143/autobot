@@ -173,6 +173,12 @@ autobot/
 │   ├── probe/matematica.php          61 de probe (botul vechi)
 │   ├── probe/unealta-matematica.php  88 de probe (unealta)
 │   └── README.md
+├── analiza/             cercetare, NU ajunge pe server (deploy-ul n-o atinge)
+│   ├── desen-orb.html       unealta de desen orb, se deschide local
+│   ├── pregateste-ferestre.py · cheie.json
+│   ├── agrega-toate-1h.py   1m -> 1h pentru toate simbolurile
+│   ├── triunghiuri.py · ruleaza.py · analiza.py · verdict.py
+│   └── README.md
 ├── tools/
 │   └── agrega_1h.py     agregă 1m -> 1h în public/data/
 └── public/              → document root

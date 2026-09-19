@@ -1,0 +1,5 @@
+# Rezultate derivate: se regenerează cu ruleaza.py din datele istorice.
+# Zeci de MB, și nu spun nimic ce nu spune codul care le-a produs.
+rezultate/
+# Ce desenează utilizatorul; intră în repo doar când e gata și analizat.
+desene.json
