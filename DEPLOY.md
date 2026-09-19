@@ -50,7 +50,7 @@ rulat din cron merge perfect. Povestea completă și tabelul verificărilor:
 fetch reușit — dacă e veche, n-a tras nimic, indiferent ce zice cPanel. Iar în
 *Basic Information* compari **HEAD Commit** cu ce ai împins tu.
 
-**Ocolirea** (o are deja `marcel-parcel`, aici **rămâne de făcut**): un Cron Job în
+**Ocolirea, făcută pe 19.09.2026** (o are și `marcel-parcel`): un Cron Job în
 cPanel → Advanced → Cron Jobs, la 5 minute, care rulează exact ce refuză butonul:
 
 ```
@@ -64,9 +64,14 @@ cd /home/marcelpa/repositories/autobot; { date; git fetch origin; git merge --ff
 
 Deploy-ul rămâne manual, ca până acum — cronul aduce doar codul.
 
-> **De verificat înainte de a face cronul:** poate s-a reparat între timp. Dai push,
-> apeși „Update from Remote" și te uiți la data lui `FETCH_HEAD`. Dacă s-a mișcat,
-> butonul merge; dacă nu, faci cronul de mai sus.
+Reverificat pe 19.09.2026, cu un commit nou pe GitHub: butonul tot nu trage. Cronul
+a adus commitul în mai puțin de 5 minute.
+
+> **⚠ În aceeași listă de Cron Jobs stă și cronul motorului** (`motor.php`, la fiecare
+> minut — vezi `motor/README.md`). Sunt două lucruri fără legătură, unul lângă altul.
+> La ștergerea unuia s-a dus din greșeală și celălalt, iar motorul a stat 11 ore fără
+> ca nimic să se plângă în afară de banda din panou. Când umbli aici, citește comanda
+> întreagă înainte de a apăsa Delete.
 
 ---
 
