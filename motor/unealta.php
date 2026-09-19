@@ -19,11 +19,11 @@
  *   obișnuite. Un prag care se declanșează la atingere e rupt de zgomot, nu de
  *   piață.
  *
- *   STOPUL se verifică la fiecare rulare, pe mecuri, inclusiv pe lumânarea în
+ *   STOPUL se verifică la fiecare rulare, pe wick-uri, inclusiv pe lumânarea în
  *   formare. E protecție, nu afirmație: dacă prețul a fost acolo, ieșim.
  *
- * EXTREMELE (minimele și maximele care mișcă pragurile) se iau din MECURI, nu
- * din închideri. Mecurile spun unde a fost prețul; închiderile spun dacă s-a
+ * EXTREMELE (minimele și maximele care mișcă pragurile) se iau din WICK-URI, nu
+ * din închideri. Wick-urile spun unde a fost prețul; închiderile spun dacă s-a
  * rupt ceva. Fiecare regulă folosește ce știe mai bine.
  *
  * RECUPERAREA: la fiecare rulare se procesează TOATE lumânările închise
@@ -310,7 +310,7 @@ function inchidePozitia(array $p, float $pret, string $motiv, int $ora): void {
  * ORDINEA CONTEAZĂ, pentru că pe un sfert de oră se pot întâmpla mai multe
  * lucruri deodată:
  *   1. MFE/MAE — întâi, ca să prindă și fereastra în care poziția se închide
- *   2. stopul — pe mecuri
+ *   2. stopul — pe wick-uri
  *   3. urmărirea — se ridică pragul
  *   4. ieșirea — doar pe închidere
  *

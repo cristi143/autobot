@@ -28,7 +28,7 @@ function u_pragArmare(string $banca, float $pragIntrare, float $depasire): float
     return $banca === 'long' ? $pragIntrare - $depasire : $pragIntrare + $depasire;
 }
 
-/** S-a dus destul de departe? Se judecă pe mecuri: contează extremul real. */
+/** S-a dus destul de departe? Se judecă pe wick-uri: contează extremul real. */
 function u_sArmat(string $banca, float $maxim, float $minim, float $pragArmare): bool {
     return $banca === 'long' ? $minim <= $pragArmare : $maxim >= $pragArmare;
 }
@@ -67,7 +67,7 @@ function u_declanseazaIntrarea(string $banca, float $inchidere, float $prag): bo
 
 /* ============================ ieșirea =================================== */
 
-/** Ținta a fost atinsă măcar o dată? Pe mecuri — de aici pornește urmărirea. */
+/** Ținta a fost atinsă măcar o dată? Pe wick-uri — de aici pornește urmărirea. */
 function u_atinsTinta(string $banca, float $maxim, float $minim, float $pragIesire): bool {
     return $banca === 'long' ? $maxim >= $pragIesire : $minim <= $pragIesire;
 }

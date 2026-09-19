@@ -23,11 +23,11 @@ Setare: `intrare 800`, `coborâre minimă 20`, `revenire 20`, `ieșire 875`,
 
 | Stare | Ce se întâmplă |
 |---|---|
-| **așteaptă** | Prețul trebuie să atingă 780 (= 800 − 20). Se uită la mecuri: contează minimul real, nu închiderea. |
+| **așteaptă** | Prețul trebuie să atingă 780 (= 800 − 20). Se uită la wick-uri: contează minimul real, nu închiderea. |
 | **armat** | Se ține minte minimul atins. Pragul de intrare devine `minim + 20`, plafonat la 800 — **doar coboară**. Minim 700 → prag 720. |
 | **intrare** | O lumânare de 15m **se închide peste prag**. Cumperi la prețul acelei închideri. |
 | **în poziție** | Ținta rămâne **875, absolută** — nu se mută cu prețul real de intrare. Stopul (760) se verifică de la prima clipă. |
-| **țintă atinsă** | Prețul atinge 875 (mec). De aici pragul de ieșire = `maxim − 45`, plafonat în jos la 875 — **doar urcă**. |
+| **țintă atinsă** | Prețul atinge 875 (wick). De aici pragul de ieșire = `maxim − 45`, plafonat în jos la 875 — **doar urcă**. |
 | **ieșire** | O lumânare de 15m **se închide sub prag**. Vinzi la prețul acelei închideri. |
 
 **SHORT e oglinda exactă**, pe banca măsurată în ZEC: prețul trebuie să treacă
@@ -55,16 +55,29 @@ ATR(14) pe 15m e 11,4 USDC, deci în mod obișnuit ieșirea cade cu **5–11 USD
 prag**. Așa se și socotește în bază — un sistem care pretinde că iese fix la prag
 minte exact în direcția în care s-ar paria bani adevărați.
 
-### 2. Extremele se iau din mecuri, nu din închideri
+### 2. Extremele se iau din wick-uri, nu din închideri
+
+**Wick** = liniuța subțire de deasupra și de dedesubtul corpului unei lumânări.
+Corpul arată deschiderea și închiderea sfertului de oră; wick-urile arată cât de
+sus și cât de jos a ajuns prețul în acele 15 minute, chiar dacă s-a întors
+imediat.
+
+```
+        ╷ 1520   ← maximul atins (wick-ul de sus)
+      ┌─┴─┐ 1515 ← închiderea
+      │   │        corpul
+      └─┬─┘ 1505 ← deschiderea
+        ╵ 1498   ← minimul atins (wick-ul de jos)
+```
 
 Pragul de urmărire se calculează din maximul **real** atins, chiar și de trei
 secunde. La fel armarea: o înțepătură sub 780 armează setarea.
 
-Măsurat pe ultimele ~1000 de lumânări de 15m, mecul superior are mediana de
+Măsurat pe ultimele ~1000 de lumânări de 15m, wick-ul superior are mediana de
 **2,71 USDC** (p90: 7,92). Alegerea costă, deci, cam 3 USDC de strictețe în plus
 față de varianta cu închideri — neglijabil față de o urmărire de 40–50.
 
-Cele două reguli lucrează împreună, și fiecare face altceva: **mecurile spun unde
+Cele două reguli lucrează împreună, și fiecare face altceva: **wick-urile spun unde
 a fost prețul, închiderile spun dacă s-a rupt ceva.**
 
 ### 3. Ținta de ieșire e absolută
@@ -129,7 +142,7 @@ o înlocuiește. Cu `nivel 800, coborâre 20`, stopul trebuie să fie sub 780.
 Contează, pentru că pe o lumânare de 15m se pot întâmpla mai multe lucruri:
 
 1. **MFE / MAE** — cât de departe a mers, în favoare și împotrivă
-2. **stopul** — pe mecuri, instantaneu
+2. **stopul** — pe wick-uri, instantaneu
 3. **urmărirea** — se actualizează maximul, se activează ținta dacă a fost atinsă,
    se recalculează pragul
 4. **ieșirea** — doar dacă închiderea a rupt pragul
@@ -145,7 +158,7 @@ care a fost primul, iar presupunerea favorabilă minte în favoarea strategiei.
 
 ## Două consecințe acceptate deliberat
 
-**Armare și intrare în aceeași lumânare sunt posibile.** O lumânare cu mec adânc
+**Armare și intrare în aceeași lumânare sunt posibile.** O lumânare cu wick adânc
 care se închide sus poate arma setarea *și* declanșa intrarea. Exemplu: prag 800,
 coborâre minimă 20, revenire 20 — lumânare cu minim 775 și închidere 798. Minimul
 armează, pragul efectiv devine 795, închiderea e peste el. E exact revenirea

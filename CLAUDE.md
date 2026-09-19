@@ -208,7 +208,7 @@ setare scrisă de om, unealta nu face nimic.
 - **Totul se declanșează pe ÎNCHIDEREA unei lumânări de 15m**, deci prețul de
   execuție e acea închidere, nu pragul. **Excepție: stopul**, evaluat pe
   atingere, fix la prag.
-- **Extremele se iau din MECURI**, declanșările din ÎNCHIDERI. Mecurile spun
+- **Extremele se iau din WICK-URI**, declanșările din ÎNCHIDERI. Wick-urile spun
   unde a fost prețul; închiderile spun dacă s-a rupt ceva.
 - **Stop și ieșire în aceeași lumânare → se ia stopul.** Aceeași convenție
   pesimistă ca la botul vechi.

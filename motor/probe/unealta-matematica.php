@@ -45,7 +45,7 @@ verifica('long: minim 780 armează (egal)',  u_sArmat('long', 800, 780, 780), tr
 verifica('long: minim 700 armează',         u_sArmat('long', 800, 700, 780), true);
 verifica('short: maxim 1615 nu armează',    u_sArmat('short', 1615, 1600, 1620), false);
 verifica('short: maxim 1620 armează (egal)',u_sArmat('short', 1620, 1600, 1620), true);
-// Mecurile contează, nu închiderile: asta e tot rostul separării.
+// Wick-urile contează, nu închiderile: asta e tot rostul separării.
 verifica('long: armează dintr-o înțepătură, oricât de scurtă',
          u_sArmat('long', 810, 779, 780), true);
 
@@ -254,7 +254,7 @@ $r = simuleaza($setareLong, [
 verifica('cu urmărire 45, poziția e ÎNCĂ DESCHISĂ', $r['stare'], 'in_pozitie');
 verifica('pragul a rămas la țintă (875), nu l-a scos',
          u_pragIesireEfectiv('long', 875.0, $r['pozitie']['extrem'], 45.0), 875.0);
-verifica('maximul reținut e 910 (din mec)', $r['pozitie']['extrem'], 910.0);
+verifica('maximul reținut e 910 (din wick)', $r['pozitie']['extrem'], 910.0);
 
 // Aceleași lumânări, urmărire strânsă: îl scoate. Cifra contează, nu regula.
 $stramt = $setareLong; $stramt['urmarire'] = 10.0;

@@ -20,7 +20,7 @@
   /* Se schimbă LA FIECARE modificare din public/unealta/. `api/unealta.php` o
      citește de pe disc, iar pagina compară: diferite = browserul rulează cod
      vechi din cache, și banda de sus o spune. */
-  var VERSIUNE = "2026-09-19-a";
+  var VERSIUNE = "2026-09-19-b";
   window.UNEALTA_VERSIUNE = VERSIUNE;
 
   var SIMBOL = "ZECUSDC";
