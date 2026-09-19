@@ -91,9 +91,12 @@ Detaliile și motivele sunt în `docs/plan-tranzactionare.md` — **nu le reinve
   măsurată pe 6.856 de ore (tabelul din plan). Desenul trebuie s-o bată. Și: **orice
   schemă de TP/SL are așteptare zero înainte de comisioane** — ieșirea nu creează
   avantaj, doar intrarea poate.
-- **Triunghiul expiră la vârf** dacă n-a fost spart: după intersecție, „sus"
-  ajunge sub „jos" și orice lumânare verde ar da un long fals. Primește starea
-  `expirat`, **distinctă de `sters`** — unul e verdictul pieței, celălalt decizia
+- **Triunghiul expiră când rămâne fără loc (20.09.2026).** Pragul e lățimea
+  dintre linii, în ATR-uri (`latime_minima_atr`, implicit 1,0) — nu vârful.
+  Motivul: cu câteva ore înainte de intersecție liniile au coborât deja peste
+  preț, deci orice lumânare verde închide peste cea de sus și semnalul e
+  fabricat de geometrie, nu de piață. Vechea regulă („expiră după vârf") e cazul
+  particular al pragului zero. Primește starea `expirat`, **distinctă de `sters`** — unul e verdictul pieței, celălalt decizia
   utilizatorului. Amândouă sunt exemple negative pentru etapa 4, dar din motive
   diferite; contopite, n-ar mai spune nimic. De aceea nici nu se pot șterge.
 - **`nota` e a utilizatorului**, scrisă la desenare. Motorul NU o atinge — a

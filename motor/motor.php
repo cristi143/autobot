@@ -67,6 +67,10 @@ $distMax     = (float)($config['reguli']['distanta_maxima_proc'] ?? 4.0);
 // Stop de timp: o poziție care n-a atins nici TP, nici SL, nu trebuie să stea
 // la infinit. Zero oprește regula.
 $oreMaxime   = (int)($config['reguli']['ore_maxime'] ?? 48);
+// Lățimea minimă a triunghiului la care mai acceptăm un semnal, în ATR-uri.
+// Sub ea, spargerea nu mai spune nimic despre piață — vezi mai jos, la
+// verificarea triunghiurilor active.
+$latimeMinAtr = (float)($config['reguli']['latime_minima_atr'] ?? 1.0);
 // capital_initial nu se citește aici: banca de long își ia soldul din tabel, iar
 // cea de short se finanțează din ce are deja. Îl folosește doar stare.php, ca
 // punct de referință pentru randament.
@@ -453,17 +457,36 @@ foreach ($triunghiuri as $t) {
         continue;
     }
 
-    // Trecut de vârf, fără spargere: liniile s-au intersectat, rolurile n-ar mai
-    // însemna nimic. Îl scoatem din joc în loc să producă un semnal fals.
-    $varf = varfulTriunghiului($linii['sus'], $linii['jos']);
-    if ($varf !== null && $inchisa['ora'] >= $varf) {
+    /* --- triunghiul a rămas fără loc? (20.09.2026) ---
+
+       Regula veche expira triunghiul abia DUPĂ vârf, când „sus" ajungea sub
+       „jos". Prea târziu: cu câteva ore înainte de intersecție, liniile au
+       coborât deja peste preț, iar ORICE lumânare verde închide peste linia de
+       sus. Semnalul acela nu spune nimic despre piață — e fabricat de geometria
+       care s-a strâns. Utilizatorul a descris exact asta: „nu vreau să ne
+       forțeze să intrăm doar pentru că prețul a ajuns la vârful triunghiului".
+
+       Pragul e lățimea dintre linii, măsurată în ATR-uri, nu în procente: un
+       triunghi mai îngust decât amplitudinea unei ore obișnuite e spart de
+       zgomot, nu de o mișcare. Același raționament ca la pragurile de TP/SL.
+
+       Regula veche devine un caz particular: după vârf lățimea e negativă, deci
+       oricum sub prag. O singură regulă în loc de două. */
+    $latime = pretLinie($linii['sus'], $inchisa['ora'])
+            - pretLinie($linii['jos'], $inchisa['ora']);
+    $latimeMinima = $atrAcum * $latimeMinAtr;
+
+    if ($latime <= $latimeMinima) {
         // `nota` NU se atinge: e a utilizatorului, scrisă la desenare, și e
         // material pentru etapa 4. Starea `expirat` spune deja ce s-a întâmplat,
         // iar momentul vârfului se recalculează oricând din cele două linii.
         $pdo->prepare("UPDATE triunghiuri SET stare='expirat' WHERE id=?")
             ->execute([$t['id']]);
-        spune("Triunghiul #{$t['id']} a trecut de vârf fără spargere (" .
-              gmdate('Y-m-d H:i', intdiv($varf, 1000)) . " UTC) — expirat.");
+        $varf = varfulTriunghiului($linii['sus'], $linii['jos']);
+        spune(sprintf("Triunghiul #%d a rămas fără loc: lățime %.2f USDC (%.2f ATR),"
+                    . " sub pragul de %.2f. Vârful ar fi fost %s. Expirat.",
+            $t['id'], $latime, $atrAcum > 0 ? $latime / $atrAcum : 0, $latimeMinima,
+            $varf === null ? 'niciodată' : gmdate('Y-m-d H:i', intdiv($varf, 1000)) . ' UTC'));
         continue;
     }
 

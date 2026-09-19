@@ -247,6 +247,32 @@ verifica('short: MFE +1% (prețul a scăzut)', $mfeS,  1.0, 1e-9);
 verifica('short: MAE −2% (prețul a urcat)',  $maeS, -2.0, 1e-9);
 verifica('MFE nu e niciodată sub MAE', $mfe >= $mae, true);
 
+echo "\n=== 12. triunghiul rămas fără loc ===\n";
+/* Lățimea dintre linii la un moment dat. Sub un prag socotit în ATR-uri,
+   spargerea e fabricată de geometrie, nu de piață. */
+function latime(array $sus, array $jos, int $t): float {
+    return pretLinie($sus, $t) - pretLinie($jos, $t);
+}
+$S = ['t1' => 0, 'p1' => 900.0, 't2' => 10 * $ORA, 'p2' => 880.0];   // coboară 2/oră
+$J = ['t1' => 0, 'p1' => 800.0, 't2' => 10 * $ORA, 'p2' => 820.0];   // urcă 2/oră
+verifica('la desenare, lățimea e 100',      latime($S, $J, 0),          100.0);
+verifica('după 10 ore, 60',                 latime($S, $J, 10 * $ORA),   60.0);
+verifica('după 20 de ore, 20',              latime($S, $J, 20 * $ORA),   20.0);
+// Vârful: 100 USDC închiși cu 4 USDC pe oră.
+verifica('vârful e la ora 25',              latime($S, $J, 25 * $ORA),    0.0);
+verifica('după vârf, lățimea e negativă',   latime($S, $J, 30 * $ORA) < 0, true);
+
+$atr = 28.0; $prag = $atr * 1.0;
+verifica('la ora 0 mai e loc (100 > 28)',   latime($S, $J, 0)  > $prag,  true);
+verifica('la ora 17 încă e loc (32 > 28)',  latime($S, $J, 17 * $ORA) > $prag, true);
+verifica('la ora 18 expiră (28 nu > 28)',   latime($S, $J, 18 * $ORA) > $prag, false);
+// Regula veche — expirarea la vârf — e cazul particular al pragului zero.
+verifica('cu prag 0, expiră fix la vârf',   latime($S, $J, 25 * $ORA) > 0.0, false);
+verifica('cu prag 0, la ora 24 încă merge', latime($S, $J, 24 * $ORA) > 0.0, true);
+// Un ATR mai mare face pragul mai exigent: triunghiul moare mai devreme.
+verifica('ATR dublu -> expiră la ora 11',   latime($S, $J, 11 * $ORA) > 56.0, false);
+verifica('ATR dublu -> la ora 10 încă e loc',latime($S, $J, 10 * $ORA) > 56.0, true);
+
 echo "\n" . str_repeat('-', 68) . "\n";
 printf("%d trecute, %d căzute\n", $treceri, $caderi);
 exit($caderi > 0 ? 1 : 0);

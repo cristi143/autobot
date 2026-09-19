@@ -351,11 +351,33 @@ o perioadă nevăzută.
 
 ## Adăugat după prima folosire pe date reale
 
-**Triunghiul expiră la vârf.** Liniile fiind convergente, se intersectează cândva.
-Dacă prețul n-a spart până atunci, după intersecție „linia de sus" ajunge sub „cea
-de jos" — iar rolurile fiind înghețate la desenare, orice lumânare verde ar
-declanșa un long fals. Motorul calculează vârful și marchează triunghiul `sters`,
-cu explicație în `nota`.
+**Triunghiul expiră când rămâne fără loc.** Liniile fiind convergente, se
+intersectează cândva. Motorul îl scoate din joc înainte, iar starea e `expirat`
+(nu `sters` — aceea e decizia utilizatorului), fără să atingă `nota`.
+
+### Pragul: lățimea, nu vârful — revizuit 20.09.2026
+
+Prima versiune expira triunghiul **după vârf**, când „linia de sus" ajungea sub
+„cea de jos" și orice lumânare verde ar fi dat un long fals.
+
+**Prea târziu.** Cu câteva ore înainte de intersecție, liniile au coborât deja
+peste preț: orice lumânare verde închide atunci peste linia de sus, nu pentru că
+piața a rupt ceva, ci pentru că geometria a rămas fără loc. **Semnalul e fabricat
+de desen.** Utilizatorul a numit exact problema: *„nu vreau să ne forțeze să
+intrăm în poziție doar pentru că prețul a ajuns la vârful triunghiului."*
+
+Pragul e acum **lățimea dintre linii, măsurată în ATR-uri** (`latime_minima_atr`,
+implicit 1,0). Sub amplitudinea unei ore obișnuite, spargerea e zgomot, nu
+mișcare — același raționament care așază TP-ul și SL-ul în ATR-uri, nu în
+procente fixe.
+
+**Regula veche devine un caz particular:** după vârf lățimea e negativă, deci
+oricum sub prag. O singură regulă în loc de două.
+
+Și e aceeași mărime pe care utilizatorul o folosește când decide **dacă** să
+deseneze un triunghi — „prea strâns" față de „unghi prea mare" sunt capetele
+convergenței, iar lățimea = convergență × timp rămas. Aceeași socoteală, la
+celălalt capăt al vieții triunghiului. Vezi `regula-desenului.md`.
 
 ## Cerut de utilizator, de făcut mai târziu
 

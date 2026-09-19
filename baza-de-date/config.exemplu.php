@@ -35,6 +35,9 @@ return [
         'distanta_minima_proc' => 0.5,  // sub asta, comisionul mănâncă ținta
         'distanta_maxima_proc' => 4.0,  // peste asta, o oră sălbatică ar da un stop absurd
         'ore_maxime'         => 48,     // stop de timp; 0 îl oprește
+        // Sub lățimea asta (în ATR-uri) triunghiul expiră fără semnal: strâns
+        // mai tare decât o oră obișnuită, spargerea e zgomot, nu mișcare.
+        'latime_minima_atr'  => 1.0,
         'comision_o_parte'   => 0.075,  // %, deci 0.15 dus-întors
         'capital_initial'    => 1000.0, // USDC în banca de long
     ],
