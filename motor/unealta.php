@@ -185,29 +185,27 @@ foreach (array_slice($inchise, -8) as $l) {
                    $l['inchidere'], $l['volum'], $inceput]);
 }
 
-/* ------------------------------------------------------------- băncile */
+/* ------------------------------------------------------------- banca */
 
-function citesteBanca(string $care): array {
+function citesteBanca(): array {
     global $pdo;
-    $st = $pdo->prepare("SELECT * FROM u_banci WHERE banca = ?");
-    $st->execute([$care]);
-    $b = $st->fetch();
-    if (!$b) { spune("Banca „$care” lipsește din u_banci — a rulat migrația?"); incheie('eroare'); }
+    $b = $pdo->query("SELECT * FROM u_banci WHERE banca = 'long'")->fetch();
+    if (!$b) { spune("Banca de long lipsește din u_banci — a rulat migrația?"); incheie('eroare'); }
     return $b;
 }
 
-function scrieBanca(string $care, float $usdc, float $zec, string $fel,
+function scrieBanca(float $usdc, float $zec, string $fel,
                     ?int $pozitieId, ?float $pret, ?float $cantitate,
                     float $comisionPlatit, string $explicatie): void {
     global $pdo, $inceput;
     $pdo->prepare("UPDATE u_banci SET sold_usdc = ?, sold_zec = ?, actualizat_la = ?
-                   WHERE banca = ?")
-        ->execute([$usdc, $zec, $inceput, $care]);
+                   WHERE banca = 'long'")
+        ->execute([$usdc, $zec, $inceput]);
     $pdo->prepare("INSERT INTO u_miscari
                      (banca, pozitie_id, moment, fel, pret, cantitate_zec, comision,
                       sold_usdc_dupa, sold_zec_dupa, explicatie)
-                   VALUES (?,?,?,?,?,?,?,?,?,?)")
-        ->execute([$care, $pozitieId, $inceput, $fel, $pret, $cantitate,
+                   VALUES ('long',?,?,?,?,?,?,?,?,?)")
+        ->execute([$pozitieId, $inceput, $fel, $pret, $cantitate,
                    $comisionPlatit, $usdc, $zec, $explicatie]);
 }
 
@@ -223,38 +221,22 @@ function scrieBanca(string $care, float $usdc, float $zec, string $fel,
 function deschidePozitia(array $s, float $pret, int $ora): array {
     global $pdo, $comision, $inceput;
 
-    $banca = $s['banca'];
-    $b     = citesteBanca($banca);
-
-    if ($banca === 'long') {
-        $usdc = (float)$b['sold_usdc'];
-        if ($usdc <= 0) { throw new RuntimeException("banca de long n-are USDC"); }
-        $cant            = ($usdc / $pret) * (1 - $comision);
-        $comisionIntrare = $usdc * $comision;
-    } else {
-        $zec = (float)$b['sold_zec'];
-        if ($zec <= 0) { throw new RuntimeException("banca de short n-are ZEC"); }
-        $cant            = $zec;
-        $comisionIntrare = $zec * $pret * $comision;
-    }
+    $b    = citesteBanca();
+    $usdc = (float)$b['sold_usdc'];
+    if ($usdc <= 0) { throw new RuntimeException("banca n-are USDC"); }
+    $cant            = ($usdc / $pret) * (1 - $comision);
+    $comisionIntrare = $usdc * $comision;
 
     $pdo->prepare("INSERT INTO u_pozitii
                      (setare_id, banca, stare, intrare_ora, intrare_pret, cantitate,
                       prag_iesire, urmarire, prag_stop, comision_total)
-                   VALUES (?,?, 'deschisa', ?,?,?,?,?,?,?)")
-        ->execute([(int)$s['id'], $banca, $ora, round($pret, 8), round($cant, 8),
+                   VALUES (?, 'long', 'deschisa', ?,?,?,?,?,?,?)")
+        ->execute([(int)$s['id'], $ora, round($pret, 8), round($cant, 8),
                    $s['prag_iesire'], $s['urmarire'], $s['prag_stop'],
                    round($comisionIntrare, 8)]);
     $id = (int)$pdo->lastInsertId();
 
-    if ($banca === 'long') {
-        scrieBanca('long', 0.0, $cant, 'intrare', $id, $pret, $cant,
-                   $comisionIntrare, 'LONG: cumpăr ZEC');
-    } else {
-        $incasat = $cant * $pret * (1 - $comision);
-        scrieBanca('short', $incasat, 0.0, 'intrare', $id, $pret, $cant,
-                   $comisionIntrare, 'SHORT: vând ZEC');
-    }
+    scrieBanca(0.0, $cant, 'intrare', $id, $pret, $cant, $comisionIntrare, 'LONG: cumpăr ZEC');
 
     $pdo->prepare("UPDATE u_setari SET stare='in_pozitie', actualizat_la=? WHERE id=?")
         ->execute([$inceput, (int)$s['id']]);
@@ -267,24 +249,14 @@ function deschidePozitia(array $s, float $pret, int $ora): array {
 function inchidePozitia(array $p, float $pret, string $motiv, int $ora): void {
     global $pdo, $comision, $inceput;
 
-    $banca    = $p['banca'];
     $intrare  = (float)$p['intrare_pret'];
     $cant     = (float)$p['cantitate'];
-    $rezultat = u_rezultatNet($banca, $intrare, $pret, $comision);
-    $b        = citesteBanca($banca);
+    $rezultat = u_rezultatNet($intrare, $pret, $comision);
 
-    if ($banca === 'long') {
-        $comisionIesire = $cant * $pret * $comision;
-        $incasat        = $cant * $pret - $comisionIesire;
-        scrieBanca('long', $incasat, 0.0, 'iesire', (int)$p['id'], $pret, $cant,
-                   $comisionIesire, strtoupper($motiv) . ': vând ZEC');
-    } else {
-        $usdc           = (float)$b['sold_usdc'];
-        $comisionIesire = $usdc * $comision;
-        $cumparat       = ($usdc / $pret) * (1 - $comision);
-        scrieBanca('short', 0.0, $cumparat, 'iesire', (int)$p['id'], $pret, $cumparat,
-                   $comisionIesire, strtoupper($motiv) . ': răscumpăr ZEC');
-    }
+    $comisionIesire = $cant * $pret * $comision;
+    $incasat        = $cant * $pret - $comisionIesire;
+    scrieBanca($incasat, 0.0, 'iesire', (int)$p['id'], $pret, $cant,
+               $comisionIesire, strtoupper($motiv) . ': vând ZEC');
 
     $pdo->prepare("UPDATE u_pozitii SET stare='inchisa', iesire_ora=?, iesire_pret=?,
                      motiv_iesire=?, rezultat_proc=?, comision_total = comision_total + ?
@@ -326,19 +298,13 @@ function judecaPozitia(array $p, array $lum, bool $eInchisa): ?array {
     // sfârșitul ei e în VIITOR — acolo ieșirea se întâmplă acum.
     $oraIesire = $eInchisa ? $lum['ora'] + SFERT_MS : $inceput;
 
-    $banca   = $p['banca'];
     $intrare = (float)$p['intrare_pret'];
     $maxim   = $lum['maxim'];
     $minim   = $lum['minim'];
 
     /* --- 1. cât de departe a mers, în favoare și împotrivă --- */
-    if ($banca === 'long') {
-        $favorabil = ($maxim - $intrare) / $intrare * 100;
-        $potrivnic = ($minim - $intrare) / $intrare * 100;
-    } else {
-        $favorabil = ($intrare - $minim) / $intrare * 100;
-        $potrivnic = ($intrare - $maxim) / $intrare * 100;
-    }
+    $favorabil = ($maxim - $intrare) / $intrare * 100;
+    $potrivnic = ($minim - $intrare) / $intrare * 100;
     $pdo->prepare("UPDATE u_pozitii SET mfe_proc = GREATEST(mfe_proc, ?),
                                         mae_proc = LEAST(mae_proc, ?)
                    WHERE id = ?")
@@ -346,7 +312,7 @@ function judecaPozitia(array $p, array $lum, bool $eInchisa): ?array {
 
     /* --- 2. stopul, pe atingere --- */
     $stop = ($p['prag_stop'] === null) ? null : (float)$p['prag_stop'];
-    if (u_atinsStopul($banca, $maxim, $minim, $stop)) {
+    if (u_atinsStopul($minim, $stop)) {
         spune(sprintf("  stop atins (%.2f) în lumânarea %s UTC",
               $stop, gmdate('H:i', intdiv($lum['ora'], 1000))));
         inchidePozitia($p, $stop, 'stop', $oraIesire);
@@ -358,13 +324,13 @@ function judecaPozitia(array $p, array $lum, bool $eInchisa): ?array {
     $atinsa  = (int)$p['tinta_atinsa'] === 1;
     $extrem  = ($p['extrem'] === null) ? null : (float)$p['extrem'];
 
-    if (!$atinsa && u_atinsTinta($banca, $maxim, $minim, $tinta)) {
+    if (!$atinsa && u_atinsTinta($maxim, $tinta)) {
         $atinsa = true;
         spune(sprintf("  ținta %.2f atinsă în lumânarea %s UTC — urmărirea pornește",
               $tinta, gmdate('H:i', intdiv($lum['ora'], 1000))));
     }
     if ($atinsa) {
-        $extrem = u_extremIesire($banca, $extrem, $maxim, $minim);
+        $extrem = u_extremIesire($extrem, $maxim);
         $pdo->prepare("UPDATE u_pozitii SET tinta_atinsa=1, extrem=? WHERE id=?")
             ->execute([round($extrem, 8), (int)$p['id']]);
         $p['tinta_atinsa'] = 1;
@@ -373,8 +339,8 @@ function judecaPozitia(array $p, array $lum, bool $eInchisa): ?array {
 
     /* --- 4. ieșirea, doar pe închidere --- */
     if ($atinsa && $eInchisa) {
-        $prag = u_pragIesireEfectiv($banca, $tinta, $extrem, (float)$p['urmarire']);
-        if (u_declanseazaIesirea($banca, $lum['inchidere'], $prag)) {
+        $prag = u_pragIesireEfectiv($tinta, $extrem, (float)$p['urmarire']);
+        if (u_declanseazaIesirea($lum['inchidere'], $prag)) {
             spune(sprintf("  închiderea %.2f a rupt pragul de urmărire %.2f (maxim atins %.2f)",
                   $lum['inchidere'], $prag, $extrem));
             inchidePozitia($p, $lum['inchidere'], 'urmarire', $oraIesire);
@@ -385,146 +351,140 @@ function judecaPozitia(array $p, array $lum, bool $eInchisa): ?array {
     return $p;
 }
 
-/* ======================= bucla peste setările active ===================== */
+/* ======================= setarea activă ================================== */
 
+// `banca = 'long'` e o plasă de siguranță: short-ul a fost scos, dar rândurile
+// vechi pot sta în bază până rulează migrația din 11.11.2026.
 $setari = $pdo->query("SELECT * FROM u_setari
-                       WHERE stare IN ('asteapta','armat','in_pozitie')
-                       ORDER BY banca, creat_la, id")->fetchAll();
+                       WHERE banca = 'long' AND stare IN ('asteapta','armat','in_pozitie')
+                       ORDER BY creat_la, id")->fetchAll();
 
 if (!$setari) {
     spune("Nicio setare activă — nu e nimic de făcut.");
     incheie('ok', $inchise[count($inchise) - 1]['ora']);
 }
 
-$vazute = [];   // o singură setare activă pe bancă; dacă apar două, o spunem
+// O singură setare activă; dacă apar două, o spunem și o folosim pe prima.
+foreach (array_slice($setari, 1) as $alta) {
+    spune("ATENȚIE: a doua setare activă (#{$alta['id']}) — o sar.");
+}
+$s  = $setari[0];
+$id = (int)$s['id'];
+spune("Setarea #$id ({$s['stare']}):");
 
-foreach ($setari as $s) {
-    $banca = $s['banca'];
-    if (isset($vazute[$banca])) {
-        spune("ATENȚIE: a doua setare activă pe banca de $banca (#{$s['id']}) — o sar.");
-        continue;
+$pozitie = null;
+if ($s['stare'] === 'in_pozitie') {
+    $st = $pdo->prepare("SELECT * FROM u_pozitii WHERE setare_id=? AND stare='deschisa' LIMIT 1");
+    $st->execute([$id]);
+    $pozitie = $st->fetch() ?: null;
+    if (!$pozitie) {
+        spune("  setarea zice „in_pozitie” dar nu există poziție deschisă — o sar.");
+        incheie('ok', $inchise[count($inchise) - 1]['ora']);
     }
-    $vazute[$banca] = true;
+}
 
-    $id = (int)$s['id'];
-    spune("Setarea #$id ($banca, {$s['stare']}):");
+// Plasa de siguranță: o setare fără `ultima_lumanare` (n-ar trebui să existe
+// — API-ul o pune la creare) ar reprocesa 75 de ore de istoric și ar intra
+// pe o revenire de acum trei zile. Mai bine pornește de acum.
+$ultima = (int)$s['ultima_lumanare'];
+if ($ultima <= 0) {
+    $ultima = $inchise[count($inchise) - 1]['ora'] - SFERT_MS;
+    spune("  ATENȚIE: setarea n-avea `ultima_lumanare` — pornesc de la ultima lumânare închisă.");
+}
 
-    $pozitie = null;
-    if ($s['stare'] === 'in_pozitie') {
-        $st = $pdo->prepare("SELECT * FROM u_pozitii WHERE setare_id=? AND stare='deschisa' LIMIT 1");
-        $st->execute([$id]);
-        $pozitie = $st->fetch() ?: null;
-        if (!$pozitie) {
-            spune("  setarea zice „in_pozitie” dar nu există poziție deschisă — o sar.");
-            continue;
+// Golul, dacă a existat: mai bine spus în jurnal decât sărit tăcut.
+if ($ultima > 0 && $ultima < $primaAdusa - SFERT_MS) {
+    $lipsa = intdiv($primaAdusa - $ultima, SFERT_MS) - 1;
+    spune("  ATENȚIE: $lipsa lumânări lipsesc (cronul a stat oprit mai mult de "
+        . intdiv(CATE_LUMANARI * 15, 60) . " de ore). Pornesc de la prima adusă.");
+}
+
+$inchisa = false;
+foreach ($inchise as $lum) {
+    if ($lum['ora'] <= $ultima) { continue; }
+
+    $prinse[$lum['ora']] = true;
+
+    /* --- poziție deschisă: o judecăm pe lumânarea asta --- */
+    if ($pozitie) {
+        $pozitie = judecaPozitia($pozitie, $lum, true);
+        if ($pozitie === null) { $inchisa = true; }
+    }
+
+    /* --- fără poziție: întâi stopul, apoi armare și intrare --- */
+    if (!$pozitie && !$inchisa) {
+        $stareCurenta = $s['stare'];
+
+        /* STOPUL ATINS ÎNAINTE DE INTRARE OMOARĂ SETAREA.
+           Pragul de intrare urmărește minimul, deci intrarea poate ajunge
+           sub un stop care e valoare absolută — și atunci „stopul” s-ar
+           declanșa pe profit, ceea ce n-are niciun înțeles. Dar motivul
+           adevărat e altul, și e mai simplu: stopul e nivelul la care ai
+           spus că te-ai înșelat. Dacă piața ajunge acolo înainte să fi
+           intrat, teza e deja infirmată. Nu se mai cumpără.
+           Verificat ÎNAINTEA armării, ca o lumânare care coboară sub stop
+           și închide sus să nu apuce să declanșeze o intrare. */
+        $stopSetare = ($s['prag_stop'] === null) ? null : (float)$s['prag_stop'];
+        if (u_atinsStopul($lum['minim'], $stopSetare)) {
+            $pdo->prepare("UPDATE u_setari SET stare='expirat', incheiat_la=?,
+                             actualizat_la=?, ultima_lumanare=? WHERE id=?")
+                ->execute([$inceput, $inceput, $lum['ora'], $id]);
+            spune(sprintf("  EXPIRAT: prețul a atins stopul (%.2f) la %s UTC, înainte de intrare."
+                        . " Teza a picat — nu mai intru.",
+                  $stopSetare, gmdate('Y-m-d H:i', intdiv($lum['ora'], 1000))));
+            $inchisa = true;
+            break;
         }
-    }
 
-    // Plasa de siguranță: o setare fără `ultima_lumanare` (n-ar trebui să existe
-    // — API-ul o pune la creare) ar reprocesa 75 de ore de istoric și ar intra
-    // pe o revenire de acum trei zile. Mai bine pornește de acum.
-    $ultima = (int)$s['ultima_lumanare'];
-    if ($ultima <= 0) {
-        $ultima = $inchise[count($inchise) - 1]['ora'] - SFERT_MS;
-        spune("  ATENȚIE: setarea n-avea `ultima_lumanare` — pornesc de la ultima lumânare închisă.");
-    }
-
-    // Golul, dacă a existat: mai bine spus în jurnal decât sărit tăcut.
-    if ($ultima > 0 && $ultima < $primaAdusa - SFERT_MS) {
-        $lipsa = intdiv($primaAdusa - $ultima, SFERT_MS) - 1;
-        spune("  ATENȚIE: $lipsa lumânări lipsesc (cronul a stat oprit mai mult de "
-            . intdiv(CATE_LUMANARI * 15, 60) . " de ore). Pornesc de la prima adusă.");
-    }
-
-    $inchisa = false;
-    foreach ($inchise as $lum) {
-        if ($lum['ora'] <= $ultima) { continue; }
-
-        $prinse[$lum['ora']] = true;
-
-        /* --- poziție deschisă: o judecăm pe lumânarea asta --- */
-        if ($pozitie) {
-            $pozitie = judecaPozitia($pozitie, $lum, true);
-            if ($pozitie === null) { $inchisa = true; }
-        }
-
-        /* --- fără poziție: întâi stopul, apoi armare și intrare --- */
-        if (!$pozitie && !$inchisa) {
-            $stareCurenta = $s['stare'];
-
-            /* STOPUL ATINS ÎNAINTE DE INTRARE OMOARĂ SETAREA.
-               Pragul de intrare urmărește extremul, deci intrarea poate ajunge
-               sub un stop care e valoare absolută — și atunci „stopul” s-ar
-               declanșa pe profit, ceea ce n-are niciun înțeles. Dar motivul
-               adevărat e altul, și e mai simplu: stopul e nivelul la care ai
-               spus că te-ai înșelat. Dacă piața ajunge acolo înainte să fi
-               intrat, teza e deja infirmată. Nu se mai cumpără.
-               Verificat ÎNAINTEA armării, ca o lumânare care coboară sub stop
-               și închide sus să nu apuce să declanșeze o intrare. */
-            $stopSetare = ($s['prag_stop'] === null) ? null : (float)$s['prag_stop'];
-            if (u_atinsStopul($banca, $lum['maxim'], $lum['minim'], $stopSetare)) {
-                $pdo->prepare("UPDATE u_setari SET stare='expirat', incheiat_la=?,
-                                 actualizat_la=?, ultima_lumanare=? WHERE id=?")
-                    ->execute([$inceput, $inceput, $lum['ora'], $id]);
-                spune(sprintf("  EXPIRAT: prețul a atins stopul (%.2f) la %s UTC, înainte de intrare."
-                            . " Teza a picat — nu mai intru.",
-                      $stopSetare, gmdate('Y-m-d H:i', intdiv($lum['ora'], 1000))));
-                $inchisa = true;
-                break;
-            }
-
-            if ($stareCurenta === 'asteapta') {
-                $pragArm = u_pragArmare($banca, (float)$s['prag_intrare'], (float)$s['depasire_minima']);
-                if (u_sArmat($banca, $lum['maxim'], $lum['minim'], $pragArm)) {
-                    $s['stare']  = $stareCurenta = 'armat';
-                    $s['extrem'] = u_extremIntrare($banca, null, $lum['maxim'], $lum['minim']);
-                    $pdo->prepare("UPDATE u_setari SET stare='armat', extrem=?, armat_la=?, actualizat_la=?
-                                   WHERE id=?")
-                        ->execute([round((float)$s['extrem'], 8), $lum['ora'], $inceput, $id]);
-                    spune(sprintf("  ARMAT: prețul a trecut de %.2f (extrem %.2f) la %s UTC",
-                          $pragArm, (float)$s['extrem'], gmdate('Y-m-d H:i', intdiv($lum['ora'], 1000))));
-                }
-            }
-
-            if ($stareCurenta === 'armat') {
-                $extrem = u_extremIntrare($banca, ($s['extrem'] === null) ? null : (float)$s['extrem'],
-                                          $lum['maxim'], $lum['minim']);
-                if ($s['extrem'] === null || abs($extrem - (float)$s['extrem']) > 1e-12) {
-                    $pdo->prepare("UPDATE u_setari SET extrem=?, actualizat_la=? WHERE id=?")
-                        ->execute([round($extrem, 8), $inceput, $id]);
-                    $s['extrem'] = $extrem;
-                }
-
-                $prag = u_pragIntrareEfectiv($banca, (float)$s['prag_intrare'], $extrem,
-                                             (float)$s['revenire']);
-                if (u_declanseazaIntrarea($banca, $lum['inchidere'], $prag)) {
-                    try {
-                        $pdo->beginTransaction();
-                        $pozitie = deschidePozitia($s, $lum['inchidere'], $lum['ora'] + SFERT_MS);
-                        $pdo->commit();
-                    } catch (Throwable $e) {
-                        $pdo->rollBack();
-                        spune("  nu am putut deschide poziția: " . $e->getMessage());
-                        incheie('eroare', $lum['ora']);
-                    }
-                    $s['stare'] = 'in_pozitie';
-                    spune(sprintf("  INTRARE %s la %.2f (prag %.2f, extrem %.2f) — %s UTC",
-                          strtoupper($banca), $lum['inchidere'], $prag, $extrem,
-                          gmdate('Y-m-d H:i', intdiv($lum['ora'], 1000))));
-                }
+        if ($stareCurenta === 'asteapta') {
+            $pragArm = u_pragArmare((float)$s['prag_intrare'], (float)$s['depasire_minima']);
+            if (u_sArmat($lum['minim'], $pragArm)) {
+                $s['stare']  = $stareCurenta = 'armat';
+                $s['extrem'] = u_extremIntrare(null, $lum['minim']);
+                $pdo->prepare("UPDATE u_setari SET stare='armat', extrem=?, armat_la=?, actualizat_la=?
+                               WHERE id=?")
+                    ->execute([round((float)$s['extrem'], 8), $lum['ora'], $inceput, $id]);
+                spune(sprintf("  ARMAT: prețul a coborât sub %.2f (minim %.2f) la %s UTC",
+                      $pragArm, (float)$s['extrem'], gmdate('Y-m-d H:i', intdiv($lum['ora'], 1000))));
             }
         }
 
-        $pdo->prepare("UPDATE u_setari SET ultima_lumanare=? WHERE id=?")
-            ->execute([$lum['ora'], $id]);
-        $ultima = $lum['ora'];
+        if ($stareCurenta === 'armat') {
+            $extrem = u_extremIntrare(($s['extrem'] === null) ? null : (float)$s['extrem'], $lum['minim']);
+            if ($s['extrem'] === null || abs($extrem - (float)$s['extrem']) > 1e-12) {
+                $pdo->prepare("UPDATE u_setari SET extrem=?, actualizat_la=? WHERE id=?")
+                    ->execute([round($extrem, 8), $inceput, $id]);
+                $s['extrem'] = $extrem;
+            }
 
-        if ($inchisa) { break; }   // setarea și-a trăit viața
+            $prag = u_pragIntrareEfectiv((float)$s['prag_intrare'], $extrem, (float)$s['revenire']);
+            if (u_declanseazaIntrarea($lum['inchidere'], $prag)) {
+                try {
+                    $pdo->beginTransaction();
+                    $pozitie = deschidePozitia($s, $lum['inchidere'], $lum['ora'] + SFERT_MS);
+                    $pdo->commit();
+                } catch (Throwable $e) {
+                    $pdo->rollBack();
+                    spune("  nu am putut deschide poziția: " . $e->getMessage());
+                    incheie('eroare', $lum['ora']);
+                }
+                $s['stare'] = 'in_pozitie';
+                spune(sprintf("  INTRARE LONG la %.2f (prag %.2f, minim %.2f) — %s UTC",
+                      $lum['inchidere'], $prag, $extrem,
+                      gmdate('Y-m-d H:i', intdiv($lum['ora'], 1000))));
+            }
+        }
     }
 
-    if ($inchisa) { continue; }
+    $pdo->prepare("UPDATE u_setari SET ultima_lumanare=? WHERE id=?")
+        ->execute([$lum['ora'], $id]);
+    $ultima = $lum['ora'];
 
-    /* --- lumânarea în formare: doar stopul, extremele, și butonul manual --- */
+    if ($inchisa) { break; }   // setarea și-a trăit viața
+}
+
+/* --- lumânarea în formare: doar stopul, extremele, și butonul manual --- */
+if (!$inchisa) {
     if ($pozitie) {
         $pozitie = judecaPozitia($pozitie, $informare, false);
 
@@ -537,7 +497,7 @@ foreach ($setari as $s) {
         if ($pozitie) {
             $tinta  = (float)$pozitie['prag_iesire'];
             $extrem = ($pozitie['extrem'] === null) ? null : (float)$pozitie['extrem'];
-            $prag   = u_pragIesireEfectiv($banca, $tinta, $extrem, (float)$pozitie['urmarire']);
+            $prag   = u_pragIesireEfectiv($tinta, $extrem, (float)$pozitie['urmarire']);
             spune(sprintf("  rămâne deschisă: intrare %.2f · %s %.2f · stop %s · acum %.2f",
                 (float)$pozitie['intrare_pret'],
                 (int)$pozitie['tinta_atinsa'] === 1 ? 'prag urmărire' : 'țintă',
@@ -546,15 +506,15 @@ foreach ($setari as $s) {
                 $informare['inchidere']));
         }
     } elseif ($s['stare'] === 'armat') {
-        $prag = u_pragIntrareEfectiv($banca, (float)$s['prag_intrare'],
+        $prag = u_pragIntrareEfectiv((float)$s['prag_intrare'],
                                      ($s['extrem'] === null) ? null : (float)$s['extrem'],
                                      (float)$s['revenire']);
-        spune(sprintf("  armat, aștept o închidere %s %.2f (extrem %.2f, acum %.2f)",
-              $banca === 'long' ? 'peste' : 'sub', $prag, (float)$s['extrem'], $informare['inchidere']));
+        spune(sprintf("  armat, aștept o închidere peste %.2f (minim %.2f, acum %.2f)",
+              $prag, (float)$s['extrem'], $informare['inchidere']));
     } else {
-        $pragArm = u_pragArmare($banca, (float)$s['prag_intrare'], (float)$s['depasire_minima']);
-        spune(sprintf("  aștept ca prețul să %s %.2f (acum %.2f)",
-              $banca === 'long' ? 'coboare la' : 'urce la', $pragArm, $informare['inchidere']));
+        $pragArm = u_pragArmare((float)$s['prag_intrare'], (float)$s['depasire_minima']);
+        spune(sprintf("  aștept ca prețul să coboare la %.2f (acum %.2f)",
+              $pragArm, $informare['inchidere']));
     }
 }
 

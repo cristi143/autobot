@@ -2,6 +2,10 @@
 
 Stabilit pe 19 septembrie 2026, în discuție cu utilizatorul.
 
+**Din 11 noiembrie 2026, doar LONG.** Short-ul (banca măsurată în ZEC, regula
+oglindită) a fost scos la cererea utilizatorului: *„o să facem doar long”*. Codul
+lui e în istoricul git, înainte de commitul care l-a scos.
+
 **Nu are nicio legătură cu botul de triunghiuri.** Alt cod, alte tabele, alt cron,
 alți bani fictivi. Singurele lucruri comune sunt serverul, baza de date și fișierul
 de configurare. Pentru botul vechi: `plan-tranzactionare.md`.
@@ -16,7 +20,7 @@ Deosebirea față de un ordin obișnuit la Binance: nu intrăm când prețul *at
 nivelul, ci când **se întoarce** la el. Un ordin limită la 800 se execută pe
 drumul în jos; noi vrem dovada că a fost acolo și s-a întors.
 
-## Regula, întreagă (LONG)
+## Regula, întreagă
 
 Setare: `intrare 800`, `coborâre minimă 20`, `revenire 20`, `ieșire 875`,
 `urmărire 45`, opțional `stop 760`.
@@ -29,12 +33,6 @@ Setare: `intrare 800`, `coborâre minimă 20`, `revenire 20`, `ieșire 875`,
 | **în poziție** | Ținta rămâne **875, absolută** — nu se mută cu prețul real de intrare. Stopul (760) se verifică de la prima clipă. |
 | **țintă atinsă** | Prețul atinge 875 (wick). De aici pragul de ieșire = `maxim − 45`, plafonat în jos la 875 — **doar urcă**. |
 | **ieșire** | O lumânare de 15m **se închide sub prag**. Vinzi la prețul acelei închideri. |
-
-**SHORT e oglinda exactă**, pe banca măsurată în ZEC: prețul trebuie să treacă
-peste `intrare + urcare minimă`, pragul de intrare devine `maxim − revenire`
-(doar urcă, plafonat la nivelul setat), intrarea e o închidere **sub** el și
-vinde ZEC. Ținta e dedesubt; după atingerea ei pragul de ieșire e
-`minim + urmărire` (doar coboară) și ieșirea e o închidere **peste** el.
 
 ## Cele patru decizii care dau caracterul uneltei
 
@@ -133,9 +131,8 @@ A doua regulă, scoasă tot de probe. Setarea care pare cea mai firească —
 `nivel 800, coborâre minimă 20, stop 780` — **e imposibilă din construcție:**
 aceeași atingere a lui 780 care armează setarea o și omoară.
 
-Deci, la validare: pentru long, `stop < nivel − coborâre minimă`; pentru short,
-`stop > nivel + urcare minimă`. Regula e mai strictă decât „stopul sub nivel” și
-o înlocuiește. Cu `nivel 800, coborâre 20`, stopul trebuie să fie sub 780.
+Deci, la validare: `stop < nivel − coborâre minimă`. Regula e mai strictă decât
+„stopul sub nivel” și o înlocuiește. Cu `nivel 800, coborâre 20`, stopul trebuie să fie sub 780.
 
 ## Ordinea de evaluare, în interiorul unei lumânări
 
@@ -147,7 +144,7 @@ Contează, pentru că pe o lumânare de 15m se pot întâmpla mai multe lucruri:
    se recalculează pragul
 4. **ieșirea** — doar dacă închiderea a rupt pragul
 5. **expirarea** — dacă nu e poziție și stopul a fost atins, setarea moare aici
-6. **intrarea** — doar dacă nu e poziție deschisă pe banca aceea
+6. **intrarea** — doar dacă nu e poziție deschisă
 
 Pașii 5 și 6 sunt în ordinea asta dinadins: o lumânare care coboară sub stop și
 se închide sus n-are voie să apuce să declanșeze o intrare.
@@ -169,23 +166,19 @@ orice ar face ea acum e reevaluat la închidere, iar atunci maximul ei intră
 oricum în socoteală. Singurul efect e că recunoașterea are o întârziere de cel
 mult 15 minute — și asta e chiar scopul.
 
-## Băncile
+## Banca
 
-| Banca | Pornește cu | Se măsoară în | Ce face la intrare |
-|---|---|---|---|
-| LONG | **1000 USDC** | USDC | cumpără ZEC cu tot soldul |
-| SHORT | **1 ZEC** | ZEC | vinde tot ZEC-ul pe USDC |
+O singură bancă, **1000 USDC** la pornire, măsurată în USDC. La intrare cumpără
+ZEC cu tot soldul, la ieșire îl vinde înapoi.
 
-Aceeași convenție ca la botul vechi: **se afișează mereu în moneda de măsură**,
-nu în cea ținută. Cifre rotunde, ca randamentul să se citească direct din sold.
+Aceeași convenție ca la botul vechi: **se afișează mereu în USDC**, și cât ține
+ZEC (evaluat la prețul de acum). Cifră rotundă, ca randamentul să se citească
+direct din sold.
 
-Băncile sunt **proprii uneltei**, separate de cele ale botului cu triunghiuri.
-Altfel n-ar mai ști nimeni care strategie a câștigat, și s-ar putea bloca una pe
-alta.
+Banca e **proprie uneltei**, separată de cele ale botului cu triunghiuri (șters).
 
-**O setare activă per bancă**, dar cele două bănci merg în paralel: poți fi în
-long și în short în același timp, pe setări diferite. O setare nouă se poate face
-doar după ce se închide cea curentă.
+**O singură setare activă.** O setare nouă se poate face doar după ce se închide
+sau se anulează cea curentă.
 
 Comision **0,075% pe parte**, ca peste tot în proiect.
 
@@ -206,7 +199,7 @@ ca utilizatorul să fi decis ceva.
 
 ## Interfața
 
-Fără grafice, cerut explicit. Pagina arată cifre: soldul fiecărei bănci, setarea
+Fără grafice, cerut explicit. Pagina arată cifre: soldul băncii, setarea
 activă cu starea ei, poziția deschisă cu distanța până la praguri, și istoricul.
 
 Două butoane care la o unealtă manuală se simt lipsind: **anulare** a unei setări
@@ -231,21 +224,22 @@ public/api/unealta.php                      citește starea, scrie setările
 motor/unealta.php                           motorul, din cron la un minut
 motor/probe/unealta-matematica.php          probele, fără bază de date
 baza-de-date/migratii/2026-09-19-unealta.sql
+baza-de-date/migratii/2026-11-11-doar-long.sql   scoate short-ul din bază
 ```
 
-Șase tabele noi, cu prefix `u_`: `u_setari`, `u_pozitii`, `u_banci`,
+Șase tabele, cu prefix `u_`: `u_setari`, `u_pozitii`, `u_banci`,
 `u_miscari`, `u_lumanari_15m`, `u_jurnal`.
 
 Regulile de decizie stau singure, în `motor/unealta-reguli.php`: funcții pure,
 fără bază de date și fără rețea. Le folosesc toate trei locurile — motorul care
 decide, API-ul care validează, probele care verifică. Scrise de trei ori, s-ar
-desincroniza tăcut, iar o regulă inversată între long și short e exact felul de
+desincroniza tăcut, iar o regulă scrisă diferit în două locuri e exact felul de
 greșeală care nu se vede până nu costă bani. API-ul le cere pe cale absolută,
 din `/home/marcelpa/autobot-motor/`, la fel cum cere configurarea.
 
-**Probele: `php motor/probe/unealta-matematica.php` — 88 de probe**, fără bază de
-date. Verifică simetria long/short, monotonia pragurilor („doar urcă”, „doar
-coboară”), convenția pesimistă, expirarea și validările. Se rulează după orice
+**Probele: `php motor/probe/unealta-matematica.php` — 61 de probe**, fără bază de
+date. Verifică monotonia pragurilor (cel de intrare doar coboară, cel de ieșire
+doar urcă), convenția pesimistă, expirarea și validările. Se rulează după orice
 atingere a regulilor.
 
 ## Parola — amânată, și capcana care o va aștepta

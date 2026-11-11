@@ -90,12 +90,12 @@ body {
 
 /* ---------------------------------------------------------------- corpul */
 
+/* O singură bancă: lățită pe 1400px, formularul cu două coloane s-ar citi greu. */
 .corp {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
   gap: 1rem;
   padding: 1.25rem;
-  max-width: 1400px;
+  max-width: 960px;
   margin: 0 auto;
 }
 
@@ -185,7 +185,7 @@ body {
 
 /* ---------------------------------------------------------------- istoric */
 
-.istoric-zona { max-width: 1400px; margin: 0 auto; padding: 0 1.25rem 2rem; }
+.istoric-zona { max-width: 960px; margin: 0 auto; padding: 0 1.25rem 2rem; }
 .istoric-zona h2 { font-size: 1rem; font-weight: 600; margin: 0 0 0.6rem; }
 
 .tabel-invelis { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; }

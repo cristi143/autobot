@@ -2,8 +2,8 @@
 /**
  * API-ul uneltei manuale.
  *
- *   GET                              -> starea întreagă: bănci, setări, poziții, istoric
- *   POST {actiune:'creeaza', ...}    -> o setare nouă pe o bancă liberă
+ *   GET                              -> starea întreagă: banca, setarea, poziția, istoric
+ *   POST {actiune:'creeaza', ...}    -> o setare nouă, dacă nu e alta activă
  *   POST {actiune:'modifica', ...}   -> schimbă praguri (și cât ești în poziție)
  *   POST {actiune:'anuleaza', id}    -> retrage o setare care încă n-a intrat
  *   POST {actiune:'inchide', id}     -> „ieși acum” pe o poziție deschisă
@@ -12,6 +12,9 @@
  * închidere. Soldurile le mișcă doar motorul, din cron. Două locuri care scriu
  * în aceeași poziție s-ar putea ciocni, iar prețul unei coliziuni e o bancă
  * golită — capcană deja plătită la botul vechi.
+ *
+ * DOAR LONG, din 11.11.2026. `banca = 'long'` din interogări e plasă de
+ * siguranță: rândurile vechi de short pot sta în bază până rulează migrația.
  */
 
 declare(strict_types=1);
@@ -38,42 +41,38 @@ $acum   = acum_ms();
 
 if ($metoda === 'GET') {
 
-    /* ---- băncile ---- */
-    $banci = [];
-    foreach ($pdo->query("SELECT * FROM u_banci")->fetchAll() as $b) {
-        $banci[$b['banca']] = [
+    /* ---- banca ---- */
+    $banca = null;
+    if ($b = $pdo->query("SELECT * FROM u_banci WHERE banca = 'long'")->fetch()) {
+        $banca = [
             'usdc'         => (float)$b['sold_usdc'],
             'zec'          => (float)$b['sold_zec'],
             'actualizat'   => (int)$b['actualizat_la'],
         ];
     }
 
-    /* ---- pornirea fiecărei bănci, ca randamentul să aibă reper ----
+    /* ---- pornirea băncii, ca randamentul să aibă reper ----
        Se citește din prima mișcare de inițializare, nu dintr-o constantă:
        cifra scrisă în bază e cea care s-a întâmplat cu adevărat. */
-    $porniri = ['long' => null, 'short' => null];
-    foreach ($pdo->query("SELECT banca, sold_usdc_dupa, sold_zec_dupa FROM u_miscari
-                          WHERE fel = 'initializare'")->fetchAll() as $m) {
-        $porniri[$m['banca']] = $m['banca'] === 'long'
-            ? (float)$m['sold_usdc_dupa'] : (float)$m['sold_zec_dupa'];
+    $pornire = null;
+    if ($m = $pdo->query("SELECT sold_usdc_dupa FROM u_miscari
+                          WHERE banca = 'long' AND fel = 'initializare'
+                          ORDER BY moment, id LIMIT 1")->fetch()) {
+        $pornire = (float)$m['sold_usdc_dupa'];
     }
 
-    /* ---- setările active, cu pragurile deja socotite ----
+    /* ---- setarea activă, cu pragurile deja socotite ----
        Pragurile se calculează AICI, din aceleași funcții pe care le folosește
        motorul. Refăcute în JavaScript, s-ar putea desincroniza de ce se
        întâmplă de fapt, iar pagina ar minți fără să știe. */
-    $setari = ['long' => null, 'short' => null];
-    $st = $pdo->query("SELECT * FROM u_setari
-                       WHERE stare IN ('asteapta','armat','in_pozitie')
-                       ORDER BY banca, creat_la");
-    foreach ($st->fetchAll() as $s) {
-        $banca = $s['banca'];
-        if ($setari[$banca] !== null) { continue; }   // una pe bancă
-
+    $setare = null;
+    $s = $pdo->query("SELECT * FROM u_setari
+                      WHERE banca = 'long' AND stare IN ('asteapta','armat','in_pozitie')
+                      ORDER BY creat_la, id LIMIT 1")->fetch();
+    if ($s) {
         $extrem = $s['extrem'] === null ? null : (float)$s['extrem'];
         $d = [
             'id'              => (int)$s['id'],
-            'banca'           => $banca,
             'stare'           => $s['stare'],
             'prag_intrare'    => (float)$s['prag_intrare'],
             'depasire_minima' => (float)$s['depasire_minima'],
@@ -86,9 +85,9 @@ if ($metoda === 'GET') {
             'armat_la'        => $s['armat_la'] === null ? null : (int)$s['armat_la'],
             'creat_la'        => (int)$s['creat_la'],
             'ultima_lumanare' => (int)$s['ultima_lumanare'],
-            'prag_armare'     => round(u_pragArmare($banca, (float)$s['prag_intrare'],
+            'prag_armare'     => round(u_pragArmare((float)$s['prag_intrare'],
                                                     (float)$s['depasire_minima']), 8),
-            'prag_efectiv'    => round(u_pragIntrareEfectiv($banca, (float)$s['prag_intrare'],
+            'prag_efectiv'    => round(u_pragIntrareEfectiv((float)$s['prag_intrare'],
                                                             $extrem, (float)$s['revenire']), 8),
             'pozitie'         => null,
         ];
@@ -108,7 +107,7 @@ if ($metoda === 'GET') {
                     'prag_stop'     => $p['prag_stop'] === null ? null : (float)$p['prag_stop'],
                     'tinta_atinsa'  => (int)$p['tinta_atinsa'] === 1,
                     'extrem'        => $ext,
-                    'prag_efectiv'  => round(u_pragIesireEfectiv($banca, (float)$p['prag_iesire'],
+                    'prag_efectiv'  => round(u_pragIesireEfectiv((float)$p['prag_iesire'],
                                                                  $ext, (float)$p['urmarire']), 8),
                     'inchidere_ceruta' => (int)$p['inchidere_ceruta'] === 1,
                     'mfe'           => (float)$p['mfe_proc'],
@@ -117,7 +116,7 @@ if ($metoda === 'GET') {
             }
         }
 
-        $setari[$banca] = $d;
+        $setare = $d;
     }
 
     /* ---- istoricul: ce s-a închis ---- */
@@ -125,12 +124,11 @@ if ($metoda === 'GET') {
     $q = $pdo->query("SELECT p.*, s.prag_intrare, s.nota
                       FROM u_pozitii p
                       JOIN u_setari s ON s.id = p.setare_id
-                      WHERE p.stare = 'inchisa'
+                      WHERE p.stare = 'inchisa' AND p.banca = 'long'
                       ORDER BY p.iesire_ora DESC LIMIT 40");
     foreach ($q->fetchAll() as $p) {
         $istoric[] = [
             'id'           => (int)$p['id'],
-            'banca'        => $p['banca'],
             'nivel_gandit' => (float)$p['prag_intrare'],
             'intrare_ora'  => (int)$p['intrare_ora'],
             'intrare'      => (float)$p['intrare_pret'],
@@ -149,12 +147,12 @@ if ($metoda === 'GET') {
        `expirat` e verdictul pieței (stopul atins înainte de intrare).
        Contopite, n-ar mai spune nimic. */
     $anulate = [];
-    foreach ($pdo->query("SELECT id, banca, stare, prag_intrare, prag_iesire, prag_stop,
+    foreach ($pdo->query("SELECT id, stare, prag_intrare, prag_iesire, prag_stop,
                                  creat_la, incheiat_la, nota
-                          FROM u_setari WHERE stare IN ('anulata','expirat')
+                          FROM u_setari WHERE banca = 'long' AND stare IN ('anulata','expirat')
                           ORDER BY incheiat_la DESC LIMIT 15")->fetchAll() as $a) {
         $anulate[] = [
-            'id' => (int)$a['id'], 'banca' => $a['banca'], 'stare' => $a['stare'],
+            'id' => (int)$a['id'], 'stare' => $a['stare'],
             'prag_stop' => $a['prag_stop'] === null ? null : (float)$a['prag_stop'],
             'prag_intrare' => (float)$a['prag_intrare'],
             'prag_iesire'  => (float)$a['prag_iesire'],
@@ -191,9 +189,9 @@ if ($metoda === 'GET') {
         'versiune' => $versiune,
         'acum'     => $acum,
         'motor'    => $motor,
-        'banci'    => $banci,
-        'porniri'  => $porniri,
-        'setari'   => $setari,
+        'banca'    => $banca,
+        'pornire'  => $pornire,
+        'setare'   => $setare,
         'istoric'  => $istoric,
         'anulate'  => $anulate,
         'comision' => (float)(config()['reguli']['comision_o_parte'] ?? 0.075),
@@ -223,10 +221,7 @@ function setareActiva(PDO $pdo, int $id): array {
 /* ------------------------------------------------------------------ creare */
 
 if ($actiune === 'creeaza') {
-    $banca = (string)($d['banca'] ?? '');
-
     $probleme = u_validareSetare([
-        'banca'           => $banca,
         'prag_intrare'    => $d['prag_intrare']    ?? null,
         'depasire_minima' => $d['depasire_minima'] ?? null,
         'revenire'        => $d['revenire']        ?? null,
@@ -236,13 +231,13 @@ if ($actiune === 'creeaza') {
     ]);
     if ($probleme) { eroare(implode(' ', $probleme), 422); }
 
-    // O singură setare activă pe bancă. Verificarea stă aici și în motor, nu în
-    // bază: MySQL n-are indecși unici parțiali.
-    $st = $pdo->prepare("SELECT COUNT(*) FROM u_setari
-                         WHERE banca = ? AND stare IN ('asteapta','armat','in_pozitie')");
-    $st->execute([$banca]);
-    if ((int)$st->fetchColumn() > 0) {
-        eroare("Banca de $banca are deja o setare activă. Anuleaz-o sau așteaptă să se închidă.", 409);
+    // O singură setare activă. Verificarea stă aici și în motor, nu în bază:
+    // MySQL n-are indecși unici parțiali.
+    $activa = (int)$pdo->query("SELECT COUNT(*) FROM u_setari
+                                WHERE banca = 'long' AND stare IN ('asteapta','armat','in_pozitie')")
+                       ->fetchColumn();
+    if ($activa > 0) {
+        eroare('Există deja o setare activă. Anuleaz-o sau așteaptă să se închidă.', 409);
     }
 
     // Prima lumânare judecată e prima care se DESCHIDE după clipa asta. Cea în
@@ -258,9 +253,8 @@ if ($actiune === 'creeaza') {
                      (banca, stare, prag_intrare, depasire_minima, revenire,
                       prag_iesire, urmarire, prag_stop, nota,
                       ultima_lumanare, creat_la, actualizat_la)
-                   VALUES (?, 'asteapta', ?,?,?,?,?,?,?,?,?,?)")
-        ->execute([$banca,
-                   (float)$d['prag_intrare'], (float)$d['depasire_minima'],
+                   VALUES ('long', 'asteapta', ?,?,?,?,?,?,?,?,?,?)")
+        ->execute([(float)$d['prag_intrare'], (float)$d['depasire_minima'],
                    (float)$d['revenire'], (float)$d['prag_iesire'],
                    (float)$d['urmarire'], $stop, $nota !== '' ? $nota : null,
                    $ultimaLumanare, $acum, $acum]);
@@ -285,7 +279,6 @@ if ($actiune === 'modifica') {
         $p = $sp->fetch();
         if (!$p) { eroare('Setarea zice că e în poziție, dar nu există una deschisă.', 409); }
 
-        $banca    = $p['banca'];
         $tinta    = isset($d['prag_iesire']) ? (float)$d['prag_iesire'] : (float)$p['prag_iesire'];
         $urmarire = isset($d['urmarire'])    ? (float)$d['urmarire']    : (float)$p['urmarire'];
         $stop     = array_key_exists('prag_stop', $d)
@@ -298,10 +291,7 @@ if ($actiune === 'modifica') {
         // Singura regulă de direcție care rămâne valabilă în poziție: stopul e
         // de partea cealaltă a țintei. Restul le decide utilizatorul — mutarea
         // stopului la prețul de intrare („break-even”) e tocmai una dintre ele.
-        if ($stop !== null) {
-            if ($banca === 'long'  && $stop >= $tinta) { $probleme[] = 'La long, stopul trebuie să fie sub țintă.'; }
-            if ($banca === 'short' && $stop <= $tinta) { $probleme[] = 'La short, stopul trebuie să fie peste țintă.'; }
-        }
+        if ($stop !== null && $stop >= $tinta) { $probleme[] = 'Stopul trebuie să fie sub țintă.'; }
         if ($probleme) { eroare(implode(' ', $probleme), 422); }
 
         $pdo->prepare("UPDATE u_pozitii SET prag_iesire=?, urmarire=?, prag_stop=? WHERE id=?")
@@ -319,7 +309,7 @@ if ($actiune === 'modifica') {
         // închidere care rupe pragul. Mai bine spus acum decât descoperit după.
         $avertisment = null;
         if ((int)$p['tinta_atinsa'] === 1) {
-            $prag = u_pragIesireEfectiv($banca, $tinta,
+            $prag = u_pragIesireEfectiv($tinta,
                         $p['extrem'] === null ? null : (float)$p['extrem'], $urmarire);
             $avertisment = sprintf('Urmărirea e deja pornită — pragul de ieșire e acum %.2f.', $prag);
         }
@@ -332,7 +322,6 @@ if ($actiune === 'modifica') {
     }
 
     $nou = [
-        'banca'           => $s['banca'],
         'prag_intrare'    => $d['prag_intrare']    ?? (float)$s['prag_intrare'],
         'depasire_minima' => $d['depasire_minima'] ?? (float)$s['depasire_minima'],
         'revenire'        => $d['revenire']        ?? (float)$s['revenire'],

@@ -20,7 +20,7 @@
   /* Se schimbă LA FIECARE modificare din public/. `api/unealta.php` o
      citește de pe disc, iar pagina compară: diferite = browserul rulează cod
      vechi din cache, și banda de sus o spune. */
-  var VERSIUNE = "2026-09-20-a";
+  var VERSIUNE = "2026-11-11-a";
   window.UNEALTA_VERSIUNE = VERSIUNE;
 
   var SIMBOL = "ZECUSDC";
@@ -28,7 +28,7 @@
 
   var date  = null;    // ultimul răspuns al API-ului
   var lum   = null;    // lumânarea de 15m în formare
-  var editez = { long: false, short: false };
+  var editez = false;  // formularul e deschis pentru modificarea setării active
 
   function $(id) { return document.getElementById(id); }
 
@@ -172,35 +172,25 @@
         + " (" + cand(date.motor.ultima) + ")."
       : "Motorul n-a rulat încă.";
 
-    deseneazaBanca("long", "l");
-    deseneazaBanca("short", "s");
+    deseneazaBanca();
     deseneazaIstoric();
     deseneazaAnulate();
   }
 
-  function deseneazaBanca(banca, pre) {
-    var b = date.banci[banca] || { usdc: 0, zec: 0 };
-    var s = date.setari[banca];
-    var pornire = date.porniri[banca];
+  function deseneazaBanca() {
+    var b = date.banca || { usdc: 0, zec: 0 };
+    var s = date.setare;
+    var pornire = date.pornire;
 
-    /* ---- soldul, mereu în moneda de măsură ---- */
-    var esteLong = banca === "long";
+    /* ---- soldul, mereu în USDC ---- */
     var pret = lum ? lum.inchidere : null;
-    // Banca de long se măsoară în USDC și când ține ZEC; cea de short în ZEC și
-    // când stă pe USDC. Altfel cifra ar sări dintr-o monedă în alta la fiecare
-    // intrare și n-ar mai exista niciun reper.
-    var inMasura;
-    if (esteLong) {
-      inMasura = b.usdc > 0 ? b.usdc : (pret ? b.zec * pret : null);
-    } else {
-      inMasura = b.zec > 0 ? b.zec : (pret ? b.usdc / pret : null);
-    }
+    // Banca se măsoară în USDC și când ține ZEC. Altfel cifra ar sări dintr-o
+    // monedă în alta la fiecare intrare și n-ar mai exista niciun reper.
+    var inMasura = b.usdc > 0 ? b.usdc : (pret ? b.zec * pret : null);
 
-    $(pre + "-sold").textContent = inMasura === null
-      ? "—"
-      : nr(inMasura, esteLong ? 2 : 4) + (esteLong ? " USDC" : " ZEC");
+    $("l-sold").textContent = inMasura === null ? "—" : nr(inMasura, 2) + " USDC";
 
-    var randEl = $(pre + "-randament");
+    var randEl = $("l-randament");
     if (inMasura !== null && pornire) {
       var r = (inMasura / pornire - 1) * 100;
       randEl.textContent = proc(r) + " față de pornire";
@@ -210,42 +200,37 @@
       randEl.className = "sold-rand";
     }
 
-    var tine = esteLong
-      ? (b.usdc > 0 ? nr(b.usdc, 2) + " USDC" : nr(b.zec, 6) + " ZEC")
-      : (b.zec > 0 ? nr(b.zec, 6) + " ZEC" : nr(b.usdc, 2) + " USDC");
-    $(pre + "-sold-detaliu").textContent =
+    var tine = b.usdc > 0 ? nr(b.usdc, 2) + " USDC" : nr(b.zec, 6) + " ZEC";
+    $("l-sold-detaliu").textContent =
       "ține acum " + tine + " · a pornit cu "
-      + (pornire ? nr(pornire, esteLong ? 2 : 4) + (esteLong ? " USDC" : " ZEC") : "—")
-      + (inMasura !== null && (esteLong ? b.zec > 0 : b.usdc > 0)
-         ? " · evaluat la prețul de acum" : "");
+      + (pornire ? nr(pornire, 2) + " USDC" : "—")
+      + (inMasura !== null && b.zec > 0 ? " · evaluat la prețul de acum" : "");
 
     /* ---- setarea, sau formularul ---- */
-    var cutie = $(pre + "-stare");
-    var form  = $(pre + "-form");
+    var cutie = $("l-stare");
+    var form  = $("l-form");
 
-    if (!s || editez[banca]) {
+    if (!s || editez) {
       cutie.hidden = true;
       form.hidden  = false;
-      form.querySelector('[data-act="renunta"]').hidden = !editez[banca];
-      $(pre + "-trimite").textContent = editez[banca] ? "Salvează" : "Pornește setarea";
+      form.querySelector('[data-act="renunta"]').hidden = !editez;
+      $("l-trimite").textContent = editez ? "Salvează" : "Pornește setarea";
 
       // Cât ești în poziție, intrarea s-a întâmplat deja: câmpurile care o
       // descriu nu mai pot schimba nimic. Lăsate active, ar părea că da.
       var inPozitie = !!(s && s.pozitie);
       ["prag_intrare", "depasire_minima", "revenire"].forEach(function (c) {
-        form.elements[c].disabled = editez[banca] && inPozitie;
+        form.elements[c].disabled = editez && inPozitie;
       });
-      form.querySelector(".formular-intro").textContent = (editez[banca] && inPozitie)
+      form.querySelector(".formular-intro").textContent = (editez && inPozitie)
         ? "Ești în poziție: se mai pot muta doar ținta, urmărirea și stopul."
-        : (esteLong
-            ? "Prețul trebuie să coboare sub nivel și apoi să se întoarcă. Nu cumpărăm la atingere."
-            : "Prețul trebuie să urce peste nivel și apoi să coboare înapoi. Atunci vindem ZEC-ul.");
+        : "Prețul trebuie să coboare sub nivel și apoi să se întoarcă. Nu cumpărăm la atingere.";
       return;
     }
 
     form.hidden  = true;
     cutie.hidden = false;
-    deseneazaSetare(s, pre, banca, pret);
+    deseneazaSetare(s, pret);
   }
 
   /** Un rând de cifre: eticheta + valoarea, cu un detaliu mic opțional. */
@@ -265,18 +250,17 @@
     dl.appendChild(dd);
   }
 
-  function deseneazaSetare(s, pre, banca, pret) {
-    var esteLong = banca === "long";
-    var titlu = $(pre + "-stare-titlu");
-    var dl = $(pre + "-cifre");
+  function deseneazaSetare(s, pret) {
+    var titlu = $("l-stare-titlu");
+    var dl = $("l-cifre");
     dl.innerHTML = "";
 
     var poz = s.pozitie;
     var eInPozitie = s.stare === "in_pozitie" && !!poz;
 
     /* --- butoanele potrivite stării --- */
-    var bAnul  = document.querySelector('[data-act="anuleaza"][data-banca="' + banca + '"]');
-    var bIesi  = document.querySelector('[data-act="inchide"][data-banca="' + banca + '"]');
+    var bAnul  = document.querySelector('[data-act="anuleaza"]');
+    var bIesi  = document.querySelector('[data-act="inchide"]');
     bAnul.hidden = eInPozitie;
     bIesi.hidden = !eInPozitie;
     if (eInPozitie && poz.inchidere_ceruta) {
@@ -288,7 +272,7 @@
     }
 
     /* --- nota utilizatorului: e a lui, se arată ca atare --- */
-    var nota = $(pre + "-nota");
+    var nota = $("l-nota");
     nota.textContent = s.nota || "";
     nota.hidden = !s.nota;
 
@@ -299,12 +283,12 @@
                       + (armat ? "armat" : "așteaptă") + "</span>"
                       + (armat
                          ? "A fost acolo. Aștept revenirea."
-                         : "Aștept ca prețul să " + (esteLong ? "coboare" : "urce") + " destul.");
+                         : "Aștept ca prețul să coboare destul.");
 
       rand(dl, "Nivelul tău", nr(s.prag_intrare, 2));
 
       if (!armat) {
-        var dist = pret !== null ? (esteLong ? pret - s.prag_armare : s.prag_armare - pret) : null;
+        var dist = pret !== null ? pret - s.prag_armare : null;
         // Prețul poate fi deja dincolo fără ca setarea să fie armată: armarea o
         // face motorul, pe lumânarea închisă. „De mers: −3” ar deruta.
         rand(dl, "Se armează la", nr(s.prag_armare, 2),
@@ -312,18 +296,15 @@
                : (dist > 0 ? "(" + nr(dist, 2) + " de mers)"
                            : "(a ajuns — se armează la următoarea rulare)"));
       } else {
-        rand(dl, "Extremul atins", nr(s.extrem, 2), "la " + cand(s.armat_la));
-        var d2 = pret !== null ? (esteLong ? s.prag_efectiv - pret : pret - s.prag_efectiv) : null;
-        rand(dl, "Intră la o închidere de 15m " + (esteLong ? "peste" : "sub"),
+        rand(dl, "Minimul atins", nr(s.extrem, 2), "la " + cand(s.armat_la));
+        var d2 = pret !== null ? s.prag_efectiv - pret : null;
+        rand(dl, "Intră la o închidere de 15m peste",
              nr(s.prag_efectiv, 2),
              d2 === null ? null : (d2 > 0 ? "(" + nr(d2, 2) + " de mers)" : "(prețul e deja dincolo)"));
       }
 
-      // Câștigul brut al afacerii gândite, dacă intrarea s-ar face chiar la
-      // nivel. Pentru short, raportul se inversează — se câștigă la scădere.
-      var castig = esteLong
-        ? (s.prag_iesire / s.prag_intrare - 1) * 100
-        : (s.prag_intrare / s.prag_iesire - 1) * 100;
+      // Câștigul brut al afacerii gândite, dacă intrarea s-ar face chiar la nivel.
+      var castig = (s.prag_iesire / s.prag_intrare - 1) * 100;
       rand(dl, "Ținta de ieșire", nr(s.prag_iesire, 2),
            "(" + proc(castig) + " brut, dacă ai intra fix la nivel)");
       rand(dl, "Urmărire", nr(s.urmarire, 2));
@@ -345,12 +326,12 @@
     rand(dl, "Cantitate", nr(poz.cantitate, 6) + " ZEC");
 
     if (poz.tinta_atinsa) {
-      rand(dl, esteLong ? "Maxim atins" : "Minim atins", nr(poz.extrem, 2));
-      var d3 = pret !== null ? (esteLong ? pret - poz.prag_efectiv : poz.prag_efectiv - pret) : null;
-      rand(dl, "Iese la o închidere " + (esteLong ? "sub" : "peste"), nr(poz.prag_efectiv, 2),
+      rand(dl, "Maxim atins", nr(poz.extrem, 2));
+      var d3 = pret !== null ? pret - poz.prag_efectiv : null;
+      rand(dl, "Iese la o închidere sub", nr(poz.prag_efectiv, 2),
            d3 === null ? null : "(" + nr(Math.abs(d3), 2) + " distanță)");
     } else {
-      var d4 = pret !== null ? (esteLong ? poz.prag_iesire - pret : pret - poz.prag_iesire) : null;
+      var d4 = pret !== null ? poz.prag_iesire - pret : null;
       rand(dl, "Ținta", nr(poz.prag_iesire, 2),
            d4 === null ? null : "(" + nr(Math.abs(d4), 2) + " de mers)");
       rand(dl, "Urmărire, după ce o atinge", nr(poz.urmarire, 2));
@@ -363,8 +344,7 @@
        nu declanșează nimic — e o întrebare, nu o regulă. */
     if (pret !== null) {
       var f = date.comision / 100;
-      var raport = esteLong ? pret / poz.intrare : poz.intrare / pret;
-      var net = (raport * (1 - f) * (1 - f) - 1) * 100;
+      var net = (pret / poz.intrare * (1 - f) * (1 - f) - 1) * 100;
       rand(dl, "Dacă ai ieși acum", proc(net), "net, după comisioane", clasaSemn(net));
     }
     rand(dl, "A mers până la", proc(poz.mfe) + " / " + proc(poz.mae),
@@ -375,7 +355,7 @@
     var tb = $("istoric");
     tb.innerHTML = "";
     if (!date.istoric.length) {
-      tb.innerHTML = '<tr><td colspan="7" class="gol">Încă nimic.</td></tr>';
+      tb.innerHTML = '<tr><td colspan="6" class="gol">Încă nimic.</td></tr>';
       return;
     }
     date.istoric.forEach(function (p) {
@@ -387,7 +367,6 @@
         tr.appendChild(td);
         return td;
       }
-      celula(p.banca === "long" ? "Long" : "Short");
       celula(nr(p.intrare, 2) + " · " + cand(p.intrare_ora));
       celula(nr(p.iesire, 2) + " · " + cand(p.iesire_ora));
       celula({ urmarire: "urmărire", stop: "stop", manual: "manual" }[p.motiv] || p.motiv);
@@ -407,7 +386,7 @@
       var soarta = a.stare === "expirat"
         ? "stopul (" + nr(a.prag_stop, 2) + ") atins înainte de intrare — teza a picat"
         : "retrasă de tine";
-      li.textContent = (a.banca === "long" ? "Long" : "Short") + " la " + nr(a.prag_intrare, 2)
+      li.textContent = "Nivel " + nr(a.prag_intrare, 2)
                      + ", țintă " + nr(a.prag_iesire, 2)
                      + " — " + soarta + ", " + cand(a.incheiat_la)
                      + (a.nota ? " · " + a.nota : "");
@@ -436,24 +415,23 @@
     form.elements["nota"].value = s.nota || "";
   }
 
-  function legaFormular(banca, pre) {
-    var form = $(pre + "-form");
+  function legaFormular() {
+    var form = $("l-form");
     form.addEventListener("submit", function (e) {
       e.preventDefault();
-      var er = $(pre + "-eroare");
+      var er = $("l-eroare");
       er.hidden = true;
 
       var d = citesteFormularul(form);
-      d.banca = banca;
-      d.actiune = editez[banca] ? "modifica" : "creeaza";
-      if (editez[banca]) { d.id = date.setari[banca].id; }
+      d.actiune = editez ? "modifica" : "creeaza";
+      if (editez) { d.id = date.setare.id; }
 
-      var buton = $(pre + "-trimite");
+      var buton = $("l-trimite");
       buton.disabled = true;
 
       trimite(d)
         .then(function (r) {
-          editez[banca] = false;
+          editez = false;
           form.reset();
           if (r.atentie) { arataBanda(r.atentie); }
           ceruStarea();
@@ -471,14 +449,12 @@
   document.addEventListener("click", function (e) {
     var b = e.target.closest ? e.target.closest("[data-act]") : null;
     if (!b) return;
-    var banca = b.getAttribute("data-banca");
-    var pre   = banca === "long" ? "l" : "s";
     var act   = b.getAttribute("data-act");
-    var s     = date && date.setari[banca];
+    var s     = date && date.setare;
 
     if (act === "editeaza" && s) {
-      editez[banca] = true;
-      umpleFormularul($(pre + "-form"), s.pozitie ? {
+      editez = true;
+      umpleFormularul($("l-form"), s.pozitie ? {
         // În poziție se pot schimba doar trei lucruri, și ele stau pe poziție,
         // nu pe setare: setarea e ce ai decis atunci, poziția e ce e valabil acum.
         prag_intrare: s.prag_intrare, depasire_minima: s.depasire_minima,
@@ -490,14 +466,14 @@
     }
 
     if (act === "renunta") {
-      editez[banca] = false;
-      $(pre + "-eroare").hidden = true;
+      editez = false;
+      $("l-eroare").hidden = true;
       deseneaza();
       return;
     }
 
     if (act === "anuleaza" && s) {
-      if (!window.confirm("Retragi setarea de " + banca + "? Rămâne în istoric ca decizie retrasă.")) return;
+      if (!window.confirm("Retragi setarea? Rămâne în istoric ca decizie retrasă.")) return;
       trimite({ actiune: "anuleaza", id: s.id })
         .then(ceruStarea)
         .catch(function (ex) { arataBanda(ex.message); });
@@ -505,7 +481,7 @@
     }
 
     if (act === "inchide" && s && s.pozitie) {
-      if (!window.confirm("Închizi poziția de " + banca + " la prețul de acum?")) return;
+      if (!window.confirm("Închizi poziția la prețul de acum?")) return;
       trimite({ actiune: "inchide", id: s.pozitie.id })
         .then(function (r) { arataBanda(r.mesaj); ceruStarea(); })
         .catch(function (ex) { arataBanda(ex.message); });
@@ -514,8 +490,7 @@
 
   /* ---------------------------------------------------------- pornirea */
 
-  legaFormular("long", "l");
-  legaFormular("short", "s");
+  legaFormular();
 
   ceruStarea();
   ceruPretul();

@@ -2,6 +2,8 @@
 
 **Unealtă de tranzacționare manuală** pe Binance, ZECUSDC, pe lumânări de 15
 minute. Utilizatorul pune nivelurile, sistemul doar execută. Bani fictivi.
+**Doar long** — short-ul a fost scos pe 11.11.2026, la cererea utilizatorului
+(„o să facem doar long”). Nu-l reintroduce fără să fie cerut.
 
 ## La începutul fiecărei sesiuni
 
@@ -16,9 +18,10 @@ Citește **`docs/plan-unealta.md`** — sursa de adevăr pentru reguli. Apoi
 | API | `public/api/unealta.php` · `_comun.php` |
 | Motor | `motor/unealta.php`, cron la un minut |
 | **Reguli pure** | `motor/unealta-reguli.php` |
-| Probe | `motor/probe/unealta-matematica.php` — **88 de probe** |
+| Probe | `motor/probe/unealta-matematica.php` — **61 de probe** |
 | Bază de date | MySQL `marcelpa_autobot`, 6 tabele cu prefix `u_` |
-| Bănci | **1000 USDC** (long) și **1 ZEC** (short) |
+| Bancă | **1000 USDC**, doar long |
+| Migrație de rulat | `baza-de-date/migratii/2026-11-11-doar-long.sql` — scoate short-ul din bază; în doi pași, vezi fișierul |
 
 Configurarea (parola bazei, cheia de scriere): `/home/marcelpa/autobot-config.php`,
 în afara zonei publice, niciodată în git.
@@ -59,8 +62,8 @@ Detaliile și motivele sunt în `docs/plan-unealta.md` — **nu le reinventa.**
 
 - **Nu se intră la atingere, ci la revenire.** Prețul trebuie să treacă dincolo
   de nivel cu `depasire_minima`, apoi să se întoarcă.
-- **Pragul de intrare urmărește extremul** (`extrem ± revenire`), plafonat la
-  nivelul ales: doar se depărtează de el, niciodată nu se apropie.
+- **Pragul de intrare urmărește minimul** (`minim + revenire`), plafonat la
+  nivelul ales: doar coboară, niciodată nu urcă peste el.
 - **Ținta de ieșire e absolută** — nu se mută cu prețul real de intrare. Intrat
   mai jos → câștig mai mare. E intenția, nu o scăpare.
 - **După atingerea țintei, pragul de ieșire urmărește maximul** (`maxim −
@@ -70,7 +73,7 @@ Detaliile și motivele sunt în `docs/plan-unealta.md` — **nu le reinventa.**
 - **Extremele se iau din wick-uri**, declanșările din închideri. Wick-urile spun
   unde a fost prețul; închiderile spun dacă s-a rupt ceva.
 - **Stop și ieșire în aceeași lumânare → se ia stopul.** Convenție pesimistă.
-- **O setare activă pe bancă**, dar băncile merg în paralel.
+- **O singură setare activă.**
 - Comision **0,075% pe parte**.
 
 ## Capcane deja plătite
@@ -84,9 +87,9 @@ Detaliile și motivele sunt în `docs/plan-unealta.md` — **nu le reinventa.**
   nivel. `nivel 800, coborâre 20, stop 780` e imposibil din construcție: exact
   atingerea care armează setarea o și omoară.
 - **Regulile stau într-un singur fișier** (`motor/unealta-reguli.php`), cerut de
-  motor, de API și de probe. Rescrise în fiecare, simetria long/short s-ar
-  desincroniza tăcut. API-ul îl cere pe cale absolută din
-  `/home/marcelpa/autobot-motor/`, la fel cum cere configurarea.
+  motor, de API și de probe. Rescrise în fiecare, s-ar desincroniza tăcut.
+  API-ul îl cere pe cale absolută din `/home/marcelpa/autobot-motor/`, la fel
+  cum cere configurarea.
 - **API-ul nu atinge banii.** Scrie doar intenții (o setare, un steag de
   închidere); soldurile le mișcă exclusiv motorul. De asta „ieși acum" se execută
   la următoarea rulare — un singur scriitor face mai mult decât un minut câștigat.

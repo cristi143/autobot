@@ -28,10 +28,9 @@
 
 <main class="corp">
 
-  <!-- ================= BANCA LONG ================= -->
-  <section class="banca" id="banca-long" data-banca="long">
+  <section class="banca" id="banca-long">
     <header class="banca-cap">
-      <h2>Long <span class="masura">măsurată în USDC</span></h2>
+      <h2>Banca <span class="masura">doar long · măsurată în USDC</span></h2>
       <div class="sold">
         <span class="sold-cifra" id="l-sold">—</span>
         <span class="sold-rand" id="l-randament"></span>
@@ -45,9 +44,9 @@
       <dl class="cifre" id="l-cifre"></dl>
       <p class="nota" id="l-nota" hidden></p>
       <div class="butoane">
-        <button type="button" class="buton" data-act="editeaza" data-banca="long">Modifică</button>
-        <button type="button" class="buton sters" data-act="anuleaza" data-banca="long">Anulează setarea</button>
-        <button type="button" class="buton iesi" data-act="inchide" data-banca="long" hidden>Ieși acum</button>
+        <button type="button" class="buton" data-act="editeaza">Modifică</button>
+        <button type="button" class="buton sters" data-act="anuleaza">Anulează setarea</button>
+        <button type="button" class="buton iesi" data-act="inchide" hidden>Ieși acum</button>
       </div>
     </div>
 
@@ -86,68 +85,7 @@
       <p class="formular-eroare" id="l-eroare" hidden></p>
       <div class="butoane">
         <button type="submit" class="buton primar" id="l-trimite">Pornește setarea</button>
-        <button type="button" class="buton" data-act="renunta" data-banca="long" hidden>Renunță</button>
-      </div>
-    </form>
-  </section>
-
-  <!-- ================= BANCA SHORT ================= -->
-  <section class="banca" id="banca-short" data-banca="short">
-    <header class="banca-cap">
-      <h2>Short <span class="masura">măsurată în ZEC</span></h2>
-      <div class="sold">
-        <span class="sold-cifra" id="s-sold">—</span>
-        <span class="sold-rand" id="s-randament"></span>
-      </div>
-    </header>
-    <p class="sold-detaliu" id="s-sold-detaliu"></p>
-
-    <div class="stare-cutie" id="s-stare" hidden>
-      <div class="stare-titlu" id="s-stare-titlu"></div>
-      <dl class="cifre" id="s-cifre"></dl>
-      <p class="nota" id="s-nota" hidden></p>
-      <div class="butoane">
-        <button type="button" class="buton" data-act="editeaza" data-banca="short">Modifică</button>
-        <button type="button" class="buton sters" data-act="anuleaza" data-banca="short">Anulează setarea</button>
-        <button type="button" class="buton iesi" data-act="inchide" data-banca="short" hidden>Ieși acum</button>
-      </div>
-    </div>
-
-    <form class="formular" id="s-form" hidden>
-      <p class="formular-intro">
-        Prețul trebuie să <b>urce</b> peste nivel și apoi să <b>coboare</b> înapoi.
-        Atunci vindem ZEC-ul.
-      </p>
-      <label>Nivelul unde crezi că ajunge
-        <input type="number" step="any" name="prag_intrare" required inputmode="decimal">
-      </label>
-      <label>Urcare minimă peste el
-        <input type="number" step="any" name="depasire_minima" required inputmode="decimal">
-        <span class="ajutor">dovada că a fost acolo</span>
-      </label>
-      <label>Revenire, de la maxim
-        <input type="number" step="any" name="revenire" required inputmode="decimal">
-        <span class="ajutor">cât trebuie să coboare înapoi ca să vindem</span>
-      </label>
-      <label>Ținta de ieșire
-        <input type="number" step="any" name="prag_iesire" required inputmode="decimal">
-        <span class="ajutor">sub nivelul de intrare — acolo răscumpărăm</span>
-      </label>
-      <label>Urmărire, peste minim
-        <input type="number" step="any" name="urmarire" required inputmode="decimal">
-        <span class="ajutor">după ce ținta e atinsă, pragul coboară cu minimul</span>
-      </label>
-      <label>Stop <span class="optional">opțional</span>
-        <input type="number" step="any" name="prag_stop" inputmode="decimal">
-        <span class="ajutor">deasupra intrării</span>
-      </label>
-      <label class="lat">Notă <span class="optional">opțional</span>
-        <input type="text" name="nota" maxlength="255" placeholder="ce vezi acolo">
-      </label>
-      <p class="formular-eroare" id="s-eroare" hidden></p>
-      <div class="butoane">
-        <button type="submit" class="buton primar" id="s-trimite">Pornește setarea</button>
-        <button type="button" class="buton" data-act="renunta" data-banca="short" hidden>Renunță</button>
+        <button type="button" class="buton" data-act="renunta" hidden>Renunță</button>
       </div>
     </form>
   </section>
@@ -160,11 +98,11 @@
     <table class="istoric">
       <thead>
         <tr>
-          <th>Banca</th><th>Intrare</th><th>Ieșire</th><th>Motiv</th>
+          <th>Intrare</th><th>Ieșire</th><th>Motiv</th>
           <th class="nr">Rezultat</th><th class="nr">A mers până la</th><th>Notă</th>
         </tr>
       </thead>
-      <tbody id="istoric"><tr><td colspan="7" class="gol">Încă nimic.</td></tr></tbody>
+      <tbody id="istoric"><tr><td colspan="6" class="gol">Încă nimic.</td></tr></tbody>
     </table>
   </div>
 
