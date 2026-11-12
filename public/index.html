@@ -3,24 +3,23 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Autobot — unealtă de tranzacționare</title>
+<title>Autobot — bot automat</title>
 <meta name="robots" content="noindex, nofollow">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="/unealta.css">
+<link rel="stylesheet" href="/bot.css">
 </head>
 <body>
 
 <header class="bara">
   <div class="identitate">
     <span class="marca">Autobot</span>
-    <span class="titlu">Unealtă manuală</span>
-    <span class="simbol">ZECUSDC</span>
-    <span class="interval">15m</span>
+    <span class="titlu">Bot automat · bani fictivi</span>
+    <span class="eticheta">BTC · ETH · ZEC</span>
+    <span class="eticheta">1h</span>
   </div>
-  <div class="pret-zona">
-    <span class="pret-eticheta">preț</span>
-    <span class="pret" id="pret">—</span>
-    <span class="pret-detaliu" id="pret-detaliu">sfertul de oră în formare</span>
+  <div class="ora-zona">
+    <span class="mic">ultima oră judecată</span>
+    <span class="ora" id="ultima-ora">—</span>
   </div>
 </header>
 
@@ -28,106 +27,74 @@
 
 <main class="corp">
 
-  <section class="banca" id="banca-long">
-    <header class="banca-cap">
-      <h2>Banca <span class="masura">doar long · măsurată în USDC</span></h2>
-      <div class="sold">
-        <span class="sold-cifra" id="l-sold">—</span>
-        <span class="sold-rand" id="l-randament"></span>
-      </div>
-    </header>
-    <p class="sold-detaliu" id="l-sold-detaliu"></p>
+  <section>
+    <h2>Băncile</h2>
+    <p class="intro">
+      Trei bănci de câte 1000 USDC fictivi, pornite în aceeași oră, pe același coș.
+      Diferă doar regula. <b>C</b> e etalonul: fără ea, A și B n-ar avea cu ce se compara.
+    </p>
+    <div class="banci" id="banci"></div>
+  </section>
 
-    <!-- starea curentă -->
-    <div class="stare-cutie" id="l-stare" hidden>
-      <div class="stare-titlu" id="l-stare-titlu"></div>
-      <dl class="cifre" id="l-cifre"></dl>
-      <p class="nota" id="l-nota" hidden></p>
-      <div class="butoane">
-        <button type="button" class="buton" data-act="editeaza">Modifică</button>
-        <button type="button" class="buton sters" data-act="anuleaza">Anulează setarea</button>
-        <button type="button" class="buton iesi" data-act="inchide" hidden>Ieși acum</button>
-      </div>
+  <section>
+    <h2>Semnalul de panică, pe fiecare monedă</h2>
+    <p class="intro">
+      Semnal = agitația ultimelor 24 de ore e în <b>cincimea de sus</b> față de ultimele
+      30 de zile (rang ≥ 80%) <b>și</b> prețul e mai jos decât acum 24 de ore.
+      Atunci banca B ține moneda la 1/3 din capital timp de 24 de ore.
+    </p>
+    <div class="tabel-invelis">
+      <table class="tabel">
+        <thead>
+          <tr><th>Moneda</th><th class="nr">Preț (închiderea orei)</th><th>Rang agitație</th>
+              <th class="nr">24 h</th><th>Stare</th></tr>
+        </thead>
+        <tbody id="semnal"><tr><td colspan="5" class="gol">—</td></tr></tbody>
+      </table>
     </div>
+  </section>
 
-    <!-- formular -->
-    <form class="formular" id="l-form" hidden>
-      <p class="formular-intro">
-        Prețul trebuie să <b>coboare</b> sub nivel și apoi să se <b>întoarcă</b>.
-        Nu cumpărăm la atingere.
-      </p>
-      <label>Nivelul unde crezi că ajunge
-        <input type="number" step="any" name="prag_intrare" required inputmode="decimal">
-      </label>
-      <label>Coborâre minimă sub el
-        <input type="number" step="any" name="depasire_minima" required inputmode="decimal">
-        <span class="ajutor">dovada că a fost acolo</span>
-      </label>
-      <label>Revenire, de la minim
-        <input type="number" step="any" name="revenire" required inputmode="decimal">
-        <span class="ajutor">cât trebuie să urce înapoi ca să cumpărăm</span>
-      </label>
-      <label>Ținta de ieșire
-        <input type="number" step="any" name="prag_iesire" required inputmode="decimal">
-        <span class="ajutor">absolută — nu se mută cu prețul real de intrare</span>
-      </label>
-      <label>Urmărire, sub maxim
-        <input type="number" step="any" name="urmarire" required inputmode="decimal">
-        <span class="ajutor" id="l-ajutor-urmarire">după ce ținta e atinsă, pragul urcă cu maximul</span>
-      </label>
-      <label>Stop <span class="optional">opțional</span>
-        <input type="number" step="any" name="prag_stop" inputmode="decimal">
-        <span class="ajutor">gol = poziția așteaptă oricât</span>
-      </label>
-      <label class="lat">Notă <span class="optional">opțional</span>
-        <input type="text" name="nota" maxlength="255" placeholder="ce vezi acolo">
-      </label>
-      <p class="formular-eroare" id="l-eroare" hidden></p>
-      <div class="butoane">
-        <button type="submit" class="buton primar" id="l-trimite">Pornește setarea</button>
-        <button type="button" class="buton" data-act="renunta" hidden>Renunță</button>
-      </div>
-    </form>
+  <section>
+    <h2>Deciziile</h2>
+    <div class="tabel-invelis">
+      <table class="tabel">
+        <thead>
+          <tr><th>Ora</th><th>Ce și de ce</th><th class="nr">Valoare</th>
+              <th class="nr">Preț plătit</th><th class="nr">față de simulare</th></tr>
+        </thead>
+        <tbody id="decizii"><tr><td colspan="5" class="gol">Încă nimic.</td></tr></tbody>
+      </table>
+    </div>
+    <p class="mic" id="cost-executie"></p>
+  </section>
+
+  <section>
+    <h2>Excepțiile încheiate (banca B)</h2>
+    <p class="mic" id="exceptii-rezumat"></p>
+    <div class="tabel-invelis">
+      <table class="tabel">
+        <thead>
+          <tr><th>Moneda</th><th>Pornită</th><th>Încheiată</th><th class="nr">Moneda în cele 24 h</th></tr>
+        </thead>
+        <tbody id="exceptii"><tr><td colspan="4" class="gol">Încă nicio excepție încheiată.</td></tr></tbody>
+      </table>
+    </div>
   </section>
 
 </main>
 
-<section class="istoric-zona">
-  <h2>Ce s-a închis</h2>
-  <div class="tabel-invelis">
-    <table class="istoric">
-      <thead>
-        <tr>
-          <th>Intrare</th><th>Ieșire</th><th>Motiv</th>
-          <th class="nr">Rezultat</th><th class="nr">A mers până la</th><th>Notă</th>
-        </tr>
-      </thead>
-      <tbody id="istoric"><tr><td colspan="6" class="gol">Încă nimic.</td></tr></tbody>
-    </table>
-  </div>
-
-  <details class="retrase">
-    <summary>Setări încheiate fără poziție <span id="anulate-cate"></span></summary>
-    <ul id="anulate"></ul>
-    <p class="marunt">
-      Două feluri, ținute separat: <b>retrasă</b> e decizia ta, <b>expirată</b> e
-      verdictul pieței — prețul a atins stopul înainte să apucăm să intrăm, deci
-      teza picase deja. Amândouă rămân în listă; contopite, n-ar mai spune nimic.
-    </p>
-  </details>
-</section>
-
 <footer class="subsol">
   <p>
-    <b>Cum decide:</b> armarea și extremele se iau din <b>wick-uri</b> — contează unde
-    a fost prețul cu adevărat. Intrarea și ieșirea pe urmărire se declanșează doar
-    pe <b>închiderea unei lumânări de 15 minute</b>, deci prețul de execuție e acea
-    închidere, nu pragul. <b>Stopul</b> e singurul evaluat pe atingere, fix la prag.
-    Comision <span id="comision">0,075</span>% pe parte. Bani fictivi.
+    <b>Cum decide:</b> o dată pe oră, după închiderea lumânării de 1h. A și B țin
+    50% în crypto (1/6 pe monedă) și reechilibrează când o monedă se abate cu peste
+    5% din capital. B adaugă excepția de după panică. Cumpără la ask, vinde la bid,
+    comision <span id="comision">0,075</span>% pe parte, fără levier. Orele în care
+    cronul n-a rulat se notează ca pierdute, fără tranzacții. Regulile sunt fixe:
+    nu se schimbă pe parcurs și nu primesc comenzi de aici.
   </p>
-  <p class="marunt" id="motor-linie">—</p>
+  <p class="mic" id="motor-linie">—</p>
 </footer>
 
-<script src="/unealta.js"></script>
+<script src="/bot.js"></script>
 </body>
 </html>

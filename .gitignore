@@ -25,3 +25,7 @@ venv/
 .idea/
 .vscode/
 *.log
+
+# Cercetare: cache-ul orar și datele de referință se regenerează din historical_data
+cercetare/hourly/
+cercetare/*.json

@@ -1,8 +1,8 @@
 # autobot.dunitru.ro — ghid de deploy
 
 Sistem identic cu `dunitru.ro` și `marcel-parcel.ro`: GitHub → cPanel Git Version
-Control → Deploy. Domeniul găzduiește **un singur lucru**: unealta de
-tranzacționare manuală, la rădăcină.
+Control → Deploy. Domeniul găzduiește **un singur lucru**: botul automat pe bani
+fictivi, la rădăcină (unealta manuală a fost scoasă pe 12.11.2026).
 
 ---
 
@@ -53,14 +53,20 @@ Deploy-ul rămâne manual; cronul aduce doar codul.
 
 ### Cele două cronuri
 
-| Cron | Ce face | Cât de des |
-|---|---|---|
-| `unealta.php` | motorul uneltei | la un minut |
-| `git fetch` | aduce codul de pe GitHub | la 5 minute |
+| Cron | Ce face | Cât de des | Setarea în cPanel |
+|---|---|---|---|
+| `bot.php` | motorul botului | o dată pe oră, la minutul 2 | Minute `2`, restul `*` |
+| `git fetch` | aduce codul de pe GitHub | la 5 minute | |
 
 ```
-/opt/cpanel/ea-php83/root/usr/bin/php /home/marcelpa/autobot-motor/unealta.php >/dev/null 2>&1
+/opt/cpanel/ea-php83/root/usr/bin/php /home/marcelpa/autobot-motor/bot.php >/dev/null 2>&1
 ```
+
+Minutul 2, nu 0: lumânarea orei se închide la Binance la :00, iar motorul cere
+doar lumânări închise. La :00 fix ar putea prinde încă ora veche.
+
+**Cronul vechi al uneltei manuale** (`…/autobot-motor/unealta.php`, la un minut)
+**se șterge** — fișierul nu mai există după deploy-ul din 12.11.2026.
 ```
 cd /home/marcelpa/repositories/autobot; { date; git fetch origin; git merge --ff-only origin/main; } > /home/marcelpa/git-pull-autobot.log 2>&1
 ```
@@ -119,18 +125,21 @@ autobot/
 ├── .cpanel.yml          rețeta de deploy
 ├── CLAUDE.md · DEPLOY.md · README.md
 ├── docs/
-│   └── plan-unealta.md      sursa de adevăr pentru reguli
+│   ├── plan-bot.md          sursa de adevăr pentru reguli
+│   └── plan-unealta.md      unealta manuală, retrasă (istoric)
 ├── baza-de-date/
-│   ├── migratii/2026-09-19-unealta.sql   cele 6 tabele u_*
+│   ├── migratii/2026-11-12-bot.sql       cele 8 tabele b_*
+│   ├── migratii/2026-09-19-unealta.sql   tabelele u_* (unealta retrasă, rămân în bază)
 │   ├── config.exemplu.php
 │   └── README.md            cum se pregătește baza
+├── cercetare/           simularea din spatele regulilor (fără date)
 ├── motor/               → /home/marcelpa/autobot-motor/ (ÎN AFARA webului)
-│   ├── unealta.php          motorul, din cron la un minut
-│   ├── unealta-reguli.php   regulile: funcții pure, cerute și de API
-│   └── probe/unealta-matematica.php   88 de probe, fără bază de date
+│   ├── bot.php              motorul, din cron o dată pe oră
+│   ├── bot-reguli.php       regulile: funcții pure
+│   └── probe/               bot-matematica.php · bot-echivalenta.php
 └── public/              → document root
-    ├── index.html · unealta.js · unealta.css
-    ├── api/             _comun.php · unealta.php
+    ├── index.html · bot.js · bot.css
+    ├── api/             _comun.php · bot.php (doar citire)
     └── favicon.svg, robots.txt, .htaccess
 ```
 

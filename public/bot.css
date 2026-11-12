@@ -1,0 +1,130 @@
+/* autobot.dunitru.ro — botul automat, doar cifre. Aceeași paletă ca până acum. */
+
+:root {
+  --bg: #ffffff;
+  --bara: #fbfcfd;
+  --cutie: #ffffff;
+  --text: #1f2328;
+  --muted: #6b7280;
+  --line: #e5e9ef;
+  --sus: #1a8f83;
+  --jos: #d63f3c;
+  --atentie: #b45309;
+  --atentie-fundal: #fef6e7;
+  --umplere: #e8eef5;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #161b22;
+    --bara: #12161d;
+    --cutie: #1b212a;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --line: #262c36;
+    --sus: #3fbfae;
+    --jos: #f0736f;
+    --atentie: #f0b429;
+    --atentie-fundal: #2b2313;
+    --umplere: #232a35;
+  }
+}
+
+* { box-sizing: border-box; }
+
+/* `hidden` are display:none din foaia browserului, pe care orice `display`
+   dintr-o clasă îl bate. Fără linia asta, ce ascundem din cod rămâne vizibil. */
+[hidden] { display: none !important; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.5;
+}
+
+.bara {
+  display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between;
+  gap: 0.6rem 1.5rem; padding: 0.75rem 1.25rem;
+  background: var(--bara); border-bottom: 1px solid var(--line);
+}
+.identitate { display: flex; align-items: baseline; gap: 0.6rem; flex-wrap: wrap; }
+.marca { font-weight: 700; }
+.titlu { color: var(--muted); }
+.eticheta {
+  font-size: 0.75rem; padding: 0.05rem 0.45rem; border: 1px solid var(--line);
+  border-radius: 999px; color: var(--muted);
+}
+.ora-zona { display: flex; align-items: baseline; gap: 0.5rem; }
+.ora { font-variant-numeric: tabular-nums; font-weight: 600; }
+
+.banda {
+  padding: 0.6rem 1.25rem; background: var(--atentie-fundal); color: var(--atentie);
+  border-bottom: 1px solid var(--line); font-size: 0.9rem;
+}
+
+.corp { max-width: 1000px; margin: 0 auto; padding: 1rem 1.25rem 2rem; }
+section { margin-top: 1.5rem; }
+h2 { font-size: 1.05rem; margin: 0 0 0.4rem; }
+.intro { margin: 0 0 0.9rem; color: var(--muted); font-size: 0.88rem; max-width: 75ch; }
+.intro b, .subsol b { color: var(--text); }
+.mic { color: var(--muted); font-size: 0.8rem; }
+
+/* ---------------------------------------------------------------- băncile */
+
+.banci { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.9rem; }
+.banca {
+  background: var(--cutie); border: 1px solid var(--line); border-radius: 10px;
+  padding: 0.9rem 1rem; min-width: 0;
+}
+.banca-cap { display: flex; justify-content: space-between; align-items: baseline; gap: 0.5rem; }
+.banca-nume { font-weight: 700; }
+.banca-regula { margin: 0.15rem 0 0.7rem; color: var(--muted); font-size: 0.8rem; min-height: 2.4em; }
+.banca-valoare { font-size: 1.5rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.banca-rand { font-variant-numeric: tabular-nums; font-weight: 600; }
+.banca-dd { font-size: 0.8rem; color: var(--muted); margin-top: 0.1rem; }
+
+.ponderi { margin-top: 0.8rem; display: grid; gap: 0.3rem; }
+.pondere { display: grid; grid-template-columns: 3.2rem 1fr 3.2rem; gap: 0.5rem; align-items: center; font-size: 0.8rem; }
+.pondere .nr { text-align: right; }
+.bara-p { height: 6px; background: var(--umplere); border-radius: 3px; overflow: hidden; }
+.bara-p > span { display: block; height: 100%; background: var(--muted); }
+.bara-p.usdc > span { background: var(--line); }
+.bara-p.exc > span { background: var(--atentie); }
+
+.plus { color: var(--sus); }
+.minus { color: var(--jos); }
+
+/* ---------------------------------------------------------------- tabele */
+
+.tabel-invelis { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--cutie); }
+.tabel { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+.tabel th, .tabel td { padding: 0.45rem 0.7rem; text-align: left; border-bottom: 1px solid var(--line); vertical-align: top; }
+.tabel th { color: var(--muted); font-weight: 500; font-size: 0.78rem; white-space: nowrap; }
+.tabel tr:last-child td { border-bottom: 0; }
+.tabel .nr { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tabel .gol { color: var(--muted); text-align: center; padding: 1rem; }
+.tabel .cand { white-space: nowrap; font-variant-numeric: tabular-nums; color: var(--muted); }
+
+.rang { display: flex; align-items: center; gap: 0.5rem; min-width: 9rem; }
+.rang .bara-p { flex: 1; position: relative; height: 8px; }
+.rang .bara-p::after {             /* pragul de 80% */
+  content: ""; position: absolute; left: 80%; top: -2px; bottom: -2px; width: 2px; background: var(--atentie);
+}
+.rang .bara-p.peste > span { background: var(--atentie); }
+.stare-semnal { font-weight: 600; color: var(--atentie); }
+
+.subsol {
+  max-width: 1000px; margin: 0 auto; padding: 1rem 1.25rem 2.5rem;
+  border-top: 1px solid var(--line); color: var(--muted); font-size: 0.82rem;
+}
+
+@media (max-width: 760px) {
+  .banci { grid-template-columns: 1fr; }
+  .banca-regula { min-height: 0; }
+  /* tabelele se derulează pe orizontală, în loc să se strângă pe verticală */
+  .tabel { min-width: 640px; }
+  .corp, .subsol { padding-left: 1rem; padding-right: 1rem; }
+}

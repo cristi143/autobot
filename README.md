@@ -1,30 +1,38 @@
 # autobot
 
-**Unealtă de tranzacționare manuală** pe Binance, ZECUSDC.
+**Bot automat pe bani fictivi**, pe un coș BTC + ETH + ZEC (perechi USDC, Binance).
 Web: [autobot.dunitru.ro](https://autobot.dunitru.ro)
 
-Tu pui nivelurile, sistemul doar execută. Nu decide nimic singur, nu caută
-semnale, nu desenează. Fără o setare scrisă de om, nu face nimic.
+Rulează singur, din cron, o dată pe oră, și execută reguli fixe, testate pe
+date istorice 2019–2026. Trei bănci de câte 1000 USDC fictivi:
 
-Deosebirea față de un ordin obișnuit: **nu se intră la atingerea nivelului, ci
-la revenirea la el.** Un ordin limită la 800 s-ar executa pe drumul în jos; aici
-prețul trebuie să treacă dincolo și să se întoarcă.
+- **A** — 50% crypto (1/6 pe monedă), reechilibrare la abatere peste 5%
+- **B** — ca A, plus excepția după panică: moneda la 1/3 timp de 24 h
+- **C** — pasivă, etalonul
 
-Bani fictivi.
+Nu trimite ordine reale, nu are chei API, nu primește comenzi de la pagină.
 
-- Regulile, întregi: **[docs/plan-unealta.md](docs/plan-unealta.md)**
+- Regulile, întregi, și de unde vin: **[docs/plan-bot.md](docs/plan-bot.md)**
 - Hosting și deploy: **[DEPLOY.md](DEPLOY.md)**
 - Ce ajunge pe web: [`public/`](public/) · motorul, din cron: [`motor/`](motor/)
 
 ## Probe
 
 ```bash
-php motor/probe/unealta-matematica.php    # 88 de probe, fără bază de date
+php motor/probe/bot-matematica.php                 # 50 de probe, fără bază de date
+php motor/probe/bot-echivalenta.php <dosar>        # regulile față de simularea din Python
 ```
 
-## Dezvoltare locală
+Proba de echivalență cere datele de referință generate de simulare (nu sunt în
+git — derivă din `../historical_data/`). Vezi capul fișierului.
+
+## Probă locală, cap-coadă
+
+Motorul și API-ul acceptă `AUTOBOT_CONFIG` (calea configurării) și `db.dsn`
+în configurare, deci se pot rula pe SQLite, cu date reale de la Binance:
 
 ```bash
-cd public && python3 -m http.server 8000
-# http://localhost:8000  (API-ul cere PHP și baza de date, deci doar pagina)
+# schema SQLite = migrația MySQL fără ENGINE/USE/SET și cu INTEGER PRIMARY KEY AUTOINCREMENT
+AUTOBOT_CONFIG=/cale/config.php php motor/bot.php
+cd public && AUTOBOT_CONFIG=/cale/config.php php -S 127.0.0.1:8765
 ```

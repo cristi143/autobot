@@ -1,3 +1,10 @@
+> **RETRASĂ pe 12.11.2026.** Unealta manuală a fost scoasă la cererea utilizatorului;
+> locul ei l-a luat botul automat (`plan-bot.md`). Utilizatorul va avea mai târziu
+> o unealtă nouă, separată. Documentul rămâne pentru istoric: regulile și capcanele
+> de aici (stopul care expiră setarea, închiderile de 15m) se pot refolosi.
+> Codul e în istoricul git, înainte de commitul care a scos-o. Tabelele `u_*` sunt
+> încă în bază.
+
 # Unealta de tranzacționare manuală — sursa de adevăr
 
 Stabilit pe 19 septembrie 2026, în discuție cu utilizatorul.

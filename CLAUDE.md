@@ -1,45 +1,43 @@
 # autobot.dunitru.ro — context de lucru
 
-**Unealtă de tranzacționare manuală** pe Binance, ZECUSDC, pe lumânări de 15
-minute. Utilizatorul pune nivelurile, sistemul doar execută. Bani fictivi.
-**Doar long** — short-ul a fost scos pe 11.11.2026, la cererea utilizatorului
-(„o să facem doar long”). Nu-l reintroduce fără să fie cerut.
+**Bot automat pe bani fictivi**, coș BTC + ETH + ZEC (perechi USDC), lumânări de
+1 oră. Reguli fixe, testate pe date istorice; motorul rulează singur, din cron.
+**Unealta manuală a fost scoasă pe 12.11.2026** — utilizatorul va avea mai târziu
+o unealtă nouă, separată. Doar long.
 
 ## La începutul fiecărei sesiuni
 
-Citește **`docs/plan-unealta.md`** — sursa de adevăr pentru reguli. Apoi
-**`DEPLOY.md`** (hosting, cele două cronuri, capcanele cPanel).
+Citește **`docs/plan-bot.md`** — sursa de adevăr pentru reguli, de unde vin și cum
+se citesc rezultatele. Apoi **`DEPLOY.md`** (hosting, cronurile, capcanele cPanel).
 
-## Stare la 20 septembrie 2026: RULEAZĂ
+## Stare la 12 noiembrie 2026: CONSTRUIT, DE PORNIT
 
 | Piesă | Unde |
 |---|---|
-| Pagina (fără grafice) | `public/index.html` · `unealta.js` · `unealta.css` |
-| API | `public/api/unealta.php` · `_comun.php` |
-| Motor | `motor/unealta.php`, cron la un minut |
-| **Reguli pure** | `motor/unealta-reguli.php` |
-| Probe | `motor/probe/unealta-matematica.php` — **61 de probe** |
-| Bază de date | MySQL `marcelpa_autobot`, 6 tabele cu prefix `u_` |
-| Bancă | **1000 USDC**, doar long |
-| Migrație de rulat | `baza-de-date/migratii/2026-11-11-doar-long.sql` — scoate short-ul din bază; în doi pași, vezi fișierul |
+| Pagina (doar citire) | `public/index.html` · `bot.js` · `bot.css` |
+| API (doar GET) | `public/api/bot.php` · `_comun.php` |
+| Motor | `motor/bot.php`, cron **orar, la minutul 2** |
+| **Reguli pure** | `motor/bot-reguli.php` |
+| Probe | `motor/probe/bot-matematica.php` (50) · `bot-echivalenta.php` (față de simulare) |
+| Bază de date | MySQL `marcelpa_autobot`, 8 tabele `b_*`; tabelele `u_*` ale uneltei vechi rămân, neatinse |
+| Bănci | A fix 50/50 · B fix + excepție · C pasivă — câte **1000 USDC** |
+| Migrație de rulat | `baza-de-date/migratii/2026-11-12-bot.sql` |
 
-Configurarea (parola bazei, cheia de scriere): `/home/marcelpa/autobot-config.php`,
-în afara zonei publice, niciodată în git.
+Configurarea (parola bazei): `/home/marcelpa/autobot-config.php`, în afara zonei
+publice, niciodată în git.
 
-## ⛔ Ce NU se mai face aici
+## ⛔ Ce NU se face aici
 
-**Până pe 20.09.2026, domeniul găzduia și un bot automat cu triunghiuri.** A fost
-șters, cu tot cu cercetare, la cererea utilizatorului. **Nu-l reînvia și nu
-propune tipare geometrice pe grafic** — linii de trend, triunghiuri, spargeri de
-canal.
-
-Motivul e măsurat, nu presupus: pe **40.832 de triunghiuri**, 26 de simboluri și
-o perioadă ținută deoparte, tiparul avea un avantaj real de **+0,062% brut** pe
-tranzacție, confirmat statistic. **Comisionul e 0,150%.** Informație există, dar
-e 41% din cât ar trebui.
-
-Dacă subiectul revine, dă cifra și lasă decizia la el. Codul, protocolul probei
-și triunghiurile desenate sunt în istoricul git, până la `948e204`.
+- **Nu se schimbă regulile pe parcurs.** Botul e un test înainte, preînregistrat
+  (plan §9): o regulă schimbată la 4 luni repornește numărătoarea de la zero.
+  Dacă utilizatorul vrea altă regulă, e o bancă nouă sau un bot nou, nu o
+  modificare.
+- **Orice abatere de la simulare e o greșeală, nu o îmbunătățire.** Singura
+  abatere acceptată, documentată în plan §4: fără levier.
+- **Ținta de volatilitate nu intră** — testată, strică (memorie `trei-straturi-cos`).
+- **Botul cu triunghiuri a fost șters pe 20.09.2026** (avantaj real +0,062% brut,
+  sub comisionul de 0,150%). Nu-l reînvia și nu propune tipare geometrice pe grafic.
+  Codul e în istoricul git, până la `948e204`.
 
 ## Reguli de lucru
 
@@ -52,69 +50,53 @@ Dacă subiectul revine, dă cifra și lasă decizia la el. Codul, protocolul pro
 - Identitate explicită la commit:
   `git -c user.name="Cristi Iorga" -c user.email="cristi.s.iorga@gmail.com"`
 - În commit nu se pune identificatorul de model.
-- **`VERSIUNE` din `public/unealta.js` se schimbă la fiecare modificare din
-  `public/`.** API-ul o citește de pe disc, iar pagina compară: diferite =
-  browserul rulează cod vechi din cache, și banda de sus o spune.
+- **`VERSIUNE` din `public/bot.js` se schimbă la fiecare modificare din
+  `public/`.** API-ul o citește de pe disc, iar pagina compară.
+- **După orice atingere a regulilor:** ambele probe. Echivalența cere datele de
+  referință (generate de `gen_echiv.py` din simulare; vezi capul fișierului).
 
 ## Regulile, pe scurt
 
-Detaliile și motivele sunt în `docs/plan-unealta.md` — **nu le reinventa.**
+Detaliile în `docs/plan-bot.md` — **nu le reinventa.**
 
-- **Nu se intră la atingere, ci la revenire.** Prețul trebuie să treacă dincolo
-  de nivel cu `depasire_minima`, apoi să se întoarcă.
-- **Pragul de intrare urmărește minimul** (`minim + revenire`), plafonat la
-  nivelul ales: doar coboară, niciodată nu urcă peste el.
-- **Ținta de ieșire e absolută** — nu se mută cu prețul real de intrare. Intrat
-  mai jos → câștig mai mare. E intenția, nu o scăpare.
-- **După atingerea țintei, pragul de ieșire urmărește maximul** (`maxim −
-  urmarire`), plafonat la țintă. **Doar urcă.**
-- **Totul se declanșează pe ÎNCHIDEREA unei lumânări de 15m**, deci prețul de
-  execuție e acea închidere, nu pragul. **Excepție: stopul**, pe atingere.
-- **Extremele se iau din wick-uri**, declanșările din închideri. Wick-urile spun
-  unde a fost prețul; închiderile spun dacă s-a rupt ceva.
-- **Stop și ieșire în aceeași lumânare → se ia stopul.** Convenție pesimistă.
-- **O singură setare activă.**
-- Comision **0,075% pe parte**.
+- Semnal de panică pe o monedă: volatilitatea pe 24 h (abaterea std a 24 de
+  randamente log orare) are rang ≥ 0,8 față de cele 720 de ore dinainte, ȘI prețul
+  e sub cel de acum 24 h.
+- A și B țin 1/6 din capital pe monedă; B ține 1/3 timp de 24 h după semnal.
+  Un semnal în chiar ora expirării e ignorat (așa a rulat simularea).
+- Reechilibrare la abatere > 5% din capital; la pornirea/expirarea unei excepții,
+  oricât de mică.
+- Ordinea într-o oră: întâi vânzările, apoi cumpărările, fără levier.
+- Cumpără la ask, vinde la bid, comision 0,075% pe parte. Se scrie și închiderea
+  orei (`pret_simulare`), ca să se vadă costul real al execuției.
+- Ore pierdute (cron oprit): se judecă și se scriu, **fără tranzacții**.
 
 ## Capcane deja plătite
 
-- **Stopul atins ÎNAINTE de intrare omoară setarea** (starea `expirat`). Fără
-  regula asta, pragul de intrare cobora cu minimul până sub stop, iar „stopul" se
-  declanșa imediat, pe profit: nivel 1450, stop 1380, preț căzut la 1200, intrare
-  la 1227, „stop" la 1380 cu **+12,23%**. Găsit rulând regulile pe date reale.
-  Consecința: **stopul mărginește cât de jos poate coborî pragul de intrare.**
-- **Stopul trebuie să fie dincolo de pragul de armare**, nu doar dincolo de
-  nivel. `nivel 800, coborâre 20, stop 780` e imposibil din construcție: exact
-  atingerea care armează setarea o și omoară.
-- **Regulile stau într-un singur fișier** (`motor/unealta-reguli.php`), cerut de
-  motor, de API și de probe. Rescrise în fiecare, s-ar desincroniza tăcut.
-  API-ul îl cere pe cale absolută din `/home/marcelpa/autobot-motor/`, la fel
-  cum cere configurarea.
-- **API-ul nu atinge banii.** Scrie doar intenții (o setare, un steag de
-  închidere); soldurile le mișcă exclusiv motorul. De asta „ieși acum" se execută
-  la următoarea rulare — un singur scriitor face mai mult decât un minut câștigat.
-- **Timpul e BIGINT în milisecunde UTC peste tot.** Serverul are fusul
-  Europe/Bucharest. Orice formatare fără UTC explicit aliniază lumânările greșit
-  cu 2–3 ore, tăcut.
-- **`serialize_precision` e mare pe server** — fără `ini_set('serialize_precision','-1')`
-  din `_comun.php`, json_encode scrie 0.075 ca 0.07499999999999999722…
-- **Atributul `hidden` nu ascunde** elementele stilate cu `display:flex`; de aceea
-  există `[hidden] { display: none !important; }` în `unealta.css`.
-- **Migrațiile sunt MANUALE și nu rulează la deploy.** Se scriu în
-  `baza-de-date/migratii/`, se rulează din phpMyAdmin, **înaintea** deploy-ului
-  codului care le cere.
+- **Simularea băncii B avea levier fără să știm** — USDC negativ în 4% din ore,
+  până la −6% din capital. Prins abia la proba de echivalență. De aici regula
+  „vânzările întâi, cumpărări doar din USDC existent”.
+- **Datele istorice nu sunt la zi uniform**: BTC și ETH se termină pe 15.08.2026,
+  ZEC în noiembrie. Verifică data de final înainte să scrii o perioadă.
+- **Timpul e BIGINT în milisecunde UTC peste tot.** `ora` = deschiderea lumânării
+  de 1h; decizia se ia la închiderea ei (pagina afișează ora închiderii).
+- **`serialize_precision` e mare pe server** — `_comun.php` îl fixează la -1.
+- **Atributul `hidden` nu ascunde** elementele cu `display` din clasă; de aceea
+  `[hidden] { display: none !important; }` în `bot.css`.
+- **Migrațiile sunt MANUALE și nu rulează la deploy.** Din phpMyAdmin, **înaintea**
+  deploy-ului codului care le cere.
+- **Lista de Cron Jobs e comună pe tot contul cPanel.** Citește comanda întreagă
+  înainte de Delete (s-a șters odată motorul greșit).
 
 ## Parola — amânată deliberat
 
-Site-ul e deschis, intenționat: *„deocamdată sunt doar date fictive"*.
-Utilizatorul a cerut să fie întrebat din nou înainte de bani reali, chei API pe
-server sau date care nu se pot reface. **Până atunci nu insista.** Capcana de la
-deploy, pentru când se va face: `DEPLOY.md` §2.1.
+Site-ul e deschis, intenționat: date fictive. Utilizatorul a cerut să fie întrebat
+din nou înainte de bani reali, chei API pe server sau date care nu se pot reface.
+**Până atunci nu insista.** Capcana de la deploy: `DEPLOY.md` §2.1.
 
 ## Context vecin
 
 Același cont cPanel (`marcelpa`) găzduiește și `marcel-parcel.ro`, `dunitru.ro`,
-`thriftshop.dunitru.ro`, `valentina.dunitru.ro`. Proiecte complet separate, cu
-repo-uri separate — nu se modifică nimic acolo din sesiunile de aici.
-**Atenție:** deploy-ul lui dunitru.ro golește `/home/marcelpa/dunitru.ro/public_html`,
-de aceea autobot are arbore separat.
+`thriftshop.dunitru.ro`, `valentina.dunitru.ro`. Proiecte complet separate — nu se
+modifică nimic acolo din sesiunile de aici. Deploy-ul lui dunitru.ro golește
+`/home/marcelpa/dunitru.ro/public_html`, de aceea autobot are arbore separat.
