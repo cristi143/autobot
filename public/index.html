@@ -28,7 +28,7 @@
 <main class="corp">
 
   <section>
-    <h2>Băncile</h2>
+    <h2>Băncile pe coș (BTC · ETH · ZEC)</h2>
     <p class="intro">
       Trei bănci de câte 1000 USDC fictivi, pornite în aceeași oră, pe același coș.
       Diferă doar regula. <b>C</b> e etalonul: fără ea, A și B n-ar avea cu ce se compara.
@@ -37,11 +37,22 @@
   </section>
 
   <section>
+    <h2>Băncile pe ZEC singur</h2>
+    <p class="intro">
+      Trei bănci de câte 1000 USDC fictivi, pornite mai târziu, toate în aceeași oră, doar pe ZEC.
+      <b>D</b> și <b>E</b> diferă prin cât ZEC țin; <b>F</b> e E plus excepția de după panică.
+      Se compară între ele, nu cu băncile pe coș: au pornit la altă dată.
+    </p>
+    <div class="banci" id="banci-zec"></div>
+  </section>
+
+  <section>
     <h2>Semnalul de panică, pe fiecare monedă</h2>
     <p class="intro">
       Semnal = agitația ultimelor 24 de ore e în <b>cincimea de sus</b> față de ultimele
       30 de zile (rang ≥ 80%) <b>și</b> prețul e mai jos decât acum 24 de ore.
-      Atunci banca B ține moneda la 1/3 din capital timp de 24 de ore.
+      Atunci banca B ține moneda la 1/3 din capital timp de 24 de ore, iar banca F
+      ține ZEC la 55% (doar semnalul de pe ZEC contează pentru ea).
     </p>
     <div class="tabel-invelis">
       <table class="tabel">
@@ -69,14 +80,14 @@
   </section>
 
   <section>
-    <h2>Excepțiile încheiate (banca B)</h2>
+    <h2>Excepțiile încheiate (băncile B și F)</h2>
     <p class="mic" id="exceptii-rezumat"></p>
     <div class="tabel-invelis">
       <table class="tabel">
         <thead>
-          <tr><th>Moneda</th><th>Pornită</th><th>Încheiată</th><th class="nr">Moneda în cele 24 h</th></tr>
+          <tr><th>Banca</th><th>Moneda</th><th>Pornită</th><th>Încheiată</th><th class="nr">Moneda în cele 24 h</th></tr>
         </thead>
-        <tbody id="exceptii"><tr><td colspan="4" class="gol">Încă nicio excepție încheiată.</td></tr></tbody>
+        <tbody id="exceptii"><tr><td colspan="5" class="gol">Încă nicio excepție încheiată.</td></tr></tbody>
       </table>
     </div>
   </section>
@@ -87,7 +98,8 @@
   <p>
     <b>Cum decide:</b> o dată pe oră, după închiderea lumânării de 1h. A și B țin
     50% în crypto (1/6 pe monedă) și reechilibrează când o monedă se abate cu peste
-    5% din capital. B adaugă excepția de după panică. Cumpără la ask, vinde la bid,
+    5% din capital. B adaugă excepția de după panică. D, E și F fac același lucru
+    doar pe ZEC: 50%, 30%, respectiv 30% cu excepție la 55%. Cumpără la ask, vinde la bid,
     comision <span id="comision">0,075</span>% pe parte, fără levier. Orele în care
     cronul n-a rulat se notează ca pierdute, fără tranzacții. Regulile sunt fixe:
     nu se schimbă pe parcurs și nu primesc comenzi de aici.

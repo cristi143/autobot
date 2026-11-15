@@ -16,6 +16,10 @@
  *
  * Banca C (pasivă) cumpără o singură dată, la prima rulare, apoi doar se evaluează.
  *
+ * Băncile D, E, F (doar ZEC, ../docs/plan-bot-zec.md) rulează în aceeași oră, pe
+ * același semnal și aceleași prețuri, cu regulile lor (z_pasOra). Pornesc la prima
+ * rulare în care nu există încă, fără să atingă A, B, C.
+ *
  * Pentru o probă locală, calea configurării se poate da prin AUTOBOT_CONFIG, iar
  * configurarea poate avea `db.dsn` (de exemplu sqlite:...). De aceea SQL-ul de
  * aici evită ce e specific MySQL (REPLACE INTO în loc de ON DUPLICATE KEY).
@@ -235,7 +239,7 @@ function citesteBanca(string $b): ?array {
     }
     if ($b === 'B') {
         foreach (B_MONEDE as $m) {
-            $e = $pdo->query("SELECT * FROM b_exceptii WHERE simbol = " . $pdo->quote($m)
+            $e = $pdo->query("SELECT * FROM b_exceptii WHERE banca = 'B' AND simbol = " . $pdo->quote($m)
                              . " ORDER BY pornita_ora DESC, id DESC LIMIT 1")->fetch();
             if ($e) {
                 $s['exc'][$m] = ['expira' => intdiv((int)$e['expira_ora'], ORA_MS),
@@ -280,9 +284,9 @@ function scrieBanca(string $b, array $s, bool $noua): void {
 }
 
 $Hh = intdiv($H, ORA_MS);
-$prima = $pdo->query("SELECT COUNT(*) FROM b_banci")->fetchColumn() == 0;
+$prima = $pdo->query("SELECT COUNT(*) FROM b_banci WHERE banca IN ('A','B','C')")->fetchColumn() == 0;
 if ($prima) {
-    spune('Prima rulare: trei bănci a câte ' . CAPITAL . ' USDC.');
+    spune('Prima rulare: băncile A, B, C, câte ' . CAPITAL . ' USDC.');
     [$C, $tC] = b_pornestePasiv(CAPITAL, $pret, $comision);
     scrieTranzactii('C', CAPITAL, $tC);
     scrieBanca('C', $C, true);
@@ -312,13 +316,13 @@ foreach (B_MONEDE as $m) {
     $aPornit  = $dupa['activa'] && (!$inainte['activa'] || $dupa['expira'] !== $inainte['expira']);
     if ($sAInchis) {
         $pdo->prepare("UPDATE b_exceptii SET inchisa_ora = ?, pret_inchidere = ?
-                       WHERE simbol = ? AND inchisa_ora IS NULL")
+                       WHERE banca = 'B' AND simbol = ? AND inchisa_ora IS NULL")
             ->execute([$H, dec($inch[$m][$H], 8), $m]);
     }
     if ($aPornit) {
-        $pdo->prepare("INSERT INTO b_exceptii (simbol, pornita_ora, expira_ora, pret_pornire) VALUES (?,?,?,?)")
+        $pdo->prepare("INSERT INTO b_exceptii (banca, simbol, pornita_ora, expira_ora, pret_pornire) VALUES ('B',?,?,?,?)")
             ->execute([$m, $H, $dupa['expira'] * ORA_MS, dec($inch[$m][$H], 8)]);
-        spune("  excepție pe $m până la " . oraText($dupa['expira'] * ORA_MS));
+        spune("  B: excepție pe $m până la " . oraText($dupa['expira'] * ORA_MS));
     }
 }
 
@@ -336,6 +340,73 @@ foreach (['A' => $A2, 'B' => $B2, 'C' => $C] as $b => $s) {
 if ($A2['usdc'] < -1e-6 || $B2['usdc'] < -1e-6) {
     spune('USDC negativ după tranzacții — regula „fără levier” n-a ținut.');
     incheie('eroare', $H, $pierdute);
+}
+
+/* ------------------------------------------- băncile pe ZEC singur (D, E, F) */
+
+$zExista = (int)$pdo->query("SELECT COUNT(*) FROM b_banci WHERE banca IN ('D','E','F')")->fetchColumn();
+if ($zExista !== 0 && $zExista !== count(Z_BANCI)) {
+    spune('Una dintre băncile D, E, F lipsește din b_banci.');
+    incheie('eroare', $H, $pierdute);
+}
+$zPrima = $zExista === 0;
+if ($zPrima) { spune('Pornesc băncile pe ZEC: D, E, F, câte ' . CAPITAL . ' USDC.'); }
+
+foreach (Z_BANCI as $b => $regula) {
+    if ($zPrima) {
+        $s = z_stareNoua(CAPITAL);
+    } else {
+        $s = z_stareNoua((float)$pdo->query("SELECT usdc FROM b_banci WHERE banca = " . $pdo->quote($b))->fetchColumn());
+        $q = $pdo->query("SELECT cantitate FROM b_detineri WHERE banca = " . $pdo->quote($b)
+                         . " AND simbol = " . $pdo->quote(Z_MONEDA))->fetchColumn();
+        $s['q'] = $q === false ? 0.0 : (float)$q;
+        if ($regula['exc'] !== null) {
+            $e = $pdo->query("SELECT * FROM b_exceptii WHERE banca = " . $pdo->quote($b) . " AND simbol = "
+                             . $pdo->quote(Z_MONEDA) . " ORDER BY pornita_ora DESC, id DESC LIMIT 1")->fetch();
+            if ($e) {
+                $s['exc'] = ['expira' => intdiv((int)$e['expira_ora'], ORA_MS), 'activa' => $e['inchisa_ora'] === null];
+            }
+        }
+    }
+    [$s2, $t] = z_pasOra($b, $s, $Hh, $semnale[Z_MONEDA], $pret[Z_MONEDA], $comision);
+    if ($zPrima) {   // la pornire nu e o reechilibrare, e prima cumpărare
+        foreach ($t as &$x) {
+            if (str_starts_with($x['motiv'], 'reechilibrare')) { $x['motiv'] = 'pornire: ponderea de bază în ZEC'; }
+        }
+        unset($x);
+    }
+
+    // excepția (doar F): întâi închiderea, apoi pornirea
+    $inainte = $s['exc']; $dupa = $s2['exc'];
+    if ($inainte['activa'] && (!$dupa['activa'] || $dupa['expira'] !== $inainte['expira'])) {
+        $pdo->prepare("UPDATE b_exceptii SET inchisa_ora = ?, pret_inchidere = ?
+                       WHERE banca = ? AND simbol = ? AND inchisa_ora IS NULL")
+            ->execute([$H, dec($inch[Z_MONEDA][$H], 8), $b, Z_MONEDA]);
+    }
+    if ($dupa['activa'] && (!$inainte['activa'] || $dupa['expira'] !== $inainte['expira'])) {
+        $pdo->prepare("INSERT INTO b_exceptii (banca, simbol, pornita_ora, expira_ora, pret_pornire) VALUES (?,?,?,?,?)")
+            ->execute([$b, Z_MONEDA, $H, $dupa['expira'] * ORA_MS, dec($inch[Z_MONEDA][$H], 8)]);
+        spune("  $b: excepție pe " . Z_MONEDA . ' până la ' . oraText($dupa['expira'] * ORA_MS));
+    }
+
+    scrieTranzactii($b, $s['usdc'], $t);
+    if ($zPrima) {
+        $pdo->prepare("INSERT INTO b_banci (banca, usdc, capital_initial, pornita_la, actualizat_la) VALUES (?,?,?,?,?)")
+            ->execute([$b, dec($s2['usdc']), dec(CAPITAL), $inceput, $inceput]);
+    } else {
+        $pdo->prepare("UPDATE b_banci SET usdc = ?, actualizat_la = ? WHERE banca = ?")
+            ->execute([dec($s2['usdc']), $inceput, $b]);
+    }
+    $pdo->prepare("REPLACE INTO b_detineri (banca, simbol, cantitate) VALUES (?,?,?)")
+        ->execute([$b, Z_MONEDA, dec($s2['q'], 12)]);
+
+    $v = z_valoare($s2, $pret[Z_MONEDA]['eval']);
+    $insV->execute([$H, $b, dec($v), dec($s2['usdc'])]);
+    spune(sprintf('  banca %s: %.2f USDC (%+.2f%%)', $b, $v, ($v / CAPITAL - 1) * 100));
+    if ($s2['usdc'] < -1e-6) {
+        spune("USDC negativ în banca $b — regula „fără levier” n-a ținut.");
+        incheie('eroare', $H, $pierdute);
+    }
 }
 
 $pdo->commit();

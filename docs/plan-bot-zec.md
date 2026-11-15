@@ -1,6 +1,6 @@
 # Plan — băncile pe ZEC singur (D, E, F)
 
-Scris pe 15.11.2026. **Stare: plan aprobat, nimic codat.** Continuă `plan-bot.md`,
+Scris pe 15.11.2026. **Stare: codat și probat local pe 15.11.2026; pornește la prima oră de după migrație și deploy.** Continuă `plan-bot.md`,
 care rămâne sursa de adevăr pentru băncile A, B, C și pentru mecanica motorului.
 
 ## 1. Ce se adaugă și ce nu se atinge
@@ -70,9 +70,20 @@ Aceleași ca în `plan-bot.md` §4, cu o singură monedă:
 - cumpără la ask, vinde la bid, comision 0,075% pe parte; se scrie și închiderea orei;
 - ore pierdute: se judecă și se scriu, fără tranzacții.
 
-## 4. Ce trebuie hotărât la implementare
+## 4. Cum s-a implementat
 
-Nimic din ce urmează nu e făcut. De discutat înainte de cod:
+Hotărât cu Cristi pe 15.11.2026 și făcut așa:
+
+- **Regulile:** `z_pasOra` în `motor/bot-reguli.php`, funcție separată de `b_pasOra`;
+  funcțiile băncilor A, B, C nu au fost atinse. Semnalul e același (`b_evalueaza`).
+- **Baza:** `migratii/2026-11-15-banci-zec.sql` — coloana `banca` în `b_exceptii`
+  (rândurile vechi devin ale lui B). Se rulează **înaintea** deploy-ului.
+- **Motorul:** D, E, F pornesc la prima rulare în care nu există în `b_banci`.
+- **Probele:** `motor/probe/zec-matematica.php` (33) și `zec-echivalenta.php`
+  (0 diferențe în 63 921 de semnale; băncile identice cu simularea pe ambele perioade).
+- **Pagina:** două grupuri de bănci; excepțiile au coloana „Banca”.
+
+Întrebările de la care s-a pornit:
 
 1. **Regulile pure.** `bot-reguli.php` are coșul și ponderile ca constante
    (`B_MONEDE`, `B_PROPORTIE`, `B_PONDERE_EXC`). Băncile noi cer aceste valori pe

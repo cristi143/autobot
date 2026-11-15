@@ -125,18 +125,20 @@ autobot/
 ├── .cpanel.yml          rețeta de deploy
 ├── CLAUDE.md · DEPLOY.md · README.md
 ├── docs/
-│   ├── plan-bot.md          sursa de adevăr pentru reguli
+│   ├── plan-bot.md          sursa de adevăr pentru reguli (A, B, C)
+│   ├── plan-bot-zec.md      băncile pe ZEC singur (D, E, F)
 │   └── plan-unealta.md      unealta manuală, retrasă (istoric)
 ├── baza-de-date/
 │   ├── migratii/2026-11-12-bot.sql       cele 8 tabele b_*
+│   ├── migratii/2026-11-15-banci-zec.sql coloana `banca` în b_exceptii (pentru D, E, F)
 │   ├── migratii/2026-09-19-unealta.sql   tabelele u_* (unealta retrasă, rămân în bază)
 │   ├── config.exemplu.php
 │   └── README.md            cum se pregătește baza
 ├── cercetare/           simularea din spatele regulilor (fără date)
 ├── motor/               → /home/marcelpa/autobot-motor/ (ÎN AFARA webului)
 │   ├── bot.php              motorul, din cron o dată pe oră
-│   ├── bot-reguli.php       regulile: funcții pure
-│   └── probe/               bot-matematica.php · bot-echivalenta.php
+│   ├── bot-reguli.php       regulile: funcții pure (b_* pentru A, B, C · z_* pentru D, E, F)
+│   └── probe/               bot-matematica.php · bot-echivalenta.php · zec-matematica.php · zec-echivalenta.php
 └── public/              → document root
     ├── index.html · bot.js · bot.css
     ├── api/             _comun.php · bot.php (doar citire)

@@ -8,7 +8,7 @@ o unealtă nouă, separată. Doar long.
 ## La începutul fiecărei sesiuni
 
 Citește **`docs/plan-bot.md`** — sursa de adevăr pentru reguli, de unde vin și cum
-se citesc rezultatele. Apoi **`DEPLOY.md`** (hosting, cronurile, capcanele cPanel).
+se citesc rezultatele — și **`docs/plan-bot-zec.md`** pentru băncile D, E, F. Apoi **`DEPLOY.md`** (hosting, cronurile, capcanele cPanel).
 
 ## Stare la 12 noiembrie 2026: CONSTRUIT, DE PORNIT
 
@@ -22,6 +22,14 @@ se citesc rezultatele. Apoi **`DEPLOY.md`** (hosting, cronurile, capcanele cPane
 | Bază de date | MySQL `marcelpa_autobot`, 8 tabele `b_*`; tabelele `u_*` ale uneltei vechi rămân, neatinse |
 | Bănci | A fix 50/50 · B fix + excepție · C pasivă — câte **1000 USDC** |
 | Migrație de rulat | `baza-de-date/migratii/2026-11-12-bot.sql` |
+
+**Din 15.11.2026: încă trei bănci, doar pe ZECUSDC** (`docs/plan-bot-zec.md`) —
+D 50/50 · E 30/70 · F 30/70 + excepție la 55%. Reguli în `z_pasOra` (același
+fișier, funcție separată), probe `motor/probe/zec-matematica.php` (33) și
+`zec-echivalenta.php`, migrație `2026-11-15-banci-zec.sql` (coloana `banca` în
+`b_exceptii`). Pornesc singure la prima oră de după migrație + deploy.
+Testate și picate pe ZEC și BTC, de nereluat: banda dinamică, semnalul altei
+monede, filtrul de volum, Fear & Greed. Excepția trece doar pe ZEC.
 
 Configurarea (parola bazei): `/home/marcelpa/autobot-config.php`, în afara zonei
 publice, niciodată în git.

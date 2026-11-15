@@ -247,3 +247,92 @@ function b_pornestePasiv(float $usdc, array $pret, float $comision, bool $farLev
     }
     return [$s, $tranz];
 }
+
+/* ==================== băncile pe o singură monedă (D, E, F) ==============
+ *
+ * Sursa de adevăr: ../docs/plan-bot-zec.md. Reproduc simularea din 15.11.2026
+ * (cercetare/zec_singur.py). Stau SEPARAT de b_pasOra, intenționat: băncile
+ * A, B, C sunt un test preînregistrat în curs, iar regulile lor nu se ating.
+ * Semnalul e același (b_evalueaza); diferă doar coșul și ponderile.
+ */
+
+const Z_MONEDA = 'ZECUSDC';
+/** Ponderea de bază în ZEC și, unde există, ponderea din timpul excepției. */
+const Z_BANCI = [
+    'D' => ['baza' => 0.50, 'exc' => null],
+    'E' => ['baza' => 0.30, 'exc' => null],
+    'F' => ['baza' => 0.30, 'exc' => 0.55],
+];
+
+/** Starea: ['usdc' => float, 'q' => float (ZEC), 'exc' => ['expira' => ?int ora, 'activa' => bool]] */
+function z_stareNoua(float $usdc): array {
+    return ['usdc' => $usdc, 'q' => 0.0, 'exc' => ['expira' => null, 'activa' => false]];
+}
+
+function z_valoare(array $s, float $pret): float {
+    return $s['usdc'] + $s['q'] * $pret;
+}
+
+/**
+ * O oră din viața unei bănci D, E sau F.
+ *
+ *  $ora     ora unix judecată
+ *  $semnal  semnalul de panică al orei pe ZEC (doar F îl folosește)
+ *  $pret    ['eval' => preț de evaluare, 'cump' => ask, 'vinde' => bid]
+ *           (în simulare toate trei sunt close-ul orei)
+ *  $comision pe o parte, ca fracție
+ *
+ * Fără levier: o cumpărare nu cheltuie mai mult USDC decât există.
+ * Întoarce [starea nouă, lista tranzacțiilor] — aceeași formă ca la b_pasOra.
+ */
+function z_pasOra(string $banca, array $s, int $ora, bool $semnal, array $pret, float $comision): array {
+    if (!isset(Z_BANCI[$banca])) { throw new InvalidArgumentException("z_pasOra: bancă necunoscută $banca"); }
+    $r = Z_BANCI[$banca];
+    $capital = z_valoare($s, $pret['eval']);      // capitalul de la începutul orei
+
+    // excepția: întâi expirarea, apoi pornirea — un semnal în chiar ora expirării
+    // e ignorat, ca în simulare (expira < ora, strict)
+    $eveniment = false; $motivEv = null;
+    if ($r['exc'] !== null) {
+        if ($s['exc']['activa'] && $s['exc']['expira'] <= $ora) {
+            $s['exc']['activa'] = false;
+            $eveniment = true;
+            $motivEv = 'excepția a expirat, înapoi la bază';
+        }
+        if (!$s['exc']['activa'] && ($s['exc']['expira'] === null || $s['exc']['expira'] < $ora) && $semnal) {
+            $s['exc']['activa'] = true;
+            $s['exc']['expira'] = $ora + B_DURATA_EXC;
+            $eveniment = true;
+            $motivEv = 'semnal de panică, excepție pe ' . B_DURATA_EXC . ' h';
+        }
+    }
+
+    $tinta = ($r['exc'] !== null && $s['exc']['activa']) ? $r['exc'] : $r['baza'];
+    $dif = $tinta * $capital - $s['q'] * $pret['eval'];
+    if (!b_trebuie($dif, $capital, $eveniment)) { return [$s, []]; }
+
+    $dq = $dif / $pret['eval'];
+    $limitat = false;
+    if ($dq > 0) {
+        $max = max(0.0, $s['usdc']) / ($pret['cump'] * (1 + $comision));
+        if ($dq > $max) { $dq = $max; $limitat = true; }
+        if ($dq * $pret['eval'] <= B_PRAG_ZERO) { return [$s, []]; }
+        $px = $pret['cump'];
+        $fee = $dq * $px * $comision;
+        $s['usdc'] -= $dq * $px + $fee;
+    } else {
+        $px = $pret['vinde'];
+        $fee = -$dq * $px * $comision;
+        $s['usdc'] += -$dq * $px - $fee;
+    }
+    $s['q'] += $dq;
+    return [$s, [[
+        'moneda'    => Z_MONEDA,
+        'cantitate' => $dq,
+        'pret'      => $px,
+        'comision'  => $fee,
+        'tinta'     => $tinta,
+        'motiv'     => ($motivEv ?? 'reechilibrare: abatere peste ' . (B_BANDA * 100) . '% din capital')
+                     . ($limitat ? ' (limitată la USDC disponibil)' : ''),
+    ]]];
+}

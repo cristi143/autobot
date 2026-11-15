@@ -5,6 +5,9 @@
  *   GET -> băncile, deținerile, semnalul pe fiecare monedă, excepțiile, deciziile,
  *          starea motorului
  *
+ * Două grupuri de bănci: „cos” (A, B, C — BTC+ETH+ZEC, docs/plan-bot.md) și
+ * „zec” (D, E, F — doar ZEC, docs/plan-bot-zec.md). Excepții au B și F.
+ *
  * Nu există nicio scriere: botul nu primește ordine de la pagină, altfel n-ar
  * mai fi testul unei reguli fixe (docs/plan-bot.md §7). Tot ce se schimbă,
  * schimbă motorul, din cron.
@@ -41,8 +44,9 @@ if ($ultimaOra) {
 
 /* ---- excepțiile ---- */
 $active = []; $inchise = [];
-foreach ($pdo->query("SELECT * FROM b_exceptii ORDER BY pornita_ora DESC, id DESC LIMIT 100") as $e) {
+foreach ($pdo->query("SELECT * FROM b_exceptii ORDER BY pornita_ora DESC, id DESC LIMIT 300") as $e) {
     $x = [
+        'banca'   => $e['banca'],
         'simbol'  => $e['simbol'],
         'pornita' => (int)$e['pornita_ora'],
         'expira'  => (int)$e['expira_ora'],
@@ -52,14 +56,18 @@ foreach ($pdo->query("SELECT * FROM b_exceptii ORDER BY pornita_ora DESC, id DES
     ];
     if ($x['inchisa'] === null) {
         $active[] = $x;
-        if (isset($semnal[$x['simbol']])) { $semnal[$x['simbol']]['exceptie_pana'] = $x['expira']; }
+        // `exceptie_pana` rămâne a băncii B, ca până acum; a băncii F e în lista `active`
+        if ($x['banca'] === 'B' && isset($semnal[$x['simbol']])) { $semnal[$x['simbol']]['exceptie_pana'] = $x['expira']; }
     } else {
         $x['rezultat_brut'] = $x['pret_inchidere'] / $x['pret_pornire'] - 1;
         $inchise[] = $x;
     }
 }
-$stat = $pdo->query("SELECT COUNT(*) AS n, AVG(pret_inchidere / pret_pornire - 1) AS medie
-                     FROM b_exceptii WHERE inchisa_ora IS NOT NULL")->fetch();
+$stat = [];
+foreach ($pdo->query("SELECT banca, COUNT(*) AS n, AVG(pret_inchidere / pret_pornire - 1) AS medie
+                      FROM b_exceptii WHERE inchisa_ora IS NOT NULL GROUP BY banca") as $r) {
+    $stat[$r['banca']] = ['numar' => (int)$r['n'], 'medie_bruta' => $r['medie'] === null ? null : (float)$r['medie']];
+}
 
 /* ---- băncile ---- */
 $banci = [];
@@ -88,6 +96,7 @@ foreach ($pdo->query("SELECT * FROM b_banci ORDER BY banca") as $b) {
     $total = array_sum($parti);
     $banci[] = [
         'banca'      => $id,
+        'grup'       => in_array($id, ['D', 'E', 'F'], true) ? 'zec' : 'cos',
         'initial'    => (float)$b['capital_initial'],
         'pornita'    => (int)$b['pornita_la'],
         'valoare'    => $valoare,
@@ -102,7 +111,7 @@ foreach ($pdo->query("SELECT * FROM b_banci ORDER BY banca") as $b) {
 
 /* ---- deciziile ---- */
 $tranz = [];
-foreach ($pdo->query("SELECT * FROM b_tranzactii ORDER BY id DESC LIMIT 60") as $t) {
+foreach ($pdo->query("SELECT * FROM b_tranzactii ORDER BY id DESC LIMIT 80") as $t) {
     $q = (float)$t['cantitate'];
     $tranz[] = [
         'banca'     => $t['banca'],
@@ -149,8 +158,7 @@ raspunde([
     'ultima_ora' => $ultimaOra,
     'banci'      => $banci,
     'semnal'     => $semnal,
-    'exceptii'   => ['active' => $active, 'inchise' => array_slice($inchise, 0, 30),
-                     'numar' => (int)$stat['n'], 'medie_bruta' => $stat['medie'] === null ? null : (float)$stat['medie']],
+    'exceptii'   => ['active' => $active, 'inchise' => array_slice($inchise, 0, 40), 'pe_banca' => $stat],
     'tranzactii' => $tranz,
     'cost_executie' => ['n' => (int)$cost['n'], 'medie' => $cost['medie'] === null ? null : (float)$cost['medie']],
     'motor'      => $motor,

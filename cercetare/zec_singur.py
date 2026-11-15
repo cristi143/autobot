@@ -145,6 +145,26 @@ for i in range(WARM, N - 24): ymean.setdefault(year(i), []).append(F24[i])
 ymean = {y: sum(v) / len(v) for y, v in ymean.items()}
 YR = [year(i) for i in range(N)]
 
+# ---- datele de referință pentru motor/probe/zec-echivalenta.php:
+#   pypy3 zec_singur.py ore.json fng.json ZECUSDT BTCUSDT --echiv <dosar>
+if len(sys.argv) > 6 and sys.argv[5] == '--echiv':
+    out = sys.argv[6]
+    with open(out + '/zec_echiv_ore.csv', 'w') as f:
+        f.write('ora,inchidere,semnal\n')
+        for i in range(N):
+            f.write('%d,%r,%s\n' % ((T0 + i * H) // H, C[i], '' if RANG[i] is None else int(SIGZ[i])))
+    ref = {'cost': K, 'banda': 0.05, 'perioade': {}}
+    for name, (a, b) in PER.items():
+        r = {}
+        for bk, w, up in (('D', 0.5, None), ('E', 0.3, None), ('F', 0.3, 0.25)):
+            if up is None: x = sim(a, b, w, None, 0.05); n = 0
+            else:
+                tgt, ev, n = exc_targets(a, b, SIGZ, w, up); x = sim(a, b, tgt, ev, 0.05)
+            r[bk] = {'final': x[0], 'cadere': x[2], 'tranzactii': x[4], 'exceptii': n}
+        ref['perioade'][name] = {'de_la': (T0 + a * H) // H, 'pana_la': (T0 + b * H) // H, 'banci': r}
+    json.dump(ref, open(out + '/zec_echiv_referinta.json', 'w'), indent=1)
+    print('scris în', out); sys.exit(0)
+
 NP = 200
 for name, (a, b) in PER.items():
     print('\n' + '=' * 78 + '\n' + name, '(%d ore)' % (b - a))

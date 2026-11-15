@@ -9,13 +9,17 @@
 
   /* Se schimbă LA FIECARE modificare din public/. `api/bot.php` o citește de pe
      disc, iar pagina compară: diferite = browserul rulează cod vechi din cache. */
-  var VERSIUNE = "2026-11-12-bot-1";
+  var VERSIUNE = "2026-11-15-zec-1";
 
   var REGULI = {
     A: "50% crypto (1/6 pe monedă), reechilibrare la abatere peste 5%",
     B: "ca A, plus excepția: după panică, moneda la 1/3 timp de 24 h",
-    C: "pasivă: o treime în fiecare monedă la pornire, apoi nimic"
+    C: "pasivă: o treime în fiecare monedă la pornire, apoi nimic",
+    D: "50% ZEC, 50% USDC, reechilibrare la abatere peste 5%",
+    E: "30% ZEC, 70% USDC, reechilibrare la abatere peste 5%",
+    F: "ca E, plus excepția: după panică pe ZEC, 55% timp de 24 h"
   };
+  var MONEDE_GRUP = { cos: ["BTCUSDC", "ETHUSDC", "ZECUSDC", "USDC"], zec: ["ZECUSDC", "USDC"] };
   var NUME = { BTCUSDC: "BTC", ETHUSDC: "ETH", ZECUSDC: "ZEC", USDC: "USDC" };
 
   var date = null;
@@ -109,16 +113,21 @@
   }
 
   function deseneazaBanci() {
-    var c = $("banci");
+    deseneazaGrup("cos", $("banci"), "Băncile pornesc la prima rulare a motorului.");
+    deseneazaGrup("zec", $("banci-zec"), "Băncile pe ZEC pornesc la prima rulare a motorului de după instalare.");
+  }
+
+  function deseneazaGrup(grup, c, textGol) {
     c.textContent = "";
-    if (!date.banci.length) {
-      c.appendChild(el("p", "mic", "Băncile pornesc la prima rulare a motorului."));
+    var banci = date.banci.filter(function (b) { return (b.grup || "cos") === grup; });
+    if (!banci.length) {
+      c.appendChild(el("p", "mic", textGol));
       return;
     }
-    var activ = {};
-    date.exceptii.active.forEach(function (x) { activ[x.simbol] = true; });
+    var activ = {};   // "B|ZECUSDC" -> excepție activă
+    date.exceptii.active.forEach(function (x) { activ[(x.banca || "B") + "|" + x.simbol] = true; });
 
-    date.banci.forEach(function (b) {
+    banci.forEach(function (b) {
       var k = el("div", "banca");
       var cap = el("div", "banca-cap");
       cap.appendChild(el("span", "banca-nume", "Banca " + b.banca));
@@ -131,12 +140,12 @@
                                          + " · de la " + cand(b.pornita)));
       if (b.ponderi) {
         var p = el("div", "ponderi");
-        ["BTCUSDC", "ETHUSDC", "ZECUSDC", "USDC"].forEach(function (s) {
+        MONEDE_GRUP[grup].forEach(function (s) {
           var w = b.ponderi[s] || 0;
           var rand = el("div", "pondere");
           rand.appendChild(el("span", "", NUME[s]));
           var bara = el("div", "bara-p" + (s === "USDC" ? " usdc" : "")
-                               + (b.banca === "B" && activ[s] ? " exc" : ""));
+                               + (activ[b.banca + "|" + s] ? " exc" : ""));
           var u = el("span"); u.style.width = Math.max(0, Math.min(100, w * 100)) + "%";
           bara.appendChild(u);
           rand.appendChild(bara);
@@ -174,7 +183,10 @@
       tr.appendChild(tdR);
       tr.appendChild(el("td", "nr " + clasa(s.r24), proc(s.r24, 1)));
       var stare;
-      if (s.exceptie_pana) stare = el("span", "stare-semnal", "excepție activă până la " + cand(s.exceptie_pana + 3600000));
+      var exc = date.exceptii.active.filter(function (x) { return x.simbol === m; })
+        .sort(function (a, b) { return (a.banca || "B") < (b.banca || "B") ? -1 : 1; })
+        .map(function (x) { return (x.banca || "B") + " până la " + cand(x.expira + 3600000); });
+      if (exc.length) stare = el("span", "stare-semnal", "excepție activă: " + exc.join(" · "));
       else if (s.semnal) stare = el("span", "stare-semnal", "SEMNAL");
       else stare = el("span", "mic", s.rang >= 0.8 ? "agitat, dar în creștere" : "liniștit");
       var tdS = el("td"); tdS.appendChild(stare); tr.appendChild(tdS);
@@ -208,16 +220,24 @@
 
   function deseneazaExceptii() {
     var e = date.exceptii;
-    $("exceptii-rezumat").textContent = e.numar
-      ? e.numar + " excepții încheiate; moneda a făcut în medie " + proc(e.medie_bruta)
-        + " în cele 24 h (brut, înainte de comision). Din testul istoric: aproximativ +0,4%, "
-        + "cu o marjă de eroare mai mare decât efectul — câteva zeci de excepții nu spun încă nimic."
+    var pb = e.pe_banca || {};
+    var parti = [];
+    ["B", "F"].forEach(function (b) {
+      if (pb[b] && pb[b].numar) {
+        parti.push("Banca " + b + ": " + pb[b].numar + " excepții încheiate, moneda a făcut în medie "
+                   + proc(pb[b].medie_bruta) + " în cele 24 h.");
+      }
+    });
+    $("exceptii-rezumat").textContent = parti.length
+      ? parti.join(" ") + " Brut, înainte de comision. Din testele istorice: aproximativ +0,4% pe coș "
+        + "și +1,1% pe ZEC, cu o marjă de eroare mai mare decât efectul — câteva zeci de excepții nu spun încă nimic."
       : "";
     var t = $("exceptii");
     if (!e.inchise.length) return;
     t.textContent = "";
     e.inchise.forEach(function (x) {
       var tr = el("tr");
+      tr.appendChild(el("td", "", x.banca || "B"));
       tr.appendChild(el("td", "", NUME[x.simbol]));
       tr.appendChild(el("td", "cand", oraInchiderii(x.pornita)));
       tr.appendChild(el("td", "cand", oraInchiderii(x.inchisa)));

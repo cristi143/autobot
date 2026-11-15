@@ -10,6 +10,12 @@ date istorice 2019–2026. Trei bănci de câte 1000 USDC fictivi:
 - **B** — ca A, plus excepția după panică: moneda la 1/3 timp de 24 h
 - **C** — pasivă, etalonul
 
+Și trei bănci doar pe ZEC, pornite pe 15.11.2026 ([docs/plan-bot-zec.md](docs/plan-bot-zec.md)):
+
+- **D** — 50% ZEC, reechilibrare la abatere peste 5%
+- **E** — 30% ZEC, aceeași bandă
+- **F** — ca E, plus excepția după panică: ZEC la 55% timp de 24 h
+
 Nu trimite ordine reale, nu are chei API, nu primește comenzi de la pagină.
 
 - Regulile, întregi, și de unde vin: **[docs/plan-bot.md](docs/plan-bot.md)**
@@ -21,6 +27,8 @@ Nu trimite ordine reale, nu are chei API, nu primește comenzi de la pagină.
 ```bash
 php motor/probe/bot-matematica.php                 # 50 de probe, fără bază de date
 php motor/probe/bot-echivalenta.php <dosar>        # regulile față de simularea din Python
+php motor/probe/zec-matematica.php                 # 33 de probe pentru D, E, F
+php motor/probe/zec-echivalenta.php <dosar>        # D, E, F față de cercetare/zec_singur.py
 ```
 
 Proba de echivalență cere datele de referință generate de simulare (nu sunt în
