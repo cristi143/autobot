@@ -1,0 +1,161 @@
+ore 64665 goluri completate 44 44
+
+==============================================================================
+antrenare 2019-08..2022-12 (29975 ore)
+ZEC ținut simplu              555  CAGR  -15.8%  cădere 90.7%  Calmar -0.17  tranz    1  exp 1.00
+
+--- w = 0.50
+BAZA bandă 5pp               1503  CAGR  +12.7%  cădere 59.8%  Calmar  0.21  tranz  114  exp 0.50
+T2 bandă  2.5pp              1416  CAGR  +10.7%  cădere 60.9%  Calmar  0.18  tranz  360  exp 0.50
+T2 bandă 10.0pp              1675  CAGR  +16.3%  cădere 57.3%  Calmar  0.28  tranz   35  exp 0.50
+T2 bandă 15.0pp              1667  CAGR  +16.1%  cădere 61.2%  Calmar  0.26  tranz   15  exp 0.50
+T2 bandă după volat.         1418  CAGR  +10.7%  cădere 61.3%  Calmar  0.18  tranz  102  exp 0.50
+T4 excepție ZEC              1665  CAGR  +16.1%  cădere 62.8%  Calmar  0.26  tranz  534  exp 0.55  n=241
+   aceeași expunere fixă:     1424  CAGR  +10.9%  cădere 64.4%  Calmar  0.17  tranz  109  exp 0.55
+   placebo: final median 1152 | strategia peste 96% din placebo (final), 98% (Calmar)
+T5 excepție la BTC           1247  CAGR   +6.7%  cădere 66.9%  Calmar  0.10  tranz  491  exp 0.55  n=223
+   aceeași expunere fixă:     1443  CAGR  +11.3%  cădere 64.2%  Calmar  0.18  tranz  111  exp 0.55
+   placebo: final median 1131 | strategia peste 66% din placebo (final), 66% (Calmar)
+T6 doar volum mare           1628  CAGR  +15.3%  cădere 67.1%  Calmar  0.23  tranz  380  exp 0.53  n=158
+   aceeași expunere fixă:     1412  CAGR  +10.6%  cădere 64.2%  Calmar  0.17  tranz  107  exp 0.53
+   placebo: final median 1194 | strategia peste 95% din placebo (final), 95% (Calmar)
+T6 doar volum normal         1152  CAGR   +4.2%  cădere 62.1%  Calmar  0.07  tranz  346  exp 0.53  n=137
+   aceeași expunere fixă:     1415  CAGR  +10.7%  cădere 64.0%  Calmar  0.17  tranz  107  exp 0.53
+   placebo: final median 1269 | strategia peste 31% din placebo (final), 32% (Calmar)
+T7 F1 (frică ≤25)            1074  CAGR   +2.1%  cădere 70.8%  Calmar  0.03  tranz  201  exp 0.57
+   aceeași expunere fixă:     1367  CAGR   +9.6%  cădere 66.8%  Calmar  0.14  tranz  103  exp 0.57
+   placebo: final median 1348 | strategia peste 14% din placebo (final), 14% (Calmar)
+T7 F2 (+lăcomie ≥75)          856  CAGR   -4.4%  cădere 72.3%  Calmar -0.06  tranz  231  exp 0.54
+   aceeași expunere fixă:     1408  CAGR  +10.5%  cădere 64.5%  Calmar  0.16  tranz  107  exp 0.54
+   placebo: final median 1418 | strategia peste 5% din placebo (final), 5% (Calmar)
+
+--- w = 0.30
+BAZA bandă 5pp               1458  CAGR  +11.7%  cădere 40.7%  Calmar  0.29  tranz   76  exp 0.30
+T2 bandă  2.5pp              1467  CAGR  +11.9%  cădere 40.5%  Calmar  0.29  tranz  276  exp 0.30
+T2 bandă 10.0pp              1359  CAGR   +9.4%  cădere 41.0%  Calmar  0.23  tranz   18  exp 0.29
+T2 bandă 15.0pp              1811  CAGR  +19.0%  cădere 34.9%  Calmar  0.54  tranz   13  exp 0.29
+T2 bandă după volat.         1404  CAGR  +10.4%  cădere 40.4%  Calmar  0.26  tranz   80  exp 0.30
+T4 excepție ZEC              1871  CAGR  +20.1%  cădere 41.1%  Calmar  0.49  tranz  528  exp 0.35  n=241
+   aceeași expunere fixă:     1471  CAGR  +12.0%  cădere 47.3%  Calmar  0.25  tranz   87  exp 0.35
+   placebo: final median 1244 | strategia peste 98% din placebo (final), 99% (Calmar)
+T5 excepție la BTC           1403  CAGR  +10.4%  cădere 48.7%  Calmar  0.21  tranz  487  exp 0.35  n=223
+   aceeași expunere fixă:     1459  CAGR  +11.7%  cădere 46.8%  Calmar  0.25  tranz   85  exp 0.35
+   placebo: final median 1228 | strategia peste 78% din placebo (final), 76% (Calmar)
+T6 doar volum mare           1773  CAGR  +18.2%  cădere 49.8%  Calmar  0.37  tranz  366  exp 0.33  n=158
+   aceeași expunere fixă:     1487  CAGR  +12.3%  cădere 45.1%  Calmar  0.27  tranz   85  exp 0.33
+   placebo: final median 1253 | strategia peste 98% din placebo (final), 94% (Calmar)
+T6 doar volum normal         1178  CAGR   +4.9%  cădere 42.7%  Calmar  0.12  tranz  328  exp 0.33  n=137
+   aceeași expunere fixă:     1486  CAGR  +12.3%  cădere 45.0%  Calmar  0.27  tranz   85  exp 0.33
+   placebo: final median 1332 | strategia peste 24% din placebo (final), 28% (Calmar)
+T7 F1 (frică ≤25)            1186  CAGR   +5.1%  cădere 52.9%  Calmar  0.10  tranz  200  exp 0.37
+   aceeași expunere fixă:     1483  CAGR  +12.2%  cădere 49.4%  Calmar  0.25  tranz   90  exp 0.37
+   placebo: final median 1418 | strategia peste 17% din placebo (final), 17% (Calmar)
+T7 F2 (+lăcomie ≥75)          936  CAGR   -1.9%  cădere 56.0%  Calmar -0.03  tranz  232  exp 0.34
+   aceeași expunere fixă:     1479  CAGR  +12.1%  cădere 45.8%  Calmar  0.26  tranz   85  exp 0.34
+   placebo: final median 1476 | strategia peste 7% din placebo (final), 8% (Calmar)
+
+--- studii de eveniment (randament ZEC pe 24h după, exces față de media anului)
+  T5a semnal BTC                     ore  3226 zile  309  brut +0.82%  exces +0.98%  t +2.53
+  T5a semnal BTC, fără semnal ZEC    ore  1523 zile  224  brut +0.27%  exces +0.14%  t +0.28
+      semnal ZEC (referință)         ore  3171 zile  330  brut +1.13%  exces +1.55%  t +4.49
+  T6a panică ZEC, volum mare         ore  1815 zile  216  brut +1.68%  exces +1.80%  t +4.24
+  T6a panică ZEC, volum normal       ore  1356 zile  178  brut +0.40%  exces +0.16%  t +0.32
+  T6a diferența mare − normal: +1.63%  t +2.48
+--- T7a: randament ZEC pe 7 zile după, pe grupe de Fear & Greed (o observație pe zi)
+  toate zilele: 1249, medie +1.03%
+  ≤25    zile  365  medie  -0.24%  exces  -1.27%  t≈ -0.63 (corectat pt. suprapunere)
+  26–45  zile  408  medie  -0.53%  exces  -1.56%  t≈ -0.76 (corectat pt. suprapunere)
+  46–54  zile  121  medie  +1.63%  exces  +0.60%  t≈ +0.15 (corectat pt. suprapunere)
+  55–74  zile  169  medie  +3.61%  exces  +2.59%  t≈ +0.87 (corectat pt. suprapunere)
+  ≥75    zile  186  medie  +4.20%  exces  +3.17%  t≈ +0.75 (corectat pt. suprapunere)
+
+==============================================================================
+test 2023-01..2026-11 (33945 ore)
+ZEC ținut simplu            24163  CAGR +127.6%  cădere 73.2%  Calmar  1.74  tranz    1  exp 1.00
+
+--- w = 0.50
+BAZA bandă 5pp               9101  CAGR  +76.9%  cădere 44.3%  Calmar  1.73  tranz  105  exp 0.50
+T2 bandă  2.5pp              9010  CAGR  +76.4%  cădere 44.3%  Calmar  1.73  tranz  352  exp 0.50
+T2 bandă 10.0pp              8514  CAGR  +73.9%  cădere 43.2%  Calmar  1.71  tranz   25  exp 0.51
+T2 bandă 15.0pp              8652  CAGR  +74.6%  cădere 45.3%  Calmar  1.65  tranz   12  exp 0.49
+T2 bandă după volat.         9904  CAGR  +80.8%  cădere 44.9%  Calmar  1.80  tranz  115  exp 0.50
+T4 excepție ZEC             15580  CAGR +103.2%  cădere 47.8%  Calmar  2.16  tranz  618  exp 0.55  n=284
+   aceeași expunere fixă:    11358  CAGR  +87.3%  cădere 46.7%  Calmar  1.87  tranz  112  exp 0.55
+   placebo: final median 8891 | strategia peste 100% din placebo (final), 100% (Calmar)
+T5 excepție la BTC          11099  CAGR  +86.2%  cădere 55.1%  Calmar  1.56  tranz  565  exp 0.55  n=259
+   aceeași expunere fixă:    11219  CAGR  +86.7%  cădere 46.4%  Calmar  1.87  tranz  112  exp 0.55
+   placebo: final median 8848 | strategia peste 90% din placebo (final), 61% (Calmar)
+T6 doar volum mare          13975  CAGR  +97.6%  cădere 43.8%  Calmar  2.23  tranz  405  exp 0.53  n=167
+   aceeași expunere fixă:    10541  CAGR  +83.7%  cădere 45.1%  Calmar  1.86  tranz  112  exp 0.53
+   placebo: final median 8972 | strategia peste 99% din placebo (final), 100% (Calmar)
+T6 doar volum normal        11848  CAGR  +89.3%  cădere 47.1%  Calmar  1.90  tranz  419  exp 0.53  n=175
+   aceeași expunere fixă:    10702  CAGR  +84.4%  cădere 45.4%  Calmar  1.86  tranz  112  exp 0.54
+   placebo: final median 9026 | strategia peste 92% din placebo (final), 88% (Calmar)
+T7 F1 (frică ≤25)            9920  CAGR  +80.9%  cădere 55.6%  Calmar  1.45  tranz  160  exp 0.54
+   aceeași expunere fixă:    10847  CAGR  +85.1%  cădere 45.7%  Calmar  1.86  tranz  112  exp 0.54
+   placebo: final median 10118 | strategia peste 48% din placebo (final), 22% (Calmar)
+T7 F2 (+lăcomie ≥75)        11344  CAGR  +87.2%  cădere 55.6%  Calmar  1.57  tranz  206  exp 0.52
+   aceeași expunere fixă:     9789  CAGR  +80.2%  cădere 44.3%  Calmar  1.81  tranz  106  exp 0.52
+   placebo: final median 9300 | strategia peste 72% din placebo (final), 48% (Calmar)
+
+--- w = 0.30
+BAZA bandă 5pp               4294  CAGR  +45.7%  cădere 27.5%  Calmar  1.66  tranz   73  exp 0.30
+T2 bandă  2.5pp              4333  CAGR  +46.0%  cădere 27.9%  Calmar  1.65  tranz  269  exp 0.30
+T2 bandă 10.0pp              4890  CAGR  +50.7%  cădere 28.0%  Calmar  1.81  tranz   24  exp 0.30
+T2 bandă 15.0pp              4281  CAGR  +45.6%  cădere 30.5%  Calmar  1.49  tranz    9  exp 0.28
+T2 bandă după volat.         4635  CAGR  +48.6%  cădere 28.8%  Calmar  1.69  tranz   86  exp 0.30
+T4 excepție ZEC              8278  CAGR  +72.6%  cădere 32.7%  Calmar  2.22  tranz  611  exp 0.35  n=284
+   aceeași expunere fixă:     5298  CAGR  +53.8%  cădere 31.8%  Calmar  1.69  tranz   87  exp 0.35
+   placebo: final median 4406 | strategia peste 100% din placebo (final), 100% (Calmar)
+T5 excepție la BTC           5892  CAGR  +58.1%  cădere 41.9%  Calmar  1.39  tranz  560  exp 0.35  n=259
+   aceeași expunere fixă:     5032  CAGR  +51.8%  cădere 31.5%  Calmar  1.65  tranz   78  exp 0.35
+   placebo: final median 4418 | strategia peste 94% din placebo (final), 68% (Calmar)
+T6 doar volum mare           7125  CAGR  +66.0%  cădere 33.5%  Calmar  1.97  tranz  388  exp 0.33  n=167
+   aceeași expunere fixă:     4635  CAGR  +48.6%  cădere 31.8%  Calmar  1.53  tranz   74  exp 0.33
+   placebo: final median 4425 | strategia peste 100% din placebo (final), 97% (Calmar)
+T6 doar volum normal         6042  CAGR  +59.1%  cădere 32.5%  Calmar  1.82  tranz  408  exp 0.33  n=175
+   aceeași expunere fixă:     4478  CAGR  +47.3%  cădere 32.0%  Calmar  1.48  tranz   67  exp 0.33
+   placebo: final median 4408 | strategia peste 94% din placebo (final), 92% (Calmar)
+T7 F1 (frică ≤25)            5379  CAGR  +54.4%  cădere 41.7%  Calmar  1.30  tranz  161  exp 0.34
+   aceeași expunere fixă:     4832  CAGR  +50.2%  cădere 30.8%  Calmar  1.63  tranz   76  exp 0.34
+   placebo: final median 4976 | strategia peste 56% din placebo (final), 34% (Calmar)
+T7 F2 (+lăcomie ≥75)         5842  CAGR  +57.7%  cădere 41.7%  Calmar  1.38  tranz  203  exp 0.32
+   aceeași expunere fixă:     4775  CAGR  +49.7%  cădere 29.6%  Calmar  1.68  tranz   82  exp 0.32
+   placebo: final median 4601 | strategia peste 76% din placebo (final), 58% (Calmar)
+
+--- studii de eveniment (randament ZEC pe 24h după, exces față de media anului)
+  T5a semnal BTC                     ore  3519 zile  359  brut +1.38%  exces +0.91%  t +2.81
+  T5a semnal BTC, fără semnal ZEC    ore  2011 zile  281  brut +1.07%  exces +0.31%  t +0.90
+      semnal ZEC (referință)         ore  3564 zile  388  brut +1.22%  exces +1.30%  t +3.72
+  T6a panică ZEC, volum mare         ore  1928 zile  234  brut +1.56%  exces +1.41%  t +2.73
+  T6a panică ZEC, volum normal       ore  1636 zile  231  brut +0.82%  exces +0.71%  t +1.96
+  T6a diferența mare − normal: +0.70%  t +1.12
+--- T7a: randament ZEC pe 7 zile după, pe grupe de Fear & Greed (o observație pe zi)
+  toate zilele: 1408, medie +3.00%
+  ≤25    zile  215  medie  +1.81%  exces  -1.19%  t≈ -0.37 (corectat pt. suprapunere)
+  26–45  zile  273  medie  +8.08%  exces  +5.08%  t≈ +1.23 (corectat pt. suprapunere)
+  46–54  zile  277  medie  +2.82%  exces  -0.18%  t≈ -0.07 (corectat pt. suprapunere)
+  55–74  zile  522  medie  +1.64%  exces  -1.35%  t≈ -0.83 (corectat pt. suprapunere)
+  ≥75    zile  121  medie  -0.09%  exces  -3.09%  t≈ -0.76 (corectat pt. suprapunere)
+
+==============================================================================
+Pe ani (fiecare an de la 1000): randament / cădere
+w = 0.50   an | ZEC simplu | baza | T4 excepție | T6 volum mare | n exc | brut mediu/exc
+        2019 |   -59.0% / 63% |   -31.9% / 36% |   -36.1% / 41% |   -34.7% / 39% |  28 | -0.15%
+        2020 |  +132.7% / 73% |   +81.2% / 46% |   +67.7% / 54% |   +87.4% / 50% |  67 | +0.12%
+        2021 |  +126.5% / 77% |  +106.1% / 48% |  +159.1% / 54% |  +169.4% / 50% |  73 | +2.21%
+        2022 |   -74.9% / 84% |   -41.2% / 55% |   -40.6% / 57% |   -51.2% / 62% |  73 | +0.76%
+        2023 |   -27.7% / 54% |   -10.6% / 31% |    -5.4% / 31% |    -8.2% / 31% |  87 | +0.65%
+        2024 |  +107.1% / 54% |   +65.6% / 31% |  +101.8% / 33% |   +85.2% / 32% |  73 | +1.61%
+        2025 |  +800.8% / 58% |  +293.3% / 34% |  +446.7% / 36% |  +449.3% / 36% |  65 | +3.03%
+        2026 |   +76.1% / 64% |   +58.1% / 37% |   +48.4% / 43% |   +50.3% / 43% |  60 | +0.31%
+w = 0.30   an | ZEC simplu | baza | T4 excepție | T6 volum mare | n exc | brut mediu/exc
+        2019 |   -59.0% / 63% |   -21.7% / 24% |   -23.5% / 28% |   -21.7% / 26% |  28 | -0.15%
+        2020 |  +132.7% / 73% |   +53.5% / 29% |   +39.7% / 40% |   +54.5% / 35% |  67 | +0.12%
+        2021 |  +126.5% / 77% |   +66.5% / 29% |  +122.2% / 40% |  +128.4% / 33% |  73 | +2.21%
+        2022 |   -74.9% / 84% |   -26.2% / 38% |   -21.8% / 38% |   -36.7% / 46% |  73 | +0.76%
+        2023 |   -27.7% / 54% |    -7.5% / 20% |    +0.8% / 20% |    -2.3% / 20% |  87 | +0.65%
+        2024 |  +107.1% / 54% |   +42.2% / 19% |   +73.8% / 24% |   +57.4% / 20% |  73 | +1.61%
+        2025 |  +800.8% / 58% |  +142.6% / 21% |  +260.3% / 24% |  +253.7% / 25% |  65 | +3.03%
+        2026 |   +76.1% / 64% |   +35.9% / 24% |   +31.1% / 33% |   +32.6% / 34% |  60 | +0.31%
+T6a total 2019–2026: mare − normal +1.13%  t +2.50

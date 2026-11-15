@@ -21,3 +21,25 @@ php ../motor/probe/bot-echivalenta.php .
 ```
 
 Prima rulare agregă lumânările de 1m pe ore în `hourly/` (câteva minute).
+
+## Botul doar pe ZEC (15.11.2026)
+
+Testele din spatele `docs/plan-bot-zec.md`. Datele vin direct de la Binance (ore,
+cu volum) și de la alternative.me (Fear & Greed), nu din `historical_data/`.
+
+| Fișier | Ce e |
+|---|---|
+| `PREINREGISTRARE_zec_singur.md` | regulile celor cinci teste, scrise înainte de rulare; adaosul pentru BTC |
+| `zec_singur_date.py` | descarcă orele ZEC, BTC, ETH din 07.2019 într-un JSON |
+| `zec_singur.py` | baza 50/50 și 30/70, banda, excepția, semnalul extern, volumul, Fear & Greed |
+| `zec_singur_ZEC.out` · `zec_singur_BTC.out` | rezultatele rulării din 15.11.2026 |
+
+```bash
+python3 zec_singur_date.py ore.json
+curl -s 'https://api.alternative.me/fng/?limit=0&format=json' -o fng.json
+pypy3 zec_singur.py ore.json fng.json ZECUSDT BTCUSDT   # moneda testată, semnalul extern
+pypy3 zec_singur.py ore.json fng.json BTCUSDT ETHUSDT
+```
+
+Etichetele din ieșire spun „ZEC” pentru moneda testată și „BTC” pentru semnalul
+extern, oricare ar fi ele — în `zec_singur_BTC.out` se citesc BTC și ETH.
