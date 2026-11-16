@@ -1,0 +1,42 @@
+BTCUSDT: minute 3746880, completate 3090, până la 2026-08-14
+ore judecate 61677, evenimente 14712 (23.9%), aruncate (ambele niveluri în același minut) 6
+
+=== antrenare 2019-08..2022-12 ===
+  volatil: 1157 evenimente, ATR mediu 1.59% din preț
+    m=1  continuare prima 48.2% (t -2.09; prag de rentabilitate 57.9%)  timp 6, ambele 0
+         brut continuare -0.091% (t -2.85) · net continuare -0.341% (t -7.28) · net întoarcere -0.159% (t -1.58)
+    m=2  continuare prima 48.9% (t -2.83; prag de rentabilitate 53.9%)  timp 202, ambele 0
+         brut continuare -0.144% (t -3.46) · net continuare -0.394% (t -5.97) · net întoarcere -0.106% (t +0.94)
+  mijloc: 1722 evenimente, ATR mediu 1.05% din preț
+    m=1  continuare prima 48.6% (t -1.70; prag de rentabilitate 61.9%)  timp 2, ambele 2
+         brut continuare -0.063% (t -2.39) · net continuare -0.314% (t -9.79) · net întoarcere -0.188% (t -5.00)
+    m=2  continuare prima 47.6% (t -2.89; prag de rentabilitate 56.0%)  timp 176, ambele 0
+         brut continuare -0.153% (t -3.24) · net continuare -0.403% (t -7.18) · net întoarcere -0.097% (t -0.70)
+  liniștit: 3730 evenimente, ATR mediu 0.74% din preț
+    m=1  continuare prima 52.1% (t +3.88; prag de rentabilitate 66.9%)  timp 2, ambele 1
+         brut continuare +0.035% (t +3.85) · net continuare -0.216% (t -10.35) · net întoarcere -0.285% (t -18.05)
+    m=2  continuare prima 52.5% (t +2.73; prag de rentabilitate 58.4%)  timp 183, ambele 0
+         brut continuare +0.070% (t +2.96) · net continuare -0.180% (t -4.13) · net întoarcere -0.320% (t -10.04)
+
+=== test 2023-01..sfârșit ===
+  volatil: 1454 evenimente, ATR mediu 0.92% din preț
+    m=1  continuare prima 50.1% (t -0.83; prag de rentabilitate 63.6%)  timp 8, ambele 1
+         brut continuare -0.012% (t -1.39) · net continuare -0.262% (t -10.43) · net întoarcere -0.239% (t -7.66)
+    m=2  continuare prima 52.0% (t -0.37; prag de rentabilitate 56.8%)  timp 173, ambele 0
+         brut continuare +0.028% (t -0.79) · net continuare -0.222% (t -5.62) · net întoarcere -0.278% (t -4.04)
+  mijloc: 2073 evenimente, ATR mediu 0.67% din preț
+    m=1  continuare prima 50.2% (t -0.17; prag de rentabilitate 68.8%)  timp 9, ambele 0
+         brut continuare -0.002% (t +0.02) · net continuare -0.252% (t -13.48) · net întoarcere -0.248% (t -13.51)
+    m=2  continuare prima 48.6% (t -2.17; prag de rentabilitate 59.4%)  timp 205, ambele 0
+         brut continuare -0.048% (t -1.31) · net continuare -0.298% (t -8.30) · net întoarcere -0.202% (t -5.69)
+  liniștit: 4576 evenimente, ATR mediu 0.45% din preț
+    m=1  continuare prima 52.4% (t +4.35; prag de rentabilitate 77.7%)  timp 5, ambele 0
+         brut continuare +0.019% (t +4.48) · net continuare -0.231% (t -20.23) · net întoarcere -0.269% (t -29.18)
+    m=2  continuare prima 52.1% (t +2.17; prag de rentabilitate 63.8%)  timp 177, ambele 0
+         brut continuare +0.036% (t +3.02) · net continuare -0.214% (t -9.20) · net întoarcere -0.286% (t -15.24)
+
+=== criteriul ===
+  C: continuare în regim volatil, m=1: antrenare -0.341% (t -7.28), test -0.262% (t -10.43) -> PICĂ
+     abatere brută de la 50%: antrenare 48.2% (t -2.09), test 50.1% (t -0.83) -> nu
+  I: întoarcere în regim liniștit, m=1: antrenare -0.285% (t -18.05), test -0.269% (t -29.18) -> PICĂ
+     abatere brută de la 50%: antrenare 52.1% (t +3.88), test 52.4% (t +4.35) -> există

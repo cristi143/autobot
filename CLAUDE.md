@@ -32,6 +32,8 @@ Testate și picate pe ZEC și BTC, de nereluat: banda dinamică, semnalul altei
 monede, filtrul de volum, Fear & Greed. Excepția trece doar pe ZEC.
 Tot de nereluat: execuția cu ordine limită pentru F (16.11.2026) — economie
 +0,06% ± 0,06% pe parte, t ≈ 1; vezi `cercetare/README.md`.
+La fel: spargerea de 1 ATR pe regimuri de volatilitate (continuare/întoarcere,
+TP și SL în ATR) — frecvențe 47–52,5%, mult sub pragul de cost.
 
 Configurarea (parola bazei): `/home/marcelpa/autobot-config.php`, în afara zonei
 publice, niciodată în git.

@@ -65,3 +65,27 @@ criteriul cerea t ≥ 2. Pe toate orele economia e de ~0,01% pe parte. La pornir
 excepției (cumpărarea din panică) ordinul limită iese chiar puțin mai scump decât
 piața. Costul la piață reconstruit (0,046%) se potrivește cu cel măsurat live
 (0,048%). Execuția rămâne la piață.
+
+## După 1 ATR: continuare sau întoarcere, pe regimuri (16.11.2026)
+
+Studiu de eveniment pe lumânări de 1m, ZECUSDT și BTCUSDT, 2019–2026: după ce
+prețul se mișcă 1 ATR față de închiderea orei, atinge întâi +m·ATR sau −m·ATR?
+Separat pe ore volatile și liniștite.
+
+| Fișier | Ce e |
+|---|---|
+| `PREINREGISTRARE_atr_regim.md` | definițiile și criteriul, scrise înainte de rulare |
+| `atr_regim.py` | simularea |
+| `atr_regim_ZEC.out` · `atr_regim_BTC.out` | rezultatele rulării din 16.11.2026 |
+
+```bash
+pypy3 atr_regim.py ../../historical_data/ZECUSDT 2026-11-09
+pypy3 atr_regim.py ../../historical_data/BTCUSDT 2026-08-14
+```
+
+**Rezultat: ambele ipoteze pică, pe ambele monede.** Frecvența continuării e între
+47% și 52,5% peste tot; pragul de rentabilitate la cost 0,25% e între 52% și 78%.
+Net, −0,2…−0,4% pe tranzacție, oricare ar fi direcția. Semnul abaterii e invers
+față de ipoteză: în ore volatile mișcarea se întoarce puțin mai des (ZEC test 47%),
+în ore liniștite continuă puțin mai des (BTC 52%, t ≈ 4 în ambele perioade) —
+efect real pe BTC, de ~0,02–0,04% brut, de zece ori sub cost.
