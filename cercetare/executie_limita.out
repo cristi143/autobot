@@ -1,0 +1,67 @@
+închideri orare: 8912, din 05.11.2025 08:00, goluri completate 0
+decizii: 01.01.2026 00:00 -> 09.11.2026 22:00 (7511 ore), semnale 606
+ticks citite: 20252280; instantanee fără bid<ask (înlocuite cu ultimul preț): 0
+
+=== tranzacțiile băncii F (execuție la piață) ===
+  alegere 01.01-31.05     72  (pornire 32, expirare 32, reechilibrare 8)
+  judecată 01.06-09.11    54  (pornire 24, expirare 23, reechilibrare 7)
+  tot                    126  (pornire 56, expirare 55, reechilibrare 15)
+
+=== verificarea modelului: costul la piață, fără comision ===
+  pe tranzacțiile lui F: +0.0460% ± +0.0342% (n=126)   live: +0.0480%
+  jumătatea spreadului reconstruit, toate orele: medie +0.0381%, mediană +0.0274%
+  model în limite
+
+=== economia pe parte, pe tranzacțiile lui F (piață minus limită) ===
+  alegere 01.01-31.05
+    P1 W= 5  +0.0017% ± +0.0276%  t +0.06  executate ca limită  85%   [cu comision 0%: +0.0653%]
+    P1 W=15  +0.0008% ± +0.0367%  t +0.02  executate ca limită  90%   [cu comision 0%: +0.0685%]
+    P1 W=60  +0.0336% ± +0.0333%  t +1.01  executate ca limită  96%   [cu comision 0%: +0.1055%]
+    P2 W= 5  +0.0326% ± +0.0317%  t +1.03  executate ca limită  72%   [cu comision 0%: +0.0867%]
+    P2 W=15  +0.0488% ± +0.0439%  t +1.11  executate ca limită  82%   [cu comision 0%: +0.1102%]
+    P2 W=60  +0.0335% ± +0.0496%  t +0.68  executate ca limită  89%   [cu comision 0%: +0.1002%]
+  judecată 01.06-09.11
+    P1 W= 5  +0.0118% ± +0.0409%  t +0.29  executate ca limită  89%   [cu comision 0%: +0.0785%]
+    P1 W=15  -0.0189% ± +0.0523%  t -0.36  executate ca limită  91%   [cu comision 0%: +0.0491%]
+    P1 W=60  -0.0313% ± +0.0870%  t -0.36  executate ca limită  94%   [cu comision 0%: +0.0395%]
+    P2 W= 5  +0.0513% ± +0.0522%  t +0.98  executate ca limită  80%   [cu comision 0%: +0.1110%]
+    P2 W=15  +0.0594% ± +0.0612%  t +0.97  executate ca limită  87%   [cu comision 0%: +0.1246%]
+    P2 W=60  +0.0219% ± +0.0984%  t +0.22  executate ca limită  91%   [cu comision 0%: +0.0899%]
+  tot
+    P1 W= 5  +0.0061% ± +0.0235%  t +0.26  executate ca limită  87%   [cu comision 0%: +0.0710%]
+    P1 W=15  -0.0077% ± +0.0306%  t -0.25  executate ca limită  90%   [cu comision 0%: +0.0602%]
+    P1 W=60  +0.0058% ± +0.0417%  t +0.14  executate ca limită  95%   [cu comision 0%: +0.0772%]
+    P2 W= 5  +0.0406% ± +0.0287%  t +1.42  executate ca limită  75%   [cu comision 0%: +0.0971%]
+    P2 W=15  +0.0533% ± +0.0362%  t +1.47  executate ca limită  84%   [cu comision 0%: +0.1164%]
+    P2 W=60  +0.0285% ± +0.0506%  t +0.56  executate ca limită  90%   [cu comision 0%: +0.0958%]
+
+varianta reținută pe perioada de alegere: P2, W=15 min
+
+=== executate ca limită, pe feluri (varianta reținută, tot anul) ===
+  pornire        n= 56  executate  80%  economie -0.0278% ± +0.0733%
+  expirare       n= 55  executate  87%  economie +0.0956% ± +0.0285%
+  reechilibrare  n= 15  executate  87%  economie +0.2011% ± +0.0621%
+
+=== capitalul băncii F ===
+  piață                              alegere ×1.0893   judecată ×1.4758   tot ×1.6075
+  P1 W=5                             alegere ×1.0885   judecată ×1.4749   tot ×1.6054
+  P1 W=15                            alegere ×1.0883   judecată ×1.4685   tot ×1.5981
+  P1 W=60                            alegere ×1.0954   judecată ×1.4656   tot ×1.6054
+  P2 W=5                             alegere ×1.0938   judecată ×1.4845   tot ×1.6239
+  P2 W=15                            alegere ×1.0955   judecată ×1.4830   tot ×1.6246
+  P2 W=60                            alegere ×1.0962   judecată ×1.4747   tot ×1.6166
+  la închidere, 0,125% (simularea)   alegere ×1.0924   judecată ×1.4698   tot ×1.6056
+
+=== secundar: toate orele, o cumpărare și o vânzare pe oră (varianta reținută) ===
+  alegere 01.01-31.05    cu semnal    n=  680  +0.0249% ± +0.0139%  t  +1.79  executate  81%
+  alegere 01.01-31.05    fără semnal  n= 6568  +0.0034% ± +0.0044%  t  +0.78  executate  80%
+  judecată 01.06-09.11   cu semnal    n=  532  +0.0131% ± +0.0359%  t  +0.37  executate  83%
+  judecată 01.06-09.11   fără semnal  n= 7242  +0.0118% ± +0.0037%  t  +3.17  executate  80%
+  tot                    cu semnal    n= 1212  +0.0197% ± +0.0176%  t  +1.12  executate  81%
+  tot                    fără semnal  n=13810  +0.0078% ± +0.0029%  t  +2.73  executate  80%
+
+=== criteriul ===
+  tranzacții pe judecată: 54 
+  1. economie >= 0,03% și t >= 2:   +0.0594%, t +0.97  -> NU
+  2. capital F cu limită > piață:    ×1.4830 față de ×1.4758 -> da
+  3. același semn pe alegere:        +0.0488% -> da

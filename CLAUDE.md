@@ -30,6 +30,8 @@ fișier, funcție separată), probe `motor/probe/zec-matematica.php` (33) și
 `b_exceptii`). Pornesc singure la prima oră de după migrație + deploy.
 Testate și picate pe ZEC și BTC, de nereluat: banda dinamică, semnalul altei
 monede, filtrul de volum, Fear & Greed. Excepția trece doar pe ZEC.
+Tot de nereluat: execuția cu ordine limită pentru F (16.11.2026) — economie
++0,06% ± 0,06% pe parte, t ≈ 1; vezi `cercetare/README.md`.
 
 Configurarea (parola bazei): `/home/marcelpa/autobot-config.php`, în afara zonei
 publice, niciodată în git.
